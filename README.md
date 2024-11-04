@@ -1,29 +1,85 @@
-# Create T3 App
+### 👨🏼‍💻 Currently Available for Hire!
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Hi there! 👋 I'm currently looking for new opportunities as a Senior JavaScript Engineer or Frontend Developer. If you're interested in collaborating or hiring someone with expertise in JavaScript, TypeScript, React, and other frontend technologies, feel free to reach out to me!
 
-## What's next? How do I make an app with this?
+You can connect with me on [LinkedIn](https://www.linkedin.com/in/mkimitch/) or email me directly at [mark.kimitch@gmail.com](mailto:mark.kimitch@gmail.com).
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+---
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+---
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+# Family Dashboard
 
-## Learn More
+**Family Dashboard** is a web application designed to serve as a digital information board for household updates. Inspired by DAKboard, it brings together essential daily information—date, time, weather, calendars, and more—into one convenient and customizable interface. This app is also intended as a learning and portfolio project, showcasing various integrations and web development techniques with the potential to evolve into a SaaS offering.
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## Features
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+The Family Dashboard app will include:
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+- **Date & Time Components**: Always display the current date and time.
+- **Weather Forecasting**: Get real-time weather updates with detailed information.
+- **Calendar Integration**: Display upcoming events from multiple calendars (Google, Microsoft).
+- **Google Nest Integration**: Monitor and control compatible Nest devices, like thermostats and cameras.
+- **Voice Control**: Use voice commands for navigation and customization.
+- **Admin Section**: Manage customizations, settings, and authentication.
 
-## How do I deploy this?
+## TODO
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### General
+
+- [ ] Make it deploy
+- [ ] Scaffold basic UI with mock data
+- [ ] Set up database
+- [ ] Attach database to UI
+- [ ] Add authentication
+
+### Date & Time Components
+
+- [ ] Date
+- [ ] Time
+
+### Weather
+
+- [ ] Current Conditions
+- [ ] Current Temperature
+- [ ] Daily Forecast
+  - [ ] Condition
+  - [ ] Day
+  - [ ] High & Low Temperatures
+  - [ ] Precipitation
+- [ ] Dew Point
+- [ ] Feels Like Temperature
+- [ ] Humidity
+- [ ] Pressure
+- [ ] Sunset & Sunrise Times
+- [ ] Three-Hour Forecast
+- [ ] UV Index
+- [ ] Weather Alerts
+- [ ] Wind Speed and Direction
+
+### Calendar Integration
+
+- [ ] Google Calendar
+- [ ] Microsoft Calendar
+- [ ] Configurable UI to customize how events are displayed
+
+### Google Nest Integration
+
+- [ ] Thermostat
+  - [ ] HVAC Status
+  - [ ] Temperature
+- [ ] Camera Feeds
+
+### Web Speech API Integration
+
+- [ ] Use voice commands to navigate screens or change the display
+
+### Admin Section
+
+- [ ] Login/Auth Functionality
+- [ ] Determine location via Geolocation API or manual entry
+- [ ] Customization options (e.g., themes, layouts, etc.)
+
+---
+
+This project is actively in development, and more features may be added over time. Feedback is welcome!

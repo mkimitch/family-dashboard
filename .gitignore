@@ -32,7 +32,6 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # local env files
-# do not commit any .env files to git, except for the .env.example file. https://create.t3.gg/en/usage/env-variables#using-environment-variables
 .env
 .env*.local
 
@@ -44,3 +43,42 @@ yarn-error.log*
 
 # idea files
 .idea
+
+# GitHub Pages deployment
+gh-pages/
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE files
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# System files
+*.bak
+*.orig
+
+# Mac OS
+.AppleDouble
+.LSOverride
+
+# Windows thumbnail cache files
+Thumbs.db
+ehthumbs.db
+
+# Linux file system
+*.directory
+
+# Coverage directory used by testing tools
+coverage/
+
+# ESLint cache
+.eslintcache
+
+# Prettier
+.prettierignore
+
+# Dev Stats
+stats.json
