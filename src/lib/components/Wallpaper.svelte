@@ -8,6 +8,7 @@
 	let showA = true;
 	let index = 0;
 	let timer: number | undefined;
+	let refreshTimer: number | undefined;
 	const INTERVAL_MS = 15000;
 	const FADE_MS = 1200;
 	let reduceMotion = false;
@@ -44,13 +45,22 @@
 		prefetch(files[(index + 1) % files.length]);
 	}
 
+	function handleError() {
+		loadPhotos();
+		next();
+	}
+
 	onMount(() => {
 		reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 		loadPhotos();
 		if (!reduceMotion) {
 			timer = window.setInterval(next, INTERVAL_MS);
 		}
-		return () => timer && clearInterval(timer);
+		refreshTimer = window.setInterval(loadPhotos, 5 * 60 * 1000);
+		return () => {
+			timer && clearInterval(timer);
+			refreshTimer && clearInterval(refreshTimer);
+		};
 	});
 </script>
 

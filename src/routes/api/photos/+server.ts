@@ -1,12 +1,13 @@
+import { env } from '$env/dynamic/private';
+import type { RequestHandler } from '@sveltejs/kit';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { RequestHandler } from '@sveltejs/kit';
 
 const IMAGES_RX = /\.(jpe?g|png|webp|gif)$/i;
 
 export const GET: RequestHandler = async () => {
 	try {
-		const dir = path.resolve(process.cwd(), 'static', 'photos');
+		const dir = env.PHOTO_DIR ? path.resolve(env.PHOTO_DIR) : path.resolve(process.cwd(), 'static', 'photos');
 		const entries = await fs.readdir(dir, { withFileTypes: true });
 		const files = entries
 			.filter((d) => d.isFile() && IMAGES_RX.test(d.name))
