@@ -1,72 +1,74 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
 
 	type Condition = { icon?: string; main?: string; desc?: string };
 	type Day = {
+		condition?: Condition;
 		date?: string | number;
 		day?: string | number;
-		time?: string | number;
-		ts?: string | number;
+		hi?: number;
+		high?: number;
+		lo?: number;
+		low?: number;
+		max?: number;
+		maxTemp?: number;
+		min?: number;
+		minTemp?: number;
 		name?: string;
 		pop?: number | null;
 		precipPct?: number;
-		condition?: Condition;
-		tempF?: { max?: number; min?: number };
 		tempC?: { max?: number; min?: number };
-		high?: number;
-		max?: number;
-		maxTemp?: number;
-		hi?: number;
-		low?: number;
-		min?: number;
-		minTemp?: number;
-		lo?: number;
+		tempF?: { max?: number; min?: number };
+		time?: string | number;
+		ts?: string | number;
 	};
 
 	type WeatherNow = {
-		tempF?: number;
-		tempC?: number;
-		temp?: number;
-		feelsLikeF?: number;
-		feelsLikeC?: number;
-		feels?: number;
-		feels_like?: number;
-		humidity?: number;
-		rh?: number;
-		uvIndex?: number;
-		uv?: number;
-		visibility?: number;
-		pressure?: number;
-		windMph?: number;
-		wind_kph?: number;
-		windKph?: number;
-		windDeg?: number;
 		condition?: Condition;
-		summary?: string;
 		desc?: string;
+		feels_like?: number;
+		feels?: number;
+		feelsLikeC?: number;
+		feelsLikeF?: number;
+		humidity?: number;
+		pressure?: number;
+		rh?: number;
+		summary?: string;
+		temp?: number;
+		tempC?: number;
+		tempF?: number;
 		text?: string;
+		uv?: number;
+		uvIndex?: number;
+		visibility?: number;
+		wind_kph?: number;
+		windDeg?: number;
+		windKph?: number;
+		windMph?: number;
 	};
 
 	type WeatherRoot = {
-		data?: any;
-		current?: WeatherNow;
-		now?: WeatherNow;
-		forecast?: Day[];
-		daily?: Day[];
-		days?: Day[];
 		astronomy?: {
-			sunrise?: string | number;
-			sunset?: string | number;
 			moonrise?: string | number;
 			moonset?: string | number;
+			sunrise?: string | number;
+			sunset?: string | number;
 		};
-		sunrise?: string | number;
-		sunset?: string | number;
+		current?: WeatherNow;
+		daily?: Day[];
+		data?: any;
+		days?: Day[];
+		forecast?: Day[];
 		moonrise?: string | number;
 		moonset?: string | number;
+		now?: WeatherNow;
+		sunrise?: string | number;
+		sunset?: string | number;
 	};
 
-	let wx: WeatherRoot | null = null;
+	let { initialWeather = null } = $props();
+	let wx = $state<WeatherRoot | null>(initialWeather);
 	let interval: number | undefined;
 
 	const FMT_TIME = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
@@ -99,7 +101,9 @@
 		return night ? 'clear-night' : 'clear-day';
 	};
 	const iconUrlOf = (code?: string, main?: string) =>
-		`/vendor/weather-icons/fill/svg/${iconSlugOf(code, main)}.svg`;
+		`/svg/static/${iconSlugOf(code, main)}.svg`;
+	const lottiePathOf = (code?: string, main?: string) =>
+		`/lottie/weather/${iconSlugOf(code, main)}.json`;
 	const hm = (t?: string | number) => (t ? FMT_TIME.format(new Date(t)) : '—');
 	const windDir = (deg?: number) => {
 		if (typeof deg !== 'number') return '';
@@ -145,7 +149,9 @@
 	}
 
 	onMount(() => {
-		loadWeather();
+		if (!wx) {
+			loadWeather();
+		}
 		interval = window.setInterval(loadWeather, 3 * 60 * 1000);
 		return () => interval && clearInterval(interval);
 	});
@@ -203,10 +209,10 @@
 			{@const summary =
 				(now?.condition && (now.condition.desc || now.condition.main)) ||
 				(pick(now, ['summary', 'desc', 'text']) ?? '')}
-			{@const iconUrl = iconUrlOf(
-				now?.condition?.icon,
-				now?.condition?.main || now?.condition?.desc
-			)}
+			{@const iconCode = now?.condition?.icon}
+			{@const iconMain = now?.condition?.main || now?.condition?.desc}
+			{@const iconUrl = iconUrlOf(iconCode, iconMain)}
+			{@const lottieSrc = lottiePathOf(iconCode, iconMain)}
 			{@const astro = (root.astronomy || (root as any).astro || {}) as any}
 			{@const sunrise = astro.sunrise || (root as any).sunrise}
 			{@const sunset = astro.sunset || (root as any).sunset}
@@ -219,7 +225,7 @@
 						>{tempF}{#if typeof tempF === 'number'}°F{/if}</span
 					>
 					<div class="wx-icon">
-						<img class="wi wi-now" src={iconUrl} alt={summary} loading="lazy" />
+						<LottieWeatherIcon src={lottieSrc} className="wi wi-now" ariaLabel={summary} />
 					</div>
 				</div>
 				<div class="wx-feels-row">
@@ -228,9 +234,10 @@
 					</div>
 					{#if todayHiF !== undefined || todayLoF !== undefined}
 						<span class="wx-hilow-now">
-							<span class="hi">{todayHiF === undefined ? '—' : `${todayHiF}°F`}</span>
-							<span class="lo">{todayLoF === undefined ? '—' : `${todayLoF}°F`}</span></span
-						>
+							<span class="hi">High: {todayHiF === undefined ? '—' : `${todayHiF}°F`}</span>
+							<span style="font-weight: 300;"> | </span>
+							<span class="lo">Low: {todayLoF === undefined ? '—' : `${todayLoF}°F`}</span>
+						</span>
 					{/if}
 				</div>
 			</div>
@@ -243,7 +250,7 @@
 								><span class="ico"
 									><img
 										class="wi wi-stat"
-										src="/vendor/weather-icons/fill/svg/wind.svg"
+										src="/svg/static/wind.svg"
 										alt="Wind"
 										loading="lazy"
 									/></span
@@ -257,7 +264,7 @@
 								><span class="ico"
 									><img
 										class="wi wi-stat"
-										src="/vendor/weather-icons/fill/svg/humidity.svg"
+										src="/svg/static/humidity.svg"
 										alt="Humidity"
 										loading="lazy"
 									/></span
@@ -272,18 +279,18 @@
 								><span class="ico"
 									><img
 										class="wi wi-astro"
-										src="/vendor/weather-icons/fill/svg/sunrise.svg"
+										src="/svg/static/sunrise.svg"
 										alt="Sunrise"
 										loading="lazy"
 									/></span
 								>{hm(sunrise)}</span
 							>{/if}
 						{#if sunset}<span class="item sunset"
-								><span class="ico"
-									><img
-										class="wi wi-astro"
-										src="/vendor/weather-icons/fill/svg/sunset.svg"
-										alt="Sunset"
+									><span class="ico"
+										><img
+											class="wi wi-astro"
+											src="/svg/static/sunset.svg"
+											alt="Sunset"
 										loading="lazy"
 									/></span
 								>{hm(sunset)}</span
@@ -294,18 +301,18 @@
 								><span class="ico"
 									><img
 										class="wi wi-astro"
-										src="/vendor/weather-icons/fill/svg/moonrise.svg"
+										src="/svg/static/moonrise.svg"
 										alt="Moonrise"
 										loading="lazy"
 									/></span
 								>{hm(moonrise)}</span
 							>{/if}
 						{#if moonset}<span class="item moonset"
-								><span class="ico"
-									><img
-										class="wi wi-astro"
-										src="/vendor/weather-icons/fill/svg/moonset.svg"
-										alt="Moonset"
+									><span class="ico"
+										><img
+											class="wi wi-astro"
+											src="/svg/static/moonset.svg"
+											alt="Moonset"
 										loading="lazy"
 									/></span
 								>{hm(moonset)}</span
@@ -337,15 +344,15 @@
 									? c2f(d.tempC.min)
 									: pick(d, ['low', 'min', 'minTemp', 'lo'])}
 						{@const pop =
-							(d as any)?.pop === null
-								? 0
+						(d as any)?.pop === null
+							? 0
 								: typeof (d as any)?.pop === 'number'
 									? Math.round((d as any).pop <= 1 ? (d as any).pop * 100 : (d as any).pop)
 									: typeof (d as any)?.precipPct === 'number'
 										? Math.round((d as any).precipPct)
 										: undefined}
 						{@const slug = iconSlugOf(d?.condition?.icon, d?.condition?.main || d?.condition?.desc)}
-						{@const icoUrl = `/vendor/weather-icons/fill/svg/${slug}.svg`}
+					{@const icoUrl = `/svg/static/${slug}.svg`}
 						<li>
 							<div class="day">{label}</div>
 							<div class="wxi">

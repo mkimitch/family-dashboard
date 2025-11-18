@@ -286,7 +286,7 @@ body {
 			border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 88%);
 			border-radius: 0.35rem;
 			display: flex;
-			justify-content: space-evenly;
+			justify-content: space-around;
 			line-height: 2;
 			flex-wrap: wrap;
 			gap: 0.5rem;
@@ -307,6 +307,7 @@ body {
 		.wx-icon {
 			opacity: 0.9;
 
+			.wi-now,
 			img.wi-now {
 				display: block;
 				height: clamp(1em, 9vw, 6rem);
@@ -413,7 +414,7 @@ body {
 		.wxi img.wi-forecast {
 			display: inline;
 			height: auto;
-			width: 2.25rem;
+			width: 3rem;
 		}
 
 		.day {

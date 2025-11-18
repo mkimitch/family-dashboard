@@ -43,7 +43,8 @@ merged.ics
 export.ics
 
 # Local assets
-/static/photos/
+/photos-src/*
+/static/photos/*
 
 # Vite
 vite.config.js.timestamp-*

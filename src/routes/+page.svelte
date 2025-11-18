@@ -2,6 +2,7 @@
 	import Calendar from '$lib/components/Calendar.svelte';
 	import Hero from '$lib/components/Hero.svelte';
 	import { onMount } from 'svelte';
+	let { data } = $props();
 	const alerts: string[] = [];
 	const messageTitle = '';
 	const messageSubtitle = '';
@@ -31,6 +32,6 @@
 </script>
 
 <main class="board">
-	<Hero {alerts} {messageTitle} {messageSubtitle} {countdowns} />
+	<Hero {alerts} {messageTitle} {messageSubtitle} {countdowns} weather={data.weather} />
 	<Calendar class="cal" />
 </main>

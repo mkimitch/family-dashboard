@@ -41,6 +41,7 @@ const RAW_RUNTIME_STATE =
           ["eslint-plugin-svelte", "virtual:f1b7b1763a4ede3795c9dc853086118ad58bfda267555d2cd58938a708b42f66937c4a40d1b85f9515002da2367c30d89432dd74b8ee5a316f7e82d7faf58bcc#npm:3.13.0"],\
           ["family-dashboard-svelte", "workspace:."],\
           ["globals", "npm:16.5.0"],\
+          ["lottie-web", "npm:5.13.0"],\
           ["prettier", "npm:3.6.2"],\
           ["prettier-plugin-svelte", "virtual:f1b7b1763a4ede3795c9dc853086118ad58bfda267555d2cd58938a708b42f66937c4a40d1b85f9515002da2367c30d89432dd74b8ee5a316f7e82d7faf58bcc#npm:3.4.0"],\
           ["svelte", "npm:5.43.5"],\
@@ -2090,6 +2091,7 @@ const RAW_RUNTIME_STATE =
           ["eslint-plugin-svelte", "virtual:f1b7b1763a4ede3795c9dc853086118ad58bfda267555d2cd58938a708b42f66937c4a40d1b85f9515002da2367c30d89432dd74b8ee5a316f7e82d7faf58bcc#npm:3.13.0"],\
           ["family-dashboard-svelte", "workspace:."],\
           ["globals", "npm:16.5.0"],\
+          ["lottie-web", "npm:5.13.0"],\
           ["prettier", "npm:3.6.2"],\
           ["prettier-plugin-svelte", "virtual:f1b7b1763a4ede3795c9dc853086118ad58bfda267555d2cd58938a708b42f66937c4a40d1b85f9515002da2367c30d89432dd74b8ee5a316f7e82d7faf58bcc#npm:3.4.0"],\
           ["svelte", "npm:5.43.5"],\
@@ -2660,6 +2662,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../.yarn/berry/cache/lodash.merge-npm-4.6.2-77cb4416bf-10c0.zip/node_modules/lodash.merge/",\
         "packageDependencies": [\
           ["lodash.merge", "npm:4.6.2"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["lottie-web", [\
+      ["npm:5.13.0", {\
+        "packageLocation": "../.yarn/berry/cache/lottie-web-npm-5.13.0-eada0c2e04-10c0.zip/node_modules/lottie-web/",\
+        "packageDependencies": [\
+          ["lottie-web", "npm:5.13.0"]\
         ],\
         "linkType": "HARD"\
       }]\

@@ -2,7 +2,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Wallpaper from '$lib/components/Wallpaper.svelte';
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
 <svelte:head>
@@ -12,6 +12,6 @@
 </svelte:head>
 
 <div class="app-root">
-	<Wallpaper />
+	<Wallpaper initialPhotos={data.photos} />
 	<div class="app-content">{@render children()}</div>
 </div>

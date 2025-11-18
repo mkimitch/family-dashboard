@@ -2,33 +2,45 @@
 	import { onMount } from 'svelte';
 
 	type PhotoList = { files: string[] };
-	let files: string[] = [];
-	let aSrc = '';
-	let bSrc = '';
-	let showA = true;
-	let index = 0;
+	let { initialPhotos = [] } = $props();
+	let files = $state<string[]>([]);
+	let aSrc = $state('');
+	let bSrc = $state('');
+	let showA = $state(true);
+	let index = $state(0);
 	let timer: number | undefined;
 	let refreshTimer: number | undefined;
-	const INTERVAL_MS = 15000;
+	const MIN_INTERVAL_MS = 5 * 60 * 1000;
+	const MAX_INTERVAL_MS = 10 * 60 * 1000;
 	const FADE_MS = 1200;
-	let reduceMotion = false;
+	let reduceMotion = $state(false);
 
 	async function loadPhotos() {
 		try {
 			const r = await fetch('/api/photos', { cache: 'no-store' });
 			if (!r.ok) return;
 			const data = (await r.json()) as PhotoList;
-			files = Array.isArray(data?.files) ? data.files.slice() : [];
-			if (!files.length) return;
+			const list = Array.isArray(data?.files) ? data.files.slice() : [];
+			if (!list.length) return;
+			files = shuffle(list);
 			index = 0;
 			aSrc = files[index % files.length];
-			prefetch(files[(index + 1) % files.length]);
+			const nextPrefetch = files[(index + 1) % files.length];
+			if (nextPrefetch) prefetch(nextPrefetch);
 		} catch {}
 	}
 
 	function prefetch(src: string) {
 		const img = new Image();
 		img.src = src;
+	}
+
+	function shuffle<T>(arr: T[]): T[] {
+		for (let i = arr.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[arr[i], arr[j]] = [arr[j], arr[i]];
+		}
+		return arr;
 	}
 
 	function next() {
@@ -42,7 +54,22 @@
 			aSrc = nextSrc;
 			showA = true;
 		}
-		prefetch(files[(index + 1) % files.length]);
+		const nextPrefetch = files[(index + 1) % files.length];
+		if (nextPrefetch) prefetch(nextPrefetch);
+	}
+
+	function scheduleNext() {
+		if (timer) {
+			clearTimeout(timer);
+			timer = undefined;
+		}
+		if (reduceMotion) return;
+		const span = MAX_INTERVAL_MS - MIN_INTERVAL_MS;
+		const delay = MIN_INTERVAL_MS + (span > 0 ? Math.floor(Math.random() * span) : 0);
+		timer = window.setTimeout(() => {
+			next();
+			scheduleNext();
+		}, delay);
 	}
 
 	function handleError() {
@@ -52,13 +79,23 @@
 
 	onMount(() => {
 		reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-		loadPhotos();
+		if (Array.isArray(initialPhotos) && initialPhotos.length) {
+			files = shuffle(initialPhotos.slice());
+			index = 0;
+			aSrc = files[index % files.length];
+			const nextPrefetch = files[(index + 1) % files.length];
+			if (nextPrefetch) prefetch(nextPrefetch);
+		} else {
+			loadPhotos();
+		}
 		if (!reduceMotion) {
-			timer = window.setInterval(next, INTERVAL_MS);
+			scheduleNext();
 		}
 		refreshTimer = window.setInterval(loadPhotos, 5 * 60 * 1000);
 		return () => {
-			timer && clearInterval(timer);
+			if (timer) {
+				clearTimeout(timer);
+			}
 			refreshTimer && clearInterval(refreshTimer);
 		};
 	});

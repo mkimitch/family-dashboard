@@ -7,7 +7,8 @@
 		alerts = [] as string[],
 		messageTitle = '',
 		messageSubtitle = '',
-		countdowns = [] as Countdown[]
+		countdowns = [] as Countdown[],
+		weather = null
 	} = $props();
 </script>
 
@@ -42,7 +43,7 @@
 			<Clock />
 		</section>
 		<section class="hero-weather hero-card" aria-labelledby="wx-h">
-			<WeatherCard />
+			<WeatherCard initialWeather={weather} />
 		</section>
 	</div>
 </header>
