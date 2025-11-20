@@ -219,11 +219,12 @@
 			{@const moonrise = astro.moonrise || (root as any).moonrise}
 			{@const moonset = astro.moonset || (root as any).moonset}
 
-			<div class="wx-temp-main">
-				<div class="wx-temp">
-					<span
-						>{tempF}{#if typeof tempF === 'number'}°F{/if}</span
-					>
+			<div class="wx-current-main">
+				<div class="wx-current">
+					<div class="wx-current-temp">
+						<span class="temp">{tempF}</span>
+						<span class="unit">{#if typeof tempF === 'number'}°F{/if}</span>
+					</div>
 					<div class="wx-icon">
 						<LottieWeatherIcon src={lottieSrc} className="wi wi-now" ariaLabel={summary} />
 					</div>
@@ -321,7 +322,7 @@
 				</div>
 			</div>
 
-			<!-- Forecast: next 7 days (skip today) -->
+			<!-- Forecast shows the next seven days after today for a full week at a glance. -->
 			{@const forecast = (wx.daily || wx.forecast || wx.days || []) as Day[]}
 			{#if forecast.length}
 				<ol class="wx-forecast" aria-label="Forecast">

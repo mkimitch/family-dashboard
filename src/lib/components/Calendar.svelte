@@ -30,15 +30,20 @@
 	const FMT_SHORT = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
 	const FMT_DAY = new Intl.DateTimeFormat(undefined, { day: 'numeric' });
 	const FMT_TIME = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
-	const FMT_KEY = () =>
+	const createKeyFormatter = (zone?: string) =>
 		new Intl.DateTimeFormat('en-CA', {
-			timeZone: timeZone || undefined,
+			timeZone: zone || undefined,
 			year: 'numeric',
 			month: '2-digit',
 			day: '2-digit'
 		});
 
-	const keyOf = (d: Date) => FMT_KEY().format(d);
+	let keyFormatter = createKeyFormatter(timeZone);
+	$effect(() => {
+		keyFormatter = createKeyFormatter(timeZone);
+	});
+
+	const keyOf = (d: Date) => keyFormatter.format(d);
 	const sameDay = (a: Date, b: Date) => keyOf(a) === keyOf(b);
 
 	function startOfWeek(d: Date) {
@@ -315,7 +320,7 @@
 	}
 
 	function buildVisibleDays() {
-		const ymd = FMT_KEY().format(new Date());
+		const ymd = keyFormatter.format(new Date());
 		const parts = ymd.split('-').map(Number);
 		const start = new Date(parts[0], parts[1] - 1, parts[2]);
 		visibleDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -332,6 +337,7 @@
 	}
 
 	function computeAllDayLayout() {
+		// Track allocation ensures overlapping all-day events render in consistent rows without collisions.
 		const countsByDay: Record<string, number> = {};
 		const rowsByDay: Record<string, Array<{ e: Event; isStart: boolean; isEnd: boolean }>> = {};
 		if (!visibleDays.length) return { countsByDay, rowsByDay };
@@ -562,7 +568,7 @@
 								)}</span
 							>
 							<div class="time-events">
-								{#each grp.items as e (e.id ?? e.title + String(e.start))}
+								{#each grp.items as e, j (e.id ?? `${e.calendarId || ''}:${e.title}:${String(e.start)}:${j}`)}
 									{@const cal = calendars.get(e.calendarId || '')}
 									<div
 										class="time-event"
