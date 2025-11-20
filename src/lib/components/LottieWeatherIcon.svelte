@@ -12,19 +12,22 @@
 	let { src, loop = true, autoplay = true, className = '', ariaLabel = '' }: Props = $props();
 	let container: HTMLDivElement | null = null;
 
-	onMount(async () => {
-		if (!container || typeof window === 'undefined') return;
-		const { default: lottie } = await import('lottie-web');
-		const anim = lottie.loadAnimation({
-			container,
-			renderer: 'svg',
-			loop,
-			autoplay,
-			path: src
-		});
-		return () => {
-			anim?.destroy();
+	onMount(() => {
+		let dispose: (() => void) | undefined;
+		const load = async () => {
+			if (!container || typeof window === 'undefined') return;
+			const { default: lottie } = await import('lottie-web');
+			const anim = lottie.loadAnimation({
+				container,
+				renderer: 'svg',
+				loop,
+				autoplay,
+				path: src
+			});
+			dispose = () => anim?.destroy();
 		};
+		load();
+		return () => dispose?.();
 	});
 </script>
 

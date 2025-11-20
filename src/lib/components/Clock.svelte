@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	let now = new Date();
+	let now = $state(new Date());
 	let timer: number | undefined;
-	export let className: string = '';
+	const props = $props<{ className?: string }>();
+	const className = $derived(props.className ?? '');
 
 	const FMT_DATE_PARTS = new Intl.DateTimeFormat(undefined, {
 		weekday: 'long',
@@ -21,23 +22,35 @@
 	const part = (parts: Intl.DateTimeFormatPart[], type: string): string =>
 		parts.find((p) => p.type === type)?.value || '';
 
+	const updateNow = () => {
+		now = new Date();
+	};
+
 	onMount(() => {
-		timer = window.setInterval(() => (now = new Date()), 1000);
+		updateNow();
+		const handleVisibility = () => {
+			if (document.visibilityState === 'visible') {
+				updateNow();
+			}
+		};
+		document.addEventListener('visibilitychange', handleVisibility);
+		timer = window.setInterval(updateNow, 1000);
 		return () => {
 			if (timer) window.clearInterval(timer);
+			document.removeEventListener('visibilitychange', handleVisibility);
 		};
 	});
 
-	$: dparts = FMT_DATE_PARTS.formatToParts(now);
-	$: tparts = FMT_TIME_PARTS.formatToParts(now);
-	$: dow = part(dparts, 'weekday');
-	$: month = part(dparts, 'month');
-	$: day = part(dparts, 'day');
-	$: year = part(dparts, 'year');
-	$: hour = part(tparts, 'hour');
-	$: minute = part(tparts, 'minute');
-	$: second = part(tparts, 'second');
-	$: ampm = part(tparts, 'dayPeriod');
+	const dparts = $derived(FMT_DATE_PARTS.formatToParts(now));
+	const tparts = $derived(FMT_TIME_PARTS.formatToParts(now));
+	const dow = $derived(part(dparts, 'weekday'));
+	const month = $derived(part(dparts, 'month'));
+	const day = $derived(part(dparts, 'day'));
+	const year = $derived(part(dparts, 'year'));
+	const hour = $derived(part(tparts, 'hour'));
+	const minute = $derived(part(tparts, 'minute'));
+	const second = $derived(part(tparts, 'second'));
+	const ampm = $derived(part(tparts, 'dayPeriod'));
 </script>
 
 <time class={`clock ${className}`.trim()} aria-live="polite">
