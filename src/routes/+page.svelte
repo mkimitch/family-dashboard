@@ -4,10 +4,10 @@
 	import SystemStatusStub from '$lib/components/SystemStatusStub.svelte';
 	import { onMount } from 'svelte';
 	let { data } = $props();
-	const alerts: string[] = [];
-	const messageTitle = '';
-	const messageSubtitle = '';
-	const countdowns: { label: string; value: string | number }[] = [];
+	const alerts: string[] = (data.hero?.alerts as string[]) ?? [];
+	const messageTitle = data.hero?.messageTitle ?? '';
+	const messageSubtitle = data.hero?.messageSubtitle ?? '';
+	const countdowns: { label: string; value: string | number }[] = data.countdowns ?? [];
 
 	onMount(() => {
 		const update = () => {

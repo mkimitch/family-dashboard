@@ -12,6 +12,6 @@
 </svelte:head>
 
 <div class="app-root">
-	<Wallpaper initialPhotos={data.photos} />
+	<Wallpaper initialPhotos={data.wallpaperOverride ?? data.photos} />
 	<div class="app-content">{@render children()}</div>
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { CalendarConfig, CalendarOverlayEvent } from '$lib/config/types';
 
 	type CalInfo = { id: string; name?: string; color?: string; icon?: string; sortOrder?: number };
 	type Event = {
@@ -197,19 +198,51 @@
 
 	async function loadCalendars() {
 		try {
-			const r = await fetch('/api/calendars');
-			if (!r.ok) return;
-			const list = await r.json();
+			const [remoteRes, cfgRes] = await Promise.all([
+				fetch('/api/calendars'),
+				fetch('/api/calendar-config', { cache: 'no-store' })
+			]);
+			if (!remoteRes.ok) return;
+			const list = await remoteRes.json();
+			let overrides: CalendarConfig[] = [];
+			if (cfgRes.ok) {
+				try {
+					const data = await cfgRes.json();
+					if (Array.isArray(data)) overrides = data as CalendarConfig[];
+				} catch {
+					overrides = [];
+				}
+			}
+			const overrideMap = new Map<string, CalendarConfig>();
+			for (const cfg of overrides) {
+				if (!cfg?.id) continue;
+				overrideMap.set(cfg.id, cfg);
+			}
 			const map = new Map<string, CalInfo>();
+			const seen = new Set<string>();
 			for (const c of list || []) {
-				const enabled = c?.enabled === undefined || Boolean(c?.enabled);
-				if (!enabled) continue;
-				const id = c.id ?? c.calendarId ?? c.name ?? c.label ?? '';
+				const id = (c.id ?? c.calendarId ?? c.name ?? c.label ?? '').trim();
 				if (!id) continue;
-				const name = c.label ?? c.name ?? id;
-				const color = c.color ?? c.calendarColor ?? '#888';
-				const icon = c.icon ?? '';
-				const sortOrder = Number.isFinite(Number(c.sortOrder)) ? Number(c.sortOrder) : undefined;
+				seen.add(id);
+				const cfg = overrideMap.get(id);
+				const enabledFromRemote = c?.enabled === undefined || Boolean(c?.enabled);
+				const enabled = cfg?.enabled ?? enabledFromRemote;
+				if (!enabled) continue;
+				const name = cfg?.name ?? c.label ?? c.name ?? id;
+				const color = cfg?.color ?? c.color ?? c.calendarColor ?? '#888';
+				const icon = cfg?.icon ?? c.icon ?? '';
+				const sortRaw = cfg?.sortOrder ?? c.sortOrder ?? c.sort ?? c.order ?? c.position;
+				const sortOrder = Number.isFinite(Number(sortRaw)) ? Number(sortRaw) : undefined;
+				map.set(id, { id, name, color, icon, sortOrder });
+			}
+			for (const cfg of overrides) {
+				if (!cfg.id || seen.has(cfg.id)) continue;
+				if (cfg.enabled === false) continue;
+				const id = cfg.id;
+				const name = cfg.name ?? id;
+				const color = cfg.color ?? '#888';
+				const icon = cfg.icon ?? '';
+				const sortOrder = cfg.sortOrder;
 				map.set(id, { id, name, color, icon, sortOrder });
 			}
 			calendars = map;
@@ -243,7 +276,10 @@
 			const endIso = endLocalExclusive.toISOString();
 			const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 			const qs = `/api/calendar?start=${encodeURIComponent(startIso)}&end=${encodeURIComponent(endIso)}&clientZone=${encodeURIComponent(tz)}&includeCancelled=true`;
-			const r = await fetch(qs, { cache: 'no-store', headers: { accept: 'application/json' } });
+			const [r, overlayRes] = await Promise.all([
+				fetch(qs, { cache: 'no-store', headers: { accept: 'application/json' } }),
+				fetch('/api/calendar-overlays', { cache: 'no-store' })
+			]);
 			if (!r.ok) return;
 			const data = await r.json();
 			timeZone = (data && typeof data.zone === 'string' && data.zone) || timeZone;
@@ -253,7 +289,7 @@
 				: Array.isArray(data)
 					? data
 					: [];
-			events = arr.map((e) => {
+			let listEvents: Event[] = arr.map((e) => {
 				const sI = extractDateInfo(e.start);
 				const eI = extractDateInfo(e.end);
 				const start = sI.dt ?? parseCalDate(e.start);
@@ -283,6 +319,37 @@
 					rawEndYMD
 				} as Event;
 			});
+			let overlays: CalendarOverlayEvent[] = [];
+			if (overlayRes.ok) {
+				try {
+					const raw = await overlayRes.json();
+					if (Array.isArray(raw)) overlays = raw as CalendarOverlayEvent[];
+				} catch {
+					overlays = [];
+				}
+			}
+			const overlayEvents: Event[] = [];
+			for (const ov of overlays) {
+				if (!ov?.title || !ov.startDate) continue;
+				const start = parseCalDate(ov.startDate);
+				const end = ov.endDate ? parseCalDate(ov.endDate) : undefined;
+				const rawStartYMD = ov.startDate.slice(0, 10);
+				const rawEndYMD = (ov.endDate ?? ov.startDate).slice(0, 10);
+				overlayEvents.push({
+					id: ov.id,
+					title: ov.title,
+					start,
+					end,
+					calendarId: ov.calendarId ?? 'overlay',
+					allDay: ov.allDay !== false,
+					rawStartYMD,
+					rawEndYMD
+				});
+			}
+			if (overlayEvents.length) {
+				listEvents = listEvents.concat(overlayEvents);
+			}
+			events = listEvents;
 			// Ensure calendars map entries and improve names/colors from events when needed
 			for (const e of arr) {
 				const id = e.calendarId ?? e.calendar ?? e.cal ?? 'default';
