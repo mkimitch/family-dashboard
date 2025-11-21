@@ -22,7 +22,7 @@
 		Record<string, Array<{ e: Event; isStart: boolean; isEnd: boolean }>>
 	>({});
 	let allDayTrackCountByDay = $state<Record<string, number>>({});
-	let now = new Date();
+	let now = $state(new Date());
 	let timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	let tick: number | undefined;
 	let { class: className = '' } = $props();
