@@ -453,6 +453,7 @@
 				])
 			);
 		})();
+		// Advance `now` on a fixed cadence so time-based classes (is-current, is-past) stay in sync.
 		tick = window.setInterval(() => {
 			now = new Date();
 		}, 60 * 1000);
