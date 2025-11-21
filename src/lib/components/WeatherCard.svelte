@@ -69,7 +69,9 @@
 
 	let { initialWeather = null } = $props();
 	let wx = $state<WeatherRoot | null>(initialWeather);
+	let nowClock = $state(new Date());
 	let interval: number | undefined;
+	let clockTick: number | undefined;
 
 	const FMT_TIME = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
 	const FMT_WEEKDAY_SHORT = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
@@ -134,6 +136,28 @@
 		}
 		return new Date(v);
 	};
+	const parseAstroTime = (v: any, base: Date): Date | null => {
+		if (v === undefined || v === null || v === '') return null;
+		try {
+			const direct = new Date(v);
+			if (!Number.isNaN(direct.getTime())) return direct;
+		} catch {
+			// fall through
+		}
+		if (typeof v === 'string') {
+			const s = v.trim();
+			const m = s.match(/^(\d{1,2}):(\d{2})(?:\s*([ap]m))?/i);
+			if (m) {
+				let hh = Number(m[1]);
+				const mm = Number(m[2]) || 0;
+				const ap = m[3]?.toLowerCase();
+				if (ap === 'pm' && hh < 12) hh += 12;
+				if (ap === 'am' && hh === 12) hh = 0;
+				return new Date(base.getFullYear(), base.getMonth(), base.getDate(), hh, mm, 0, 0);
+			}
+		}
+		return null;
+	};
 
 	async function loadWeather() {
 		try {
@@ -152,8 +176,15 @@
 		if (!wx) {
 			loadWeather();
 		}
+		nowClock = new Date();
 		interval = window.setInterval(loadWeather, 3 * 60 * 1000);
-		return () => interval && clearInterval(interval);
+		clockTick = window.setInterval(() => {
+			nowClock = new Date();
+		}, 60 * 1000);
+		return () => {
+			if (interval) clearInterval(interval);
+			if (clockTick) clearInterval(clockTick);
+		};
 	});
 </script>
 
@@ -218,6 +249,14 @@
 			{@const sunset = astro.sunset || (root as any).sunset}
 			{@const moonrise = astro.moonrise || (root as any).moonrise}
 			{@const moonset = astro.moonset || (root as any).moonset}
+			{@const sunriseDate = parseAstroTime(sunrise, nowClock)}
+			{@const sunsetDate = parseAstroTime(sunset, nowClock)}
+			{@const moonriseDate = parseAstroTime(moonrise, nowClock)}
+			{@const moonsetDate = parseAstroTime(moonset, nowClock)}
+			{@const sunriseIsPast = sunriseDate ? +nowClock > +sunriseDate : false}
+			{@const sunsetIsPast = sunsetDate ? +nowClock > +sunsetDate : false}
+			{@const moonriseIsPast = moonriseDate ? +nowClock > +moonriseDate : false}
+			{@const moonsetIsPast = moonsetDate ? +nowClock > +moonsetDate : false}
 
 			<div class="wx-current-main">
 				<div class="wx-current">
@@ -276,7 +315,7 @@
 				</div>
 				<div class="wx-astro">
 					<div class="col sun">
-						{#if sunrise}<span class="item sunrise"
+						{#if sunrise}<span class="item sunrise" class:is-past={sunriseIsPast}
 								><span class="ico"
 									><img
 										class="wi wi-astro"
@@ -286,7 +325,7 @@
 									/></span
 								>{hm(sunrise)}</span
 							>{/if}
-						{#if sunset}<span class="item sunset"
+						{#if sunset}<span class="item sunset" class:is-past={sunsetIsPast}
 									><span class="ico"
 										><img
 											class="wi wi-astro"
@@ -298,7 +337,7 @@
 							>{/if}
 					</div>
 					<div class="col moon">
-						{#if moonrise}<span class="item moonrise"
+						{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
 								><span class="ico"
 									><img
 										class="wi wi-astro"
@@ -308,7 +347,7 @@
 									/></span
 								>{hm(moonrise)}</span
 							>{/if}
-						{#if moonset}<span class="item moonset"
+						{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
 									><span class="ico"
 										><img
 											class="wi wi-astro"
