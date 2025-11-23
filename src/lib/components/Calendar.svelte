@@ -40,8 +40,10 @@
 		});
 
 	let keyFormatter = createKeyFormatter(timeZone);
+	let lastDayKey = keyFormatter.format(now);
 	$effect(() => {
 		keyFormatter = createKeyFormatter(timeZone);
+		lastDayKey = keyFormatter.format(now);
 	});
 
 	const keyOf = (d: Date) => keyFormatter.format(d);
@@ -522,7 +524,15 @@
 		})();
 		// Advance `now` on a fixed cadence so time-based classes (is-current, is-past) stay in sync.
 		tick = window.setInterval(() => {
+			const prevDayKey = lastDayKey;
 			now = new Date();
+			const currentDayKey = keyFormatter.format(now);
+			if (currentDayKey !== prevDayKey) {
+				lastDayKey = currentDayKey;
+				(async () => {
+					await loadEvents();
+				})();
+			}
 		}, 60 * 1000);
 		return () => {
 			if (tick) clearInterval(tick);
