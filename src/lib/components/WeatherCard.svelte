@@ -159,6 +159,60 @@
 		return null;
 	};
 
+	type WxAlert = {
+		id?: string | number;
+		headline?: string;
+		title?: string;
+		name?: string;
+		description?: string;
+		desc?: string;
+		severity?: string;
+		urgency?: string;
+		sender?: string;
+		sender_name?: string;
+		source?: string;
+	};
+
+	type NormalizedAlert = {
+		id: string;
+		title: string;
+		severity: string;
+		description?: string;
+	};
+
+	function normalizeAlerts(root: any): NormalizedAlert[] {
+		if (!root) return [];
+		const raw = (root.alerts ?? root.alert ?? root.warnings ?? []) as any;
+		const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
+		return arr
+			.map((a: WxAlert | null | undefined, idx: number) => {
+				if (!a) return null;
+				const titleSource =
+					a.event ?? a.headline ?? a.title ?? a.name ?? a.description ?? a.desc;
+				const title = String(titleSource || '').trim();
+				if (!title) return null;
+				const sevRaw = String((a.severity ?? '') || '').toLowerCase();
+				let level = 'info';
+				if (/(extreme|warning|red)/.test(sevRaw)) level = 'warning';
+				else if (/(watch|orange|yellow)/.test(sevRaw)) level = 'watch';
+				else if (/advisory|statement/.test(sevRaw)) level = 'advisory';
+				const rawDesc = (a.description ?? a.desc) as any;
+				const description =
+					typeof rawDesc === 'string' ? rawDesc.trim() || undefined : undefined;
+				const id = String((a.id ?? idx) as any);
+				return { id, title, severity: level, description };
+			})
+			.filter((x): x is NormalizedAlert => !!x);
+	}
+
+	const alertIconFor = (severity: string): string => {
+		const s = severity.toLowerCase();
+		if (s === 'warning') return '/svg/animated/code-red.svg';
+		if (s === 'watch') return '/svg/animated/code-orange.svg';
+		if (s === 'advisory') return '/svg/animated/code-yellow.svg';
+		return '/svg/animated/code-green.svg';
+	};
+
 	async function loadWeather() {
 		try {
 			const r = await fetch('/api/weather', { cache: 'no-store' });
@@ -189,9 +243,34 @@
 </script>
 
 {#if wx}
+	{@const alerts = normalizeAlerts(wx)}
 	<!-- Now block -->
 	<div class="wx-now">
-		<div class="wx-topline"></div>
+		<div class="wx-topline">
+			{#if alerts.length}
+				<div class="wx-alerts" aria-live="polite" aria-label="Weather alerts">
+					{#each alerts.slice(0, 3) as a (a.id)}
+						{@const icon = alertIconFor(a.severity)}
+						<div class={'wx-alert-pill wx-alert-pill--' + a.severity}>
+							<span class="wx-alert-icon">
+								<img
+									class="wx-alert-icon-img"
+									src={icon}
+									alt=""
+									loading="lazy"
+								/>
+							</span>
+							<span class="wx-alert-text">
+								<span class="wx-alert-label">{a.title}</span>
+								{#if a.description}
+									<span class="wx-alert-desc">{a.description}</span>
+								{/if}
+							</span>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 		{#key wx}
 			{@const now = (wx.current || wx.now || wx) as WeatherNow}
 			{@const root = wx}
@@ -264,21 +343,26 @@
 						<span class="temp">{tempF}</span>
 						<span class="unit">{#if typeof tempF === 'number'}°F{/if}</span>
 					</div>
+					<div class="wx-feels-row">
+						{#if typeof feelsF === 'number'}
+							<div class="wx-feels">
+								Feels like {feelsF}°F
+							</div>
+						{/if}
+						{#if todayHiF !== undefined || todayLoF !== undefined}
+							<span class="wx-hilow-now">
+								<span class="hi">{todayHiF === undefined ? '—' : `${todayHiF}°F`}</span>
+								<span style="font-weight: 300;"> / </span>
+								<span class="lo">{todayLoF === undefined ? '—' : `${todayLoF}°F`}</span>
+							</span>
+						{/if}
+						{#if summary}
+							<div class="wx-summary">{summary}</div>
+						{/if}
+					</div>
 					<div class="wx-icon">
 						<LottieWeatherIcon src={lottieSrc} className="wi wi-now" ariaLabel={summary} />
 					</div>
-				</div>
-				<div class="wx-feels-row">
-					<div class="wx-feels">
-						{typeof feelsF === 'number' ? `Feels like ${feelsF}°F` : summary}
-					</div>
-					{#if todayHiF !== undefined || todayLoF !== undefined}
-						<span class="wx-hilow-now">
-							<span class="hi">High: {todayHiF === undefined ? '—' : `${todayHiF}°F`}</span>
-							<span style="font-weight: 300;"> | </span>
-							<span class="lo">Low: {todayLoF === undefined ? '—' : `${todayLoF}°F`}</span>
-						</span>
-					{/if}
 				</div>
 			</div>
 
@@ -290,13 +374,12 @@
 								><span class="ico"
 									><img
 										class="wi wi-stat"
-										src="/svg/static/wind.svg"
-										alt="Wind"
+										src="/svg/static/direction.svg"
+										alt={now?.windDeg !== undefined ? `Wind ${windDir(now.windDeg)}` : 'Wind direction'}
 										loading="lazy"
+										style={now?.windDeg !== undefined ? `transform: rotate(${now.windDeg}deg);` : ''}
 									/></span
-								>{windMphVal} mph{now?.windDeg !== undefined
-									? ` ${windDir(now.windDeg)}`
-									: ''}</span
+								>{windMphVal} mph</span
 							>
 						{/if}
 						{#if (now?.humidity ?? (now as any)?.rh) !== undefined}
