@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { CalendarConfig, CalendarOverlayEvent } from '$lib/config/types';
+	import LastUpdated from './LastUpdated.svelte';
 
 	type CalInfo = { id: string; name?: string; color?: string; icon?: string; sortOrder?: number };
 	type Event = {
@@ -26,6 +27,10 @@
 	let now = $state(new Date());
 	let timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	let tick: number | undefined;
+	let updatedAt = $state<string | null>(null);
+	const EVENTS_POLL_MINUTES = 5;
+	const EVENTS_POLL_MS = EVENTS_POLL_MINUTES * 60 * 1000;
+	let lastEventsReloadAt = 0;
 	let { class: className = '' } = $props();
 
 	const FMT_SHORT = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
@@ -284,6 +289,20 @@
 			]);
 			if (!r.ok) return;
 			const data = await r.json();
+			const root: any = data && typeof data === 'object' ? data : null;
+			let ts: string | null = null;
+			if (root) {
+				const v =
+					root.updatedAt ??
+					root.updated_at ??
+					root.updateTime ??
+					root.last_updated ??
+					root.timestamp ??
+					null;
+				if (typeof v === 'string') ts = v;
+			}
+			if (!ts) ts = new Date().toISOString();
+			updatedAt = ts;
 			timeZone = (data && typeof data.zone === 'string' && data.zone) || timeZone;
 			buildVisibleDays();
 			const arr: ApiEvent[] = Array.isArray(data?.events)
@@ -512,6 +531,7 @@
 		buildVisibleDays();
 		(async () => {
 			await Promise.all([loadCalendars(), loadEvents()]);
+			lastEventsReloadAt = Date.now();
 			const layout = computeAllDayLayout();
 			allDayTrackCountByDay = layout.countsByDay;
 			allDayRowsByDay = layout.rowsByDay;
@@ -527,10 +547,16 @@
 			const prevDayKey = lastDayKey;
 			now = new Date();
 			const currentDayKey = keyFormatter.format(now);
-			if (currentDayKey !== prevDayKey) {
-				lastDayKey = currentDayKey;
+			const shouldReloadForDayChange = currentDayKey !== prevDayKey;
+			const shouldReloadForPoll =
+				EVENTS_POLL_MS > 0 && Date.now() - lastEventsReloadAt >= EVENTS_POLL_MS;
+			if (shouldReloadForDayChange || shouldReloadForPoll) {
+				if (shouldReloadForDayChange) {
+					lastDayKey = currentDayKey;
+				}
 				(async () => {
 					await loadEvents();
+					lastEventsReloadAt = Date.now();
 				})();
 			}
 		}, 60 * 1000);
@@ -550,32 +576,35 @@
 </script>
 
 <section class={`cal ${className}`.trim()} aria-label="Calendar">
-	<div class="cal-legend" role="list">
-		{#each Array.from(calendars.values()).sort((a, b) => {
-			const aa = a.sortOrder ?? Number.POSITIVE_INFINITY;
-			const bb = b.sortOrder ?? Number.POSITIVE_INFINITY;
-			if (aa !== bb) return aa - bb;
-			return (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' });
-		}) as c}
-			<div
-				class="cal-legend-item"
-				role="listitem"
-				style={`--cal-color: ${c.color || '#888'}`}
-				title={displayCalName(c) || c.id}
-			>
-				<span class="swatch" aria-hidden="true"></span>
-				{#if iconIsSvg(c.icon)}
-					<span class="icon" aria-hidden="true" style="color: var(--cal-color)"
-						>{@html iconHtml(c.icon)}</span
-					>
-				{:else if iconIsUrl(c.icon)}
-					<span class="icon" aria-hidden="true"><img src={c.icon as string} alt="" /></span>
-				{:else if c.icon}
-					<span class="icon" aria-hidden="true">{c.icon}</span>
-				{/if}
-				<span class="name">{displayCalName(c) || c.id}</span>
-			</div>
-		{/each}
+	<div class="cal-header">
+		<div class="cal-legend" role="list">
+			{#each Array.from(calendars.values()).sort((a, b) => {
+				const aa = a.sortOrder ?? Number.POSITIVE_INFINITY;
+				const bb = b.sortOrder ?? Number.POSITIVE_INFINITY;
+				if (aa !== bb) return aa - bb;
+				return (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' });
+			}) as c}
+				<div
+					class="cal-legend-item"
+					role="listitem"
+					style={`--cal-color: ${c.color || '#888'}`}
+					title={displayCalName(c) || c.id}
+				>
+					<span class="swatch" aria-hidden="true"></span>
+					{#if iconIsSvg(c.icon)}
+						<span class="icon" aria-hidden="true" style="color: var(--cal-color)"
+							>{@html iconHtml(c.icon)}</span
+						>
+					{:else if iconIsUrl(c.icon)}
+						<span class="icon" aria-hidden="true"><img src={c.icon as string} alt="" /></span>
+					{:else if c.icon}
+						<span class="icon" aria-hidden="true">{c.icon}</span>
+					{/if}
+					<span class="name">{displayCalName(c) || c.id}</span>
+				</div>
+			{/each}
+		</div>
+		<LastUpdated timestamp={updatedAt} className="cal-last-updated" />
 	</div>
 	<div class="cal-grid">
 		{#each visibleDays as d}

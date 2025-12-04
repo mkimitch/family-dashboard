@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
+	import LastUpdated from './LastUpdated.svelte';
 
 	type Condition = { icon?: string; main?: string; desc?: string };
 	type Day = {
@@ -72,6 +73,7 @@
 	let nowClock = $state(new Date());
 	let interval: number | undefined;
 	let clockTick: number | undefined;
+	let updatedAt = $state<string | null>(null);
 
 	const FMT_TIME = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
 	const FMT_WEEKDAY_SHORT = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
@@ -159,6 +161,19 @@
 		return null;
 	};
 
+	const extractUpdatedAt = (root: WeatherRoot | null | undefined): string | null => {
+		if (!root) return null;
+		const anyRoot = root as any;
+		const v =
+			anyRoot?.updatedAt ??
+			anyRoot?.updated_at ??
+			anyRoot?.updateTime ??
+			anyRoot?.last_updated ??
+			anyRoot?.timestamp ??
+			null;
+		return typeof v === 'string' ? v : null;
+	};
+
 	type WxAlert = {
 		id?: string | number;
 		headline?: string;
@@ -223,10 +238,16 @@
 			}
 			const data = await r.json();
 			wx = data?.data || data;
+			const ts = extractUpdatedAt(wx);
+			updatedAt = ts ?? new Date().toISOString();
 		} catch {}
 	}
 
 	onMount(() => {
+		if (wx && !updatedAt) {
+			const ts = extractUpdatedAt(wx);
+			if (ts) updatedAt = ts;
+		}
 		if (!wx) {
 			loadWeather();
 		}
@@ -270,6 +291,7 @@
 					{/each}
 				</div>
 			{/if}
+			<LastUpdated timestamp={updatedAt} className="wx-last-updated" />
 		</div>
 		{#key wx}
 			{@const now = (wx.current || wx.now || wx) as WeatherNow}

@@ -178,7 +178,8 @@ body {
 
 	& .date {
 		color: var(--muted);
-		font-size: clamp(0.875rem, 1.6vw, 1.125rem);
+		font-size: clamp(1rem, 2vw, 1.35rem);
+		font-variant-numeric: tabular-nums;
 	}
 
 	& .time {
@@ -548,6 +549,17 @@ body {
 	gap: 0.3rem;
 }
 
+.cal-header {
+	align-items: END;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+
+	.cal-last-updated {
+		margin-left: auto;
+	}
+}
+
 .cal-legend {
 	align-items: center;
 	display: flex;
@@ -682,19 +694,19 @@ body {
 		padding-left: calc(0.5rem - 0.25rem);
 	}
 
-	.day-head {
+	& .day-head {
 		align-items: baseline;
 		display: inline-flex;
 		flex-shrink: 0;
 		font-weight: 800;
 		gap: 0.4rem;
 
-		.dow {
+		& .dow {
 			color: var(--muted);
 			font-weight: 700;
 		}
 
-		.dom {
+		& .dom {
 			font-size: 1.05rem;
 		}
 	}
@@ -950,7 +962,7 @@ body {
 	& .mem-bar {
 		background: color-mix(in oklch, var(--fg), transparent 88%);
 		border-radius: 999px;
-		height: 0.25rem;
+		height: 0.75rem;
 		overflow: hidden;
 		position: relative;
 		width: 2.8rem;
