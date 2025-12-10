@@ -222,10 +222,10 @@
 
 	const alertIconFor = (severity: string): string => {
 		const s = severity.toLowerCase();
-		if (s === 'warning') return '/svg/animated/code-red.svg';
-		if (s === 'watch') return '/svg/animated/code-orange.svg';
-		if (s === 'advisory') return '/svg/animated/code-yellow.svg';
-		return '/svg/animated/code-green.svg';
+		if (s === 'warning') return '/svg/static/code-red.svg';
+		if (s === 'watch') return '/svg/static/code-orange.svg';
+		if (s === 'advisory') return '/svg/static/code-yellow.svg';
+		return '/svg/static/code-white.svg';
 	};
 
 	async function loadWeather() {
@@ -268,6 +268,7 @@
 	<!-- Now block -->
 	<div class="wx-now">
 		<div class="wx-topline">
+			<LastUpdated timestamp={updatedAt} className="wx-last-updated" />
 			{#if alerts.length}
 				<div class="wx-alerts" aria-live="polite" aria-label="Weather alerts">
 					{#each alerts.slice(0, 3) as a (a.id)}
@@ -291,7 +292,6 @@
 					{/each}
 				</div>
 			{/if}
-			<LastUpdated timestamp={updatedAt} className="wx-last-updated" />
 		</div>
 		{#key wx}
 			{@const now = (wx.current || wx.now || wx) as WeatherNow}
