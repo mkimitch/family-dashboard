@@ -116,12 +116,6 @@
 		}
 	}
 
-	@media (prefers-color-scheme: light) {
-		.last-updated {
-			color: rgba(0, 0, 0, 0.7);
-		}
-	}
-
 	.last-updated-text {
 		white-space: nowrap;
 	}
