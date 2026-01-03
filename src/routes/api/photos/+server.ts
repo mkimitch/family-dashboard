@@ -7,7 +7,9 @@ const IMAGES_RX = /\.(jpe?g|png|webp|gif)$/i;
 
 export const GET: RequestHandler = async () => {
 	try {
-		const dir = env.PHOTO_DIR ? path.resolve(env.PHOTO_DIR) : path.resolve(process.cwd(), 'static', 'photos');
+		const dir = env.PHOTO_DIR
+			? path.resolve(env.PHOTO_DIR)
+			: path.resolve(process.cwd(), 'static', 'photos');
 		const entries = await fs.readdir(dir, { withFileTypes: true });
 		const files = entries
 			.filter((d) => d.isFile() && IMAGES_RX.test(d.name))

@@ -104,8 +104,7 @@
 		if (/cloud/.test(m)) return 'cloudy';
 		return night ? 'clear-night' : 'clear-day';
 	};
-	const iconUrlOf = (code?: string, main?: string) =>
-		`/svg/static/${iconSlugOf(code, main)}.svg`;
+	const iconUrlOf = (code?: string, main?: string) => `/svg/static/${iconSlugOf(code, main)}.svg`;
 	const lottiePathOf = (code?: string, main?: string) =>
 		`/lottie/weather/${iconSlugOf(code, main)}.json`;
 	const hm = (t?: string | number) => (t ? FMT_TIME.format(new Date(t)) : '—');
@@ -202,8 +201,7 @@
 		return arr
 			.map((a: WxAlert | null | undefined, idx: number) => {
 				if (!a) return null;
-				const titleSource =
-					a.event ?? a.headline ?? a.title ?? a.name ?? a.description ?? a.desc;
+				const titleSource = a.event ?? a.headline ?? a.title ?? a.name ?? a.description ?? a.desc;
 				const title = String(titleSource || '').trim();
 				if (!title) return null;
 				const sevRaw = String((a.severity ?? '') || '').toLowerCase();
@@ -212,8 +210,7 @@
 				else if (/(watch|orange|yellow)/.test(sevRaw)) level = 'watch';
 				else if (/advisory|statement/.test(sevRaw)) level = 'advisory';
 				const rawDesc = (a.description ?? a.desc) as any;
-				const description =
-					typeof rawDesc === 'string' ? rawDesc.trim() || undefined : undefined;
+				const description = typeof rawDesc === 'string' ? rawDesc.trim() || undefined : undefined;
 				const id = String((a.id ?? idx) as any);
 				return { id, title, severity: level, description };
 			})
@@ -275,12 +272,7 @@
 						{@const icon = alertIconFor(a.severity)}
 						<div class={'wx-alert-pill wx-alert-pill--' + a.severity}>
 							<span class="wx-alert-icon">
-								<img
-									class="wx-alert-icon-img"
-									src={icon}
-									alt=""
-									loading="lazy"
-								/>
+								<img class="wx-alert-icon-img" src={icon} alt="" loading="lazy" />
 							</span>
 							<span class="wx-alert-text">
 								<span class="wx-alert-label">{a.title}</span>
@@ -363,7 +355,9 @@
 				<div class="wx-current">
 					<div class="wx-current-temp">
 						<span class="temp">{tempF}</span>
-						<span class="unit">{#if typeof tempF === 'number'}°F{/if}</span>
+						<span class="unit"
+							>{#if typeof tempF === 'number'}°F{/if}</span
+						>
 					</div>
 					<div class="wx-feels-row">
 						{#if typeof feelsF === 'number'}
@@ -397,9 +391,13 @@
 									><img
 										class="wi wi-stat"
 										src="/svg/static/direction.svg"
-										alt={now?.windDeg !== undefined ? `Wind ${windDir(now.windDeg)}` : 'Wind direction'}
+										alt={now?.windDeg !== undefined
+											? `Wind ${windDir(now.windDeg)}`
+											: 'Wind direction'}
 										loading="lazy"
-										style={now?.windDeg !== undefined ? `transform: rotate(${now.windDeg}deg);` : ''}
+										style={now?.windDeg !== undefined
+											? `transform: rotate(${now.windDeg}deg);`
+											: ''}
 									/></span
 								>{windMphVal} mph</span
 							>
@@ -431,11 +429,11 @@
 								>{hm(sunrise)}</span
 							>{/if}
 						{#if sunset}<span class="item sunset" class:is-past={sunsetIsPast}
-									><span class="ico"
-										><img
-											class="wi wi-astro"
-											src="/svg/static/sunset.svg"
-											alt="Sunset"
+								><span class="ico"
+									><img
+										class="wi wi-astro"
+										src="/svg/static/sunset.svg"
+										alt="Sunset"
 										loading="lazy"
 									/></span
 								>{hm(sunset)}</span
@@ -453,11 +451,11 @@
 								>{hm(moonrise)}</span
 							>{/if}
 						{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
-									><span class="ico"
-										><img
-											class="wi wi-astro"
-											src="/svg/static/moonset.svg"
-											alt="Moonset"
+								><span class="ico"
+									><img
+										class="wi wi-astro"
+										src="/svg/static/moonset.svg"
+										alt="Moonset"
 										loading="lazy"
 									/></span
 								>{hm(moonset)}</span
@@ -489,15 +487,15 @@
 									? c2f(d.tempC.min)
 									: pick(d, ['low', 'min', 'minTemp', 'lo'])}
 						{@const pop =
-						(d as any)?.pop === null
-							? 0
+							(d as any)?.pop === null
+								? 0
 								: typeof (d as any)?.pop === 'number'
 									? Math.round((d as any).pop <= 1 ? (d as any).pop * 100 : (d as any).pop)
 									: typeof (d as any)?.precipPct === 'number'
 										? Math.round((d as any).precipPct)
 										: undefined}
 						{@const slug = iconSlugOf(d?.condition?.icon, d?.condition?.main || d?.condition?.desc)}
-					{@const icoUrl = `/svg/static/${slug}.svg`}
+						{@const icoUrl = `/svg/static/${slug}.svg`}
 						<li>
 							<div class="day">{label}</div>
 							<div class="wxi">

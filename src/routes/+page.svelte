@@ -11,10 +11,16 @@
 
 	onMount(() => {
 		const update = () => {
-			const el = document.querySelector('.cal-grid') as HTMLElement | null;
-			if (!el) return;
-			const top = Math.round(el.getBoundingClientRect().top + 50);
-			document.documentElement.style.setProperty('--wp-height', `${Math.max(0, top)}px`);
+			const calGrid = document.querySelector('.cal-grid') as HTMLElement | null;
+			const hero = document.querySelector('.hero') as HTMLElement | null;
+			if (!calGrid && !hero) return;
+			const calTop = calGrid ? calGrid.getBoundingClientRect().top : 0;
+			const heroBottom = hero ? hero.getBoundingClientRect().bottom : 0;
+			const y = Math.round(Math.max(calTop, heroBottom) + 50);
+			document.documentElement.style.setProperty(
+				'--wp-height',
+				`${Math.max(0, Math.min(window.innerHeight, y))}px`
+			);
 		};
 		const ro = new ResizeObserver(() => update());
 		const hero = document.querySelector('.hero') as HTMLElement | null;
