@@ -9,13 +9,13 @@ An information board for the family room built with SvelteKit. The layout is tun
 
 ## Project architecture
 
-| Layer | Responsibility | Key files |
-| --- | --- | --- |
-| UI components | Hero, calendar, weather, wallpaper, system status | `src/lib/components/*.svelte` |
-| Routes (pages) | Compose dashboard layout and load initial data | `src/routes/+page.svelte`, `src/routes/+layout.svelte` |
-| Server load | Prefetch weather and wallpaper photos for fast first paint | `src/routes/+layout.server.ts` |
-| API proxies | Fetch upstream calendar, weather, and system metrics | `src/routes/api/**` |
-| Static assets | Wallpapers, icons, SVGs | `static/` |
+| Layer          | Responsibility                                             | Key files                                              |
+| -------------- | ---------------------------------------------------------- | ------------------------------------------------------ |
+| UI components  | Hero, calendar, weather, wallpaper, system status          | `src/lib/components/*.svelte`                          |
+| Routes (pages) | Compose dashboard layout and load initial data             | `src/routes/+page.svelte`, `src/routes/+layout.svelte` |
+| Server load    | Prefetch weather and wallpaper photos for fast first paint | `src/routes/+layout.server.ts`                         |
+| API proxies    | Fetch upstream calendar, weather, and system metrics       | `src/routes/api/**`                                    |
+| Static assets  | Wallpapers, icons, SVGs                                    | `static/`                                              |
 
 State is managed through the Svelte 5 `$state` primitive inside components. Server routes proxy external APIs so browser clients never need upstream credentials.
 
@@ -56,15 +56,15 @@ yarn format  # Apply Prettier formatting
 
 Create a `.env` alongside the project root with the variables used by the proxy endpoints:
 
-| Variable | Purpose |
-| --- | --- |
-| `CAL_URL` | Base URL for the calendar events feed |
-| `CAL_API_KEY` | Optional API key header sent to calendar endpoints |
-| `CAL_CLIENT_ZONE` | Default timezone supplied to the calendar service |
-| `CAL_CALENDARS_URL` | Optional separate endpoint for calendar metadata/legend |
-| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather` |
-| `PHOTO_DIR` | Optional absolute/relative directory containing wallpaper JPGs |
-| `GPU_TEMP_FILE` | Optional file path for GPU temperature reporting |
+| Variable                      | Purpose                                                        |
+| ----------------------------- | -------------------------------------------------------------- |
+| `CAL_URL`                     | Base URL for the calendar events feed                          |
+| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints             |
+| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service              |
+| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend        |
+| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`               |
+| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs |
+| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting               |
 
 Example:
 
@@ -88,14 +88,14 @@ All network calls use the SvelteKit fetch polyfill, keeping credentials on the s
 
 ## Scripts
 
-| Script | Description |
-| --- | --- |
-| `yarn dev` | Run Vite dev server |
-| `yarn build` | Optimize photos (if `photos-src` exists) then build SvelteKit |
-| `yarn preview` | Preview the production build |
-| `yarn check` | Run `svelte-check` against `tsconfig.json` |
-| `yarn lint` | Run Prettier in check mode and ESLint |
-| `yarn format` | Format the codebase with Prettier |
+| Script                 | Description                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `yarn dev`             | Run Vite dev server                                                            |
+| `yarn build`           | Optimize photos (if `photos-src` exists) then build SvelteKit                  |
+| `yarn preview`         | Preview the production build                                                   |
+| `yarn check`           | Run `svelte-check` against `tsconfig.json`                                     |
+| `yarn lint`            | Run Prettier in check mode and ESLint                                          |
+| `yarn format`          | Format the codebase with Prettier                                              |
 | `yarn optimize:photos` | Downscale JPGs from `photos-src/` into `static/photos/` (requires ImageMagick) |
 
 ## Assets and attribution
