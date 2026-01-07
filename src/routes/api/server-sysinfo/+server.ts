@@ -33,6 +33,25 @@ async function readGpuTempC(): Promise<number | null> {
 	return null;
 }
 
+function readIpv4(): string | null {
+	const nets = os.networkInterfaces();
+	const names = Object.keys(nets);
+	const excluded = (name: string) => /^(lo|docker|br-|veth|virbr|vmnet|tun|tap|wg|tailscale|zt)/.test(name);
+	const preferred = names.filter((name) => /^(eth|en|wl|wlan)/.test(name));
+	const candidates = [preferred, names.filter((name) => !excluded(name)), names];
+
+	for (const list of candidates) {
+		for (const name of list) {
+			const iface = nets[name];
+			if (!iface) continue;
+			for (const net of iface) {
+				if (net.family === 'IPv4' && !net.internal) return net.address;
+			}
+		}
+	}
+	return null;
+}
+
 export const GET: RequestHandler = async () => {
 	const [load1, load5, load15] = os.loadavg();
 	const uptimeSec = os.uptime();
@@ -40,11 +59,13 @@ export const GET: RequestHandler = async () => {
 	const freeMem = os.freemem();
 	const usedMem = totalMem - freeMem;
 	const cpuCount = os.cpus()?.length ?? null;
+	const ipv4 = readIpv4();
 	const [cpuTempC, gpuTempC] = await Promise.all([readCpuTempC(), readGpuTempC()]);
 
 	const toMB = (bytes: number) => Math.round((bytes / (1024 * 1024)) * 10) / 10;
 
 	const payload = {
+		ipv4,
 		cpuCount,
 		cpuTempC,
 		gpuTempC,

@@ -570,7 +570,7 @@ body {
 
 .board {
 	display: grid;
-	gap: 0;
+	gap: 0.25rem;
 	grid-template-areas: 'hero' 'cal' 'sys';
 	grid-template-columns: 1fr;
 	grid-template-rows: 1fr auto max-content;
