@@ -12,7 +12,6 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"optimize:photos": "bash scripts/optimize-photos.sh",
-		"preinstall": "node preinstall.js",
 		"prepare": "svelte-kit sync || echo ''",
 		"preview": "vite preview",
 		"start": "node build"
