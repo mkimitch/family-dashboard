@@ -2,6 +2,15 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Wallpaper from '$lib/components/Wallpaper.svelte';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		const params = new URLSearchParams(window.location.search);
+		if (params.has('kiosk')) {
+			document.documentElement.dataset.kiosk = 'true';
+		}
+	});
+
 	let { children, data } = $props();
 </script>
 

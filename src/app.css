@@ -28,6 +28,11 @@
 	unicode-range: U+0C80-0CFF, U+200C-200D, U+25CC;
 }
 
+html[data-kiosk="true"],
+html[data-kiosk="true"] * {
+	cursor: none !important;
+}
+
 * {
 	box-sizing: border-box;
 }

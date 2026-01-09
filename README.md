@@ -56,15 +56,16 @@ yarn format  # Apply Prettier formatting
 
 Create a `.env` alongside the project root with the variables used by the proxy endpoints:
 
-| Variable                      | Purpose                                                        |
-| ----------------------------- | -------------------------------------------------------------- |
-| `CAL_URL`                     | Base URL for the calendar events feed                          |
-| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints             |
-| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service              |
-| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend        |
-| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`               |
-| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs |
-| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting               |
+| Variable                      | Purpose                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| `CAL_URL`                     | Base URL for the calendar events feed                                                 |
+| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints                                    |
+| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service                                     |
+| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend                               |
+| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`                                      |
+| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs                        |
+| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting (server only, not Pi)                |
+| `PI_SYSINFO_URL`              | Optional HTTP endpoint for Raspberry Pi system metrics (see Pi setup section below)   |
 
 Example:
 
@@ -75,8 +76,170 @@ CAL_CLIENT_ZONE="America/Chicago"
 CAL_CALENDARS_URL="https://example.com/api/calendars"
 WX_URL="https://example.com/api/weather"
 PHOTO_DIR="/mnt/photos/dashboard"
-GPU_TEMP_FILE="/sys/devices/gpu/temp"
+GPU_TEMP_FILE="/sys/class/hwmon/hwmon2/temp1_input"
+PI_SYSINFO_URL="http://192.168.1.100:9000/sysinfo"
 ```
+
+## Raspberry Pi system monitor setup
+
+The dashboard displays system metrics (CPU/GPU temperature, load, memory, uptime, IP address) for both the Raspberry Pi display host and the backend server. The server metrics are collected automatically via the `/api/server-sysinfo` endpoint, but the **Raspberry Pi metrics require a separate Python sidecar script** running on the Pi itself.
+
+### What `pi_sysinfo.py` does
+
+The `scripts/pi_sysinfo.py` script is a lightweight HTTP service that:
+
+- Reads Pi-specific metrics from `/proc/` (CPU temp, GPU temp via `vcgencmd`, load, memory, uptime)
+- Detects the Pi's local network IPv4 address (filtering out loopback, link-local, and Docker bridges)
+- Exposes this data as JSON at `http://<pi-ip>:9000/sysinfo`
+
+### Prerequisites on the Raspberry Pi
+
+- Python 3.7+
+- `vcgencmd` (included by default on Raspberry Pi OS)
+- Network connectivity between your Pi and the machine running the SvelteKit app
+
+### Step-by-step installation
+
+#### 1. Copy the script to your Raspberry Pi
+
+From your development machine:
+
+```sh
+scp scripts/pi_sysinfo.py <username>@<pi-ip>:/home/<username>/
+```
+
+Example:
+
+```sh
+scp scripts/pi_sysinfo.py mkimitch@192.168.1.100:/home/mkimitch/
+```
+
+#### 2. Test the script manually
+
+SSH into your Pi and run it:
+
+```sh
+ssh <username>@<pi-ip>
+python3 ~/pi_sysinfo.py --port 9000
+```
+
+You should see:
+
+```sh
+pi-sysinfo listening on http://127.0.0.1:9000/sysinfo
+```
+
+Test it locally on the Pi:
+
+```sh
+curl http://localhost:9000/sysinfo
+```
+
+This should return JSON with `ipv4`, `cpuTempC`, `gpuTempC`, `cpuCount`, `load`, `mem`, and `uptimeSec`.
+
+Press `Ctrl+C` to stop the script once verified.
+
+#### 3. Set up systemd service for autostart
+
+Create a systemd service file to run the script automatically at boot:
+
+```sh
+sudo nano /etc/systemd/system/pi-sysinfo.service
+```
+
+Add the following configuration (replace `<username>` with your actual username):
+
+```ini
+[Unit]
+Description=Raspberry Pi System Info HTTP Service
+After=network.target
+
+[Service]
+Type=simple
+User=<username>
+WorkingDirectory=/home/<username>
+ExecStart=/usr/bin/python3 /home/<username>/pi_sysinfo.py --port 9000
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save and exit (`Ctrl+X`, `Y`, `Enter`).
+
+#### 4. Enable and start the service
+
+```sh
+# Reload systemd to recognize the new service
+sudo systemctl daemon-reload
+
+# Enable the service to start at boot
+sudo systemctl enable pi-sysinfo.service
+
+# Start the service now
+sudo systemctl start pi-sysinfo.service
+```
+
+#### 5. Verify the service is running
+
+```sh
+# Check service status
+sudo systemctl status pi-sysinfo.service
+
+# View recent logs
+sudo journalctl -u pi-sysinfo.service -n 50
+
+# Follow logs in real-time
+sudo journalctl -u pi-sysinfo.service -f
+```
+
+You should see `Active: active (running)` in the status output.
+
+#### 6. Test from your development machine
+
+From your dev machine, verify you can reach the endpoint:
+
+```sh
+curl http://<pi-ip>:9000/sysinfo
+```
+
+Replace `<pi-ip>` with your Pi's actual IP address (e.g., `192.168.1.100`).
+
+### Configuring the SvelteKit app
+
+In your `.env` file on the development/server machine, add the Pi endpoint URL:
+
+```env
+PI_SYSINFO_URL=http://192.168.1.100:9000/sysinfo
+```
+
+The `SystemStatusStub` component will automatically poll this endpoint every 15 seconds and display the Pi's metrics in the dashboard.
+
+### Useful service management commands
+
+```sh
+# Restart the service (e.g., after updating the script)
+sudo systemctl restart pi-sysinfo.service
+
+# Stop the service
+sudo systemctl stop pi-sysinfo.service
+
+# Disable autostart
+sudo systemctl disable pi-sysinfo.service
+
+# View all logs since boot
+sudo journalctl -u pi-sysinfo.service
+```
+
+### Troubleshooting
+
+- **Service fails with "Failed at step USER"**: Check that the `User=` field in the service file matches your actual username. Run `whoami` on the Pi to confirm.
+- **IP shows as "unknown"**: The script may not be running, or the `hostname -I` command on your Pi isn't returning valid IPs. Check the service logs with `sudo journalctl -u pi-sysinfo.service`.
+- **Connection refused from SvelteKit app**: Ensure port 9000 is not blocked by a firewall on the Pi. Check with `sudo ufw status` if using UFW.
+- **Metrics not updating**: Verify the `PI_SYSINFO_URL` in your `.env` file matches your Pi's actual IP address and port.
 
 ## Data flow
 
