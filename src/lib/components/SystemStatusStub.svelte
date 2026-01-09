@@ -591,7 +591,7 @@
 			display: none;
 		}
 
-		@container (max-width: 1080px) {
+		@container (max-width: 1060px) {
 			& .metric--mem .bar {
 				display: none;
 			}
