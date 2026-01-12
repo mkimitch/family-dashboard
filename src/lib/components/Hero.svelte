@@ -1,5 +1,7 @@
 <script lang="ts">
+	import type { SchoolMenu as SchoolMenuType } from '../../routes/+layout.server';
 	import Clock from './Clock.svelte';
+	import SchoolMenu from './SchoolMenu.svelte';
 	import WeatherCard from './WeatherCard.svelte';
 
 	type Countdown = { label: string; value: string | number };
@@ -8,7 +10,8 @@
 		messageTitle = '',
 		messageSubtitle = '',
 		countdowns = [] as Countdown[],
-		weather = null
+		weather = null,
+		schoolMenu = null as SchoolMenuType | null,
 	} = $props();
 </script>
 
@@ -36,6 +39,8 @@
 				</ol>
 			</aside>
 		{/if}
+
+		<SchoolMenu {schoolMenu} />
 	</div>
 
 	<div class="hero-bottom">

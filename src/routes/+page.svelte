@@ -39,7 +39,7 @@
 </script>
 
 <main class="board">
-	<Hero {alerts} {messageTitle} {messageSubtitle} {countdowns} weather={data.weather} />
+	<Hero {alerts} {messageTitle} {messageSubtitle} {countdowns} weather={data.weather} schoolMenu={data.schoolMenu} />
 	<Calendar class="cal" />
 	<SystemStatusStub />
 </main>

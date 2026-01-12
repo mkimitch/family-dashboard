@@ -33,7 +33,15 @@
 
 <div
 	bind:this={container}
-	class={className}
+	class="lottie-icon {className}"
 	role={ariaLabel ? 'img' : undefined}
 	aria-label={ariaLabel || undefined}
 ></div>
+
+<style>
+	.lottie-icon :global(svg) {
+		display: block;
+		height: 100%;
+		width: 100%;
+	}
+</style>
