@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import SnowOverlay from '$lib/components/SnowOverlay.svelte';
 	import Wallpaper from '$lib/components/Wallpaper.svelte';
 	import { onMount } from 'svelte';
 
@@ -22,5 +23,6 @@
 
 <div class="app-root">
 	<Wallpaper initialPhotos={data.photos} />
+	<SnowOverlay />
 	<div class="app-content">{@render children()}</div>
 </div>

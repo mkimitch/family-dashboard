@@ -16,13 +16,13 @@
 
 	// Provide deterministic display metrics while developing without the Raspberry Pi endpoint.
 	const MOCK_PI: SysInfo = {
-		ipv4: '10.0.10.100',
-		cpuTempC: 69,
-		gpuTempC: 69,
-		cpuCount: 69,
-		load: { '1m': 0.69, '5m': 0.69, '15m': 0.69 },
-		uptimeSec: 3,
-		mem: { totalMB: 69, usedMB: 69, freeMB: 69 }
+		ipv4: '192.168.1.100',
+		cpuTempC: 75,
+		gpuTempC: 75,
+		cpuCount: 4,
+		load: { '1m': 1.69, '5m': 1.00, '15m': 4.00 },
+		uptimeSec: 60 * 79 * 11 * 7 * 20,
+		mem: { totalMB: 8192, usedMB: 4096, freeMB: 4096 }
 	};
 
 	// Refresh both endpoints every 15s to keep the dashboard metrics current without overloading the Pi.
@@ -103,6 +103,8 @@
 	}
 
 	async function fetchPi() {
+		if (dev) pi = MOCK_PI;
+		else {
 		try {
 			const r = await fetch('http://127.0.0.1:9000/sysinfo', { cache: 'no-store' });
 			if (!r.ok) {
@@ -121,6 +123,7 @@
 			pi = hasData ? data : dev ? MOCK_PI : null;
 		} catch {
 			pi = dev ? MOCK_PI : null;
+		}
 		}
 	}
 
@@ -350,44 +353,50 @@
 
 <style>
 	.sys-status {
-		--gap: 8px;
-		--font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-		--fs: 11.5px;
+		--bar-h: 14px;
+		--bar-w: 4cqi;
+		--bg: oklch(0.17 0.01 254.17);
+		--faint: color-mix(in oklab, oklch(1 0 231.14) 50%, transparent);
 		--fs-k: 9.5px;
 		--fs-s: 10.5px;
-		--weight: 600;
-		--tracking-k: 0.05em;
-		--bg: oklch(0.17 0.01 254.17);
-		--surface: color-mix(in oklab, oklch(1 0 231.14) 6%, transparent);
-		--surface-2: color-mix(in oklab, oklch(1 0 231.14) 4.5%, transparent);
-		--stroke: color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
-		--stroke-2: color-mix(in oklab, oklch(1 0 231.14) 9%, transparent);
-		--shadow: 0 6px 20px color-mix(in oklab, oklch(0 0 0) 60%, transparent);
-		--text: color-mix(in oklab, oklch(1 0 231.14) 95%, transparent);
-		--muted: color-mix(in oklab, oklch(1 0 231.14) 65%, transparent);
-		--faint: color-mix(in oklab, oklch(1 0 231.14) 50%, transparent);
-		--ok: oklch(0.84 0.16 145.75);
-		--warn: oklch(0.86 0.13 89.95);
+		--fs: 11.5px;
+		--gap: 8px;
 		--hot: oklch(0.73 0.16 25.78);
 		--info: oklch(0.79 0.12 246.66);
-		display: flex;
-		--bar-h: 14px;
-		--bar-w: 60px;
-		--r-pill: 999px;
+		--muted: color-mix(in oklab, oklch(1 0 231.14) 65%, transparent);
+		--ok: oklch(0.84 0.16 145.75);
 		--r-chip: 999px;
+		--r-pill: 999px;
+		--shadow: 0 6px 20px color-mix(in oklab, oklch(0 0 0) 60%, transparent);
+		--stroke-2: color-mix(in oklab, oklch(1 0 231.14) 9%, transparent);
+		--stroke: color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
+		--surface-2: color-mix(in oklab, oklch(1 0 231.14) 4.5%, transparent);
+		--surface: color-mix(in oklab, oklch(1 0 231.14) 6%, transparent);
+		--text: color-mix(in oklab, oklch(1 0 231.14) 95%, transparent);
+		--tracking-k: 0.05em;
+		--warn: oklch(0.86 0.13 89.95);
+		--weight: 600;
+		align-content: center;
 		align-items: center;
 		color: var(--text);
 		container-type: inline-size;
-		display: flex;
-		font-family: var(--font);
+		display: flex;;
 		font-size: var(--fs);
 		font-variant-numeric: tabular-nums;
 		gap: var(--gap);
 		grid-area: sys;
-		justify-content: center;
+		grid-auto-flow: column;
+		justify-content: space-evenly;
 		letter-spacing: 0.01em;
 		line-height: 1;
 		padding: 0;
+		padding: 0;
+
+		& * {
+			text-box: trim-both cap alphabetic;
+			text-wrap: nowrap;
+			white-space: nowrap;
+		}
 
 		/* .statusbar {
 			align-items: center;
@@ -408,23 +417,14 @@
 		& .host {
 			--accent: hsl(var(--accent-hue) 85% 62% / 1);
 			align-items: center;
-			background: var(--surface);
-			border: 1px solid var(--stroke);
-			border-radius: var(--r-pill);
-			box-shadow:
-				0 1px 0 color-mix(in oklab, oklch(1 0 231.14) 6%, transparent) inset,
-				var(--shadow);
+			container-name: host;
+			container-type: inline-size;
 			display: inline-flex;
-			flex: 0 1 auto;
+			flex: 1 1 max-content;
 			gap: 8px;
-			min-width: 0;
 			padding: 3px 8px;
 			transition: all 0.15s ease;
-		}
-
-		& .host:hover {
-			background: color-mix(in oklab, oklch(1 0 231.14) 7%, transparent);
-			border-color: color-mix(in oklab, oklch(1 0 231.14) 14%, transparent);
+			justify-content: center;
 		}
 
 		& .host__id {
@@ -432,7 +432,7 @@
 			border-right: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
 			display: inline-flex;
 			gap: 6px;
-			min-width: 0;
+			min-width: min-content;
 			padding-right: 8px;
 		}
 
@@ -451,18 +451,17 @@
 			direction: rtl;
 			font-weight: var(--weight);
 			max-width: 16ch;
-			min-width: 0;
+			min-width: min-content;
 			overflow: hidden;
 			text-align: left;
 			text-overflow: ellipsis;
-			white-space: nowrap;
 		}
 
 		& .metrics {
 			align-items: stretch;
 			display: inline-flex;
 			gap: 5px;
-			min-width: 0;
+			min-width: min-content;
 		}
 
 		& .metric {
@@ -478,9 +477,9 @@
 
 		& .metric svg {
 			fill: var(--stroke);
-			height: 1.4em;
+			height: 1.3rem;
 			stroke: var(--text);
-			width: 1.4em;
+			width: 1.3rem;
 		}
 
 		& .metric:hover {
@@ -591,17 +590,17 @@
 			display: none;
 		}
 
-		@container (max-width: 1060px) {
+		@container host (max-width: 1060px) {
 			& .metric--mem .bar {
-				display: none;
+				/* display: none; */
 			}
 
 			& .metric--mem .s {
-				display: none;
+				/* display: none; */
 			}
 		}
 
-		@container (max-width: 800px) {
+		@container host (max-width: 489.9px) {
 			& .metric--mem {
 				display: none;
 			}

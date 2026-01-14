@@ -1,9 +1,33 @@
 import type { LayoutServerLoad } from './$types';
 
+export type SchoolMenuItem = {
+	name: string;
+	station: string;
+	confidence: string;
+	ingredients?: string;
+	image_url?: string | null;
+};
+
+export type SchoolMenu = {
+	date: string;
+	generated_at: string;
+	vegetarian: SchoolMenuItem[];
+	ambiguous: SchoolMenuItem[];
+	unknown?: SchoolMenuItem[];
+	source?: {
+		host: string;
+		school: string;
+		menu_type: string;
+		week_start: string;
+		url: string;
+	};
+} | null;
+
 export const load: LayoutServerLoad = async ({ fetch }) => {
-	const [weatherRes, photosRes] = await Promise.all([
+	const [weatherRes, photosRes, schoolMenuRes] = await Promise.all([
 		fetch('/api/weather', { cache: 'no-store' }),
-		fetch('/api/photos', { cache: 'no-store' })
+		fetch('/api/photos', { cache: 'no-store' }),
+		fetch('/api/school-menu', { cache: 'no-store' })
 	]);
 
 	let weather: unknown = null;
@@ -27,8 +51,18 @@ export const load: LayoutServerLoad = async ({ fetch }) => {
 		}
 	}
 
+	let schoolMenu: SchoolMenu = null;
+	if (schoolMenuRes.ok) {
+		try {
+			schoolMenu = (await schoolMenuRes.json()) as SchoolMenu;
+		} catch {
+			schoolMenu = null;
+		}
+	}
+
 	return {
 		weather,
-		photos
+		photos,
+		schoolMenu
 	};
 };

@@ -27,8 +27,10 @@ build/
 .env.test.local
 .env.production.local
 .env.*
+*.service
 !.env.example
 !.env.test
+
 
 # Database & data
 data/

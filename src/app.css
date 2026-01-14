@@ -8,6 +8,7 @@
 	--weekend-wash: color-mix(in oklch, var(--muted), transparent 92%);
 	--today-ring: color-mix(in oklch, var(--accent), transparent 40%);
 	--today-fill: color-mix(in oklch, var(--accent), transparent 88%);
+	--snow-color: rgba(255,255,255,0.92);
 }
 
 @font-face {
@@ -195,6 +196,71 @@ body {
 	list-style: none;
 	margin: 0;
 	padding: 0.375rem 0.5rem;
+}
+
+/* School Lunch */
+.hero-lunch {
+	display: grid;
+	grid-template-columns: 1fr;
+	width: 15rem;
+
+	.lunch-header {
+		align-items: center;
+		display: flex;
+		gap: 0.625rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.lunch-icon {
+		flex-shrink: 0;
+		filter: drop-shadow(0 0 4px rgba(74, 222, 128, 0.5));
+		height: 1.75rem;
+		width: 1.75rem;
+	}
+
+	.lunch-header-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.lunch-title {
+		font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		line-height: 1.1;
+	}
+
+	.lunch-date {
+		color: var(--muted);
+		font-size: clamp(0.65rem, 1vw, 0.75rem);
+		font-weight: 500;
+	}
+
+	ul.lunch-items {
+		display: grid;
+		grid-template-rows: auto-fill;
+		gap: 0.375rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	li {
+		&.lunch-chip {
+			background: color-mix(in oklch, var(--card), transparent 40%);
+			border-radius: 0.75rem;
+			border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 88%);
+			font-size: clamp(0.7rem, 1.1vw, 0.8rem);
+			font-weight: 500;
+			padding: 0.25rem 0.625rem;
+		}
+
+		&.lunch-chip--maybe {
+			border: 1px dashed rgba(251, 191, 36, 0.5);
+			opacity: 0.75;
+		}
+	}
 }
 
 /* Clock */
@@ -510,7 +576,7 @@ body {
 				align-items: center;
 				display: flex;
 				height: 1.4rem;
-				width: auto;
+				width: 1.4rem;
 			}
 		}
 
@@ -518,7 +584,7 @@ body {
 			align-items: center;
 			display: flex;
 			height: 1.2rem;
-			width: auto;
+			width: 1.2rem;
 		}
 	}
 
@@ -541,9 +607,9 @@ body {
 			text-align: center;
 		}
 
-		.wxi img.wi-forecast {
-			display: inline;
-			height: auto;
+		.wxi .wi-forecast {
+			display: inline-block;
+			height: 3rem;
 			width: 3rem;
 		}
 
@@ -1060,7 +1126,13 @@ body {
 		padding: 0.5rem;
 	}
 
+	.cal {
+		align-self: end;
+		height: max-content;
+	}
+
 	.cal-grid {
+		background: color-mix(in oklch, var(--card), transparent 20%);
 		flex: 1;
 		grid-template-rows: auto 1fr;
 	}

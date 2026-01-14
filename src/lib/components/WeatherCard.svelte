@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
 	import LastUpdated from './LastUpdated.svelte';
+	import SnowCap from "$lib/components/SnowCap.svelte"
 
 	type Condition = { icon?: string; main?: string; desc?: string };
 	type Day = {
@@ -104,7 +105,6 @@
 		if (/cloud/.test(m)) return 'cloudy';
 		return night ? 'clear-night' : 'clear-day';
 	};
-	const iconUrlOf = (code?: string, main?: string) => `/svg/static/${iconSlugOf(code, main)}.svg`;
 	const lottiePathOf = (code?: string, main?: string) =>
 		`/lottie/weather/${iconSlugOf(code, main)}.json`;
 	const hm = (t?: string | number) => (t ? FMT_TIME.format(new Date(t)) : '—');
@@ -217,12 +217,12 @@
 			.filter((x): x is NormalizedAlert => !!x);
 	}
 
-	const alertIconFor = (severity: string): string => {
+	const alertLottieFor = (severity: string): string => {
 		const s = severity.toLowerCase();
-		if (s === 'warning') return '/svg/static/code-red.svg';
-		if (s === 'watch') return '/svg/static/code-orange.svg';
-		if (s === 'advisory') return '/svg/static/code-yellow.svg';
-		return '/svg/static/code-white.svg';
+		if (s === 'warning') return '/lottie/weather/code-red.json';
+		if (s === 'watch') return '/lottie/weather/code-orange.json';
+		if (s === 'advisory') return '/lottie/weather/code-yellow.json';
+		return '/lottie/weather/code-green.json';
 	};
 
 	async function loadWeather() {
@@ -269,10 +269,10 @@
 			{#if alerts.length}
 				<div class="wx-alerts" aria-live="polite" aria-label="Weather alerts">
 					{#each alerts.slice(0, 3) as a (a.id)}
-						{@const icon = alertIconFor(a.severity)}
+						{@const alertLottie = alertLottieFor(a.severity)}
 						<div class={'wx-alert-pill wx-alert-pill--' + a.severity}>
 							<span class="wx-alert-icon">
-								<img class="wx-alert-icon-img" src={icon} alt="" loading="lazy" />
+								<LottieWeatherIcon src={alertLottie} className="wx-alert-icon-img" />
 							</span>
 							<span class="wx-alert-text">
 								<span class="wx-alert-label">{a.title}</span>
@@ -335,7 +335,6 @@
 				(pick(now, ['summary', 'desc', 'text']) ?? '')}
 			{@const iconCode = now?.condition?.icon}
 			{@const iconMain = now?.condition?.main || now?.condition?.desc}
-			{@const iconUrl = iconUrlOf(iconCode, iconMain)}
 			{@const lottieSrc = lottiePathOf(iconCode, iconMain)}
 			{@const astro = (root.astronomy || (root as any).astro || {}) as any}
 			{@const sunrise = astro.sunrise || (root as any).sunrise}
@@ -350,6 +349,7 @@
 			{@const sunsetIsPast = sunsetDate ? +nowClock > +sunsetDate : false}
 			{@const moonriseIsPast = moonriseDate ? +nowClock > +moonriseDate : false}
 			{@const moonsetIsPast = moonsetDate ? +nowClock > +moonsetDate : false}
+			{@const moonriseFirst = !moonsetDate || (moonriseDate && +moonriseDate <= +moonsetDate)}
 
 			<div class="wx-current-main">
 				<div class="wx-current">
@@ -387,30 +387,29 @@
 					<div class="col metrics">
 						{#if typeof windMphVal === 'number'}
 							<span class="item wind"
-								><span class="ico"
-									><img
-										class="wi wi-stat"
-										src="/svg/static/direction.svg"
-										alt={now?.windDeg !== undefined
-											? `Wind ${windDir(now.windDeg)}`
-											: 'Wind direction'}
-										loading="lazy"
+								><span
+										class="ico"
 										style={now?.windDeg !== undefined
 											? `transform: rotate(${now.windDeg}deg);`
 											: ''}
-									/></span
+									><LottieWeatherIcon
+											src="/lottie/weather/wind.json"
+											className="wi wi-stat"
+											ariaLabel={now?.windDeg !== undefined
+												? `Wind ${windDir(now.windDeg)}`
+												: 'Wind'}
+										/></span
 								>{windMphVal} mph</span
 							>
 						{/if}
 						{#if (now?.humidity ?? (now as any)?.rh) !== undefined}
 							<span class="item humidity"
 								><span class="ico"
-									><img
-										class="wi wi-stat"
-										src="/svg/static/humidity.svg"
-										alt="Humidity"
-										loading="lazy"
-									/></span
+									><LottieWeatherIcon
+											src="/lottie/weather/humidity.json"
+											className="wi wi-stat"
+											ariaLabel="Humidity"
+										/></span
 								>{(now?.humidity ?? (now as any)?.rh) as number}%</span
 							>
 						{/if}
@@ -420,46 +419,63 @@
 					<div class="col sun">
 						{#if sunrise}<span class="item sunrise" class:is-past={sunriseIsPast}
 								><span class="ico"
-									><img
-										class="wi wi-astro"
-										src="/svg/static/sunrise.svg"
-										alt="Sunrise"
-										loading="lazy"
-									/></span
+									><LottieWeatherIcon
+											src="/lottie/weather/sunrise.json"
+											className="wi wi-astro"
+											ariaLabel="Sunrise"
+										/></span
 								>{hm(sunrise)}</span
 							>{/if}
 						{#if sunset}<span class="item sunset" class:is-past={sunsetIsPast}
 								><span class="ico"
-									><img
-										class="wi wi-astro"
-										src="/svg/static/sunset.svg"
-										alt="Sunset"
-										loading="lazy"
-									/></span
+									><LottieWeatherIcon
+											src="/lottie/weather/sunset.json"
+											className="wi wi-astro"
+											ariaLabel="Sunset"
+										/></span
 								>{hm(sunset)}</span
 							>{/if}
 					</div>
 					<div class="col moon">
-						{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
-								><span class="ico"
-									><img
-										class="wi wi-astro"
-										src="/svg/static/moonrise.svg"
-										alt="Moonrise"
-										loading="lazy"
-									/></span
-								>{hm(moonrise)}</span
-							>{/if}
-						{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
-								><span class="ico"
-									><img
-										class="wi wi-astro"
-										src="/svg/static/moonset.svg"
-										alt="Moonset"
-										loading="lazy"
-									/></span
-								>{hm(moonset)}</span
-							>{/if}
+						{#if moonriseFirst}
+							{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
+									><span class="ico"
+										><LottieWeatherIcon
+												src="/lottie/weather/moonrise.json"
+												className="wi wi-astro"
+												ariaLabel="Moonrise"
+											/></span
+									>{hm(moonrise)}</span
+								>{/if}
+							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
+									><span class="ico"
+										><LottieWeatherIcon
+												src="/lottie/weather/moonset.json"
+												className="wi wi-astro"
+												ariaLabel="Moonset"
+											/></span
+									>{hm(moonset)}</span
+								>{/if}
+						{:else}
+							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
+									><span class="ico"
+										><LottieWeatherIcon
+												src="/lottie/weather/moonset.json"
+												className="wi wi-astro"
+												ariaLabel="Moonset"
+											/></span
+									>{hm(moonset)}</span
+								>{/if}
+							{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
+									><span class="ico"
+										><LottieWeatherIcon
+												src="/lottie/weather/moonrise.json"
+												className="wi wi-astro"
+												ariaLabel="Moonrise"
+											/></span
+									>{hm(moonrise)}</span
+								>{/if}
+						{/if}
 					</div>
 				</div>
 			</div>
@@ -495,15 +511,14 @@
 										? Math.round((d as any).precipPct)
 										: undefined}
 						{@const slug = iconSlugOf(d?.condition?.icon, d?.condition?.main || d?.condition?.desc)}
-						{@const icoUrl = `/svg/static/${slug}.svg`}
+						{@const forecastLottie = `/lottie/weather/${slug}.json`}
 						<li>
 							<div class="day">{label}</div>
 							<div class="wxi">
-								<img
-									class="wi wi-forecast"
-									src={icoUrl}
-									alt={d?.condition?.main || d?.condition?.desc || ''}
-									loading="lazy"
+								<LottieWeatherIcon
+									src={forecastLottie}
+									className="wi wi-forecast"
+									ariaLabel={d?.condition?.main || d?.condition?.desc || ''}
 								/>
 							</div>
 							<div class="pop">{pop === undefined ? '' : `${pop}%`}</div>
