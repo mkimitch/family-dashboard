@@ -1184,10 +1184,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"devalue@npm:^5.3.2, devalue@npm:^5.5.0":
+"devalue@npm:^5.3.2":
   version: 5.6.1
   resolution: "devalue@npm:5.6.1"
   checksum: 10c0/4dca0e800336003fd1e268c142adfe78f3539cda7384b4f69762a93e0dfc33e223b580251da0a6da4be44962958fcba5eadf122f9720e09f437b28904af9c43e
+  languageName: node
+  linkType: hard
+
+"devalue@npm:^5.6.2":
+  version: 5.6.2
+  resolution: "devalue@npm:5.6.2"
+  checksum: 10c0/654f257ec525a2d3f35c941bfbb361148bc65ced060710969fbaa1c45abf1c9d7c4fcb77310bf8d2fb73c34cf60bad10710e7bf5b15643bbc082518ea04cb00b
   languageName: node
   linkType: hard
 
@@ -1510,7 +1517,7 @@ __metadata:
     lottie-web: "npm:^5.13.0"
     prettier: "npm:^3.6.2"
     prettier-plugin-svelte: "npm:^3.4.0"
-    svelte: "npm:^5.41.0"
+    svelte: "npm:^5.46.4"
     svelte-check: "npm:^4.3.3"
     typescript: "npm:^5.9.3"
     typescript-eslint: "npm:^8.46.1"
@@ -2639,9 +2646,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte@npm:^5.41.0":
-  version: 5.46.1
-  resolution: "svelte@npm:5.46.1"
+"svelte@npm:^5.46.4":
+  version: 5.46.4
+  resolution: "svelte@npm:5.46.4"
   dependencies:
     "@jridgewell/remapping": "npm:^2.3.4"
     "@jridgewell/sourcemap-codec": "npm:^1.5.0"
@@ -2651,14 +2658,14 @@ __metadata:
     aria-query: "npm:^5.3.1"
     axobject-query: "npm:^4.1.0"
     clsx: "npm:^2.1.1"
-    devalue: "npm:^5.5.0"
+    devalue: "npm:^5.6.2"
     esm-env: "npm:^1.2.1"
     esrap: "npm:^2.2.1"
     is-reference: "npm:^3.0.3"
     locate-character: "npm:^3.0.0"
     magic-string: "npm:^0.30.11"
     zimmerframe: "npm:^1.1.2"
-  checksum: 10c0/63ba18676fc8e1806795ac49b81b26ff69778ad5f89ae0bc6c3bb7c6ab4eab75a60793d8b9fda2380a789d8baaa01af9a5b2eb27cb27a35b42f356e2e4a6eaa3
+  checksum: 10c0/be108e9a0213223ea45967043f774b6448afa615b0f360b3b94d492bc0145854e8930a97a65cea8533234c2cf1f4f664f80b736402fb634fdba4c3eea2e52fd7
   languageName: node
   linkType: hard
 
