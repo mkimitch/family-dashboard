@@ -194,7 +194,7 @@
 		description?: string;
 	};
 
-	function normalizeAlerts(root: any): NormalizedAlert[] {
+	const normalizeAlerts = (root: any): NormalizedAlert[] => {
 		if (!root) return [];
 		const raw = (root.alerts ?? root.alert ?? root.warnings ?? []) as any;
 		const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
@@ -215,7 +215,7 @@
 				return { id, title, severity: level, description };
 			})
 			.filter((x): x is NormalizedAlert => !!x);
-	}
+	};
 
 	const alertLottieFor = (severity: string): string => {
 		const s = severity.toLowerCase();
@@ -225,7 +225,7 @@
 		return '/lottie/weather/code-green.json';
 	};
 
-	async function loadWeather() {
+	const loadWeather = async () => {
 		try {
 			const r = await fetch('/api/weather', { cache: 'no-store' });
 			if (!r.ok) return;
@@ -238,7 +238,7 @@
 			const ts = extractUpdatedAt(wx);
 			updatedAt = ts ?? new Date().toISOString();
 		} catch {}
-	}
+	};
 
 	onMount(() => {
 		if (wx && !updatedAt) {
