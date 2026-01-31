@@ -10,7 +10,7 @@
 	let { schoolMenu: initialMenu = null as SchoolMenu | null } = $props();
 	let menu = $state<SchoolMenu | null>(initialMenu);
 
-	async function fetchMenu() {
+	const fetchMenu = async () => {
 		try {
 			const res = await fetch('/api/school-menu', { cache: 'no-store' });
 			if (res.ok) {
@@ -19,9 +19,9 @@
 		} catch (e) {
 			console.error('SchoolMenu fetch failed:', e);
 		}
-	}
+	};
 
-	function getMsUntilDailyPoll(): number {
+	const getMsUntilDailyPoll = (): number => {
 		const now = new Date();
 		const formatter = new Intl.DateTimeFormat('en-US', {
 			timeZone: TIMEZONE,
@@ -44,9 +44,9 @@
 
 		if (diffMinutes <= 0) return -1; // Already past today's poll time
 		return diffMinutes * 60 * 1000;
-	}
+	};
 
-	function formatMenuDate(dateStr: string): string {
+	const formatMenuDate = (dateStr: string): string => {
 		const d = new Date(dateStr + 'T12:00:00');
 		const today = new Date();
 		const tomorrow = new Date(today);
@@ -58,7 +58,7 @@
 		if (isToday) return 'Today';
 		if (isTomorrow) return 'Tomorrow';
 		return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-	}
+	};
 
 	onMount(() => {
 		// Regular 90-minute polling

@@ -7,7 +7,7 @@ const CPU_TEMP_PATHS = [
 	'/sys/devices/virtual/thermal/thermal_zone0/temp'
 ];
 
-async function readCpuTempC(): Promise<number | null> {
+const readCpuTempC = async (): Promise<number | null> => {
 	for (const path of CPU_TEMP_PATHS) {
 		try {
 			const raw = await fs.readFile(path, 'utf8');
@@ -18,9 +18,9 @@ async function readCpuTempC(): Promise<number | null> {
 		}
 	}
 	return null;
-}
+};
 
-async function readGpuTempC(): Promise<number | null> {
+const readGpuTempC = async (): Promise<number | null> => {
 	const file = process.env.GPU_TEMP_FILE;
 	if (!file) return null;
 	try {
@@ -31,9 +31,9 @@ async function readGpuTempC(): Promise<number | null> {
 		// ignore
 	}
 	return null;
-}
+};
 
-function readIpv4(): string | null {
+const readIpv4 = (): string | null => {
 	const nets = os.networkInterfaces();
 	const names = Object.keys(nets);
 	const excluded = (name: string) => /^(lo|docker|br-|veth|virbr|vmnet|tun|tap|wg|tailscale|zt)/.test(name);
@@ -50,7 +50,7 @@ function readIpv4(): string | null {
 		}
 	}
 	return null;
-}
+};
 
 export const GET: RequestHandler = async () => {
 	const [load1, load5, load15] = os.loadavg();

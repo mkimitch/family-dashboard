@@ -10,10 +10,18 @@ export const GET: RequestHandler = async () => {
 		const dir = env.PHOTO_DIR
 			? path.resolve(env.PHOTO_DIR)
 			: path.resolve(process.cwd(), 'static', 'photos');
-		const entries = await fs.readdir(dir, { withFileTypes: true });
+
+		let entries = await fs.readdir(path.join(dir, 'kiosk'), { withFileTypes: true }).catch(() => null);
+		let urlPrefix = '/photos/kiosk';
+
+		if (!entries || !entries.some((d) => d.isFile() && IMAGES_RX.test(d.name))) {
+			entries = await fs.readdir(dir, { withFileTypes: true });
+			urlPrefix = '/photos';
+		}
+
 		const files = entries
 			.filter((d) => d.isFile() && IMAGES_RX.test(d.name))
-			.map((d) => `/photos/${d.name}`);
+			.map((d) => `${urlPrefix}/${d.name}`);
 		return new Response(JSON.stringify({ files }), {
 			status: 200,
 			headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }

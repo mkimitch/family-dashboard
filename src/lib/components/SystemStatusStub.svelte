@@ -32,27 +32,32 @@
 	let server: SysInfo | null = null;
 	let interval: number | undefined;
 
-	function clamp(min: number, n: number, max: number): number {
-		return Math.min(max, Math.max(min, n));
-	}
+	const clamp = (min: number, n: number, max: number): number =>
+		Math.min(max, Math.max(min, n));
 
 	type Tone = 'ok' | 'warn' | 'hot' | 'info';
 
-	function toneForPct(pct: number, thresholds: { hot?: number; warn?: number } = {}): Tone {
+	const toneForPct = (
+		pct: number,
+		thresholds: { hot?: number; warn?: number } = {}
+	): Tone => {
 		const { hot = 90, warn = 75 } = thresholds;
 		if (pct >= hot) return 'hot';
 		if (pct >= warn) return 'warn';
 		return 'ok';
-	}
+	};
 
-	function toneForTemp(c: number, thresholds: { hot?: number; warn?: number } = {}): Tone {
+	const toneForTemp = (
+		c: number,
+		thresholds: { hot?: number; warn?: number } = {}
+	): Tone => {
 		const { hot = 80, warn = 70 } = thresholds;
 		if (c >= hot) return 'hot';
 		if (c >= warn) return 'warn';
 		return 'ok';
-	}
+	};
 
-	function formatBytes(bytes: number): string {
+	const formatBytes = (bytes: number): string => {
 		if (!Number.isFinite(bytes)) return '';
 		const units = ['B', 'KB', 'MB', 'GB', 'TB'] as const;
 		let i = 0;
@@ -63,13 +68,11 @@
 		}
 		const decimals = i === 0 ? 0 : n < 10 ? 1 : 0;
 		return `${n.toFixed(decimals)}${units[i]}`;
-	}
+	};
 
-	function padNum(n: number): string {
-		return n < 10 ? ` ${n}` : `${n}`;
-	}
+	const padNum = (n: number): string => (n < 10 ? ` ${n}` : `${n}`);
 
-	function formatUptime(sec: number | null | undefined): string {
+	const formatUptime = (sec: number | null | undefined): string => {
 		if (sec == null || !Number.isFinite(sec)) return '';
 		const s = Math.floor(sec);
 		const days = Math.floor(s / 86400);
@@ -78,9 +81,9 @@
 		if (days > 0) return `${days}d ${hours}h`;
 		if (hours > 0) return `${hours}h ${minutes}m`;
 		return `${minutes}m`;
-	}
+	};
 
-	function formatLoad(load: Load | null | undefined, cpuCount?: number | null): string {
+	const formatLoad = (load: Load | null | undefined, cpuCount?: number | null): string => {
 		if (!load) return '';
 		const raw = load['1m'];
 		if (cpuCount && cpuCount > 0) {
@@ -88,21 +91,21 @@
 			return `${raw.toFixed(2)} (${pct}% of ${cpuCount}c)`;
 		}
 		return raw.toFixed(2);
-	}
+	};
 
-	function formatMem(mem: Mem | null | undefined): string {
+	const formatMem = (mem: Mem | null | undefined): string => {
 		if (!mem) return '';
 		const usedBytes = mem.usedMB * 1024 * 1024;
 		const totalBytes = mem.totalMB * 1024 * 1024;
 		return `${formatBytes(usedBytes)}/${formatBytes(totalBytes)}`;
-	}
+	};
 
-	function memPercent(mem: Mem | null | undefined): number | null {
+	const memPercent = (mem: Mem | null | undefined): number | null => {
 		if (!mem || !Number.isFinite(mem.totalMB) || mem.totalMB <= 0) return null;
 		return clamp(0, Math.round((mem.usedMB / mem.totalMB) * 100), 100);
-	}
+	};
 
-	async function fetchPi() {
+	const fetchPi = async () => {
 		if (dev) pi = MOCK_PI;
 		else {
 		try {
@@ -125,9 +128,9 @@
 			pi = dev ? MOCK_PI : null;
 		}
 		}
-	}
+	};
 
-	async function fetchServer() {
+	const fetchServer = async () => {
 		try {
 			const r = await fetch('/api/server-sysinfo', { cache: 'no-store' });
 			if (!r.ok) return;
@@ -135,7 +138,7 @@
 		} catch {
 			server = null;
 		}
-	}
+	};
 
 	onMount(() => {
 		if (typeof window === 'undefined') return;
@@ -380,16 +383,15 @@
 		align-items: center;
 		color: var(--text);
 		container-type: inline-size;
-		display: flex;;
+		display: grid;
 		font-size: var(--fs);
 		font-variant-numeric: tabular-nums;
 		gap: var(--gap);
 		grid-area: sys;
-		grid-auto-flow: column;
-		justify-content: space-evenly;
+		grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr));
 		letter-spacing: 0.01em;
 		line-height: 1;
-		padding: 0;
+		min-width: 0;
 		padding: 0;
 
 		& * {
@@ -415,24 +417,24 @@
 		} */
 
 		& .host {
-			--accent: hsl(var(--accent-hue) 85% 62% / 1);
 			align-items: center;
 			container-name: host;
 			container-type: inline-size;
-			display: inline-flex;
-			flex: 1 1 max-content;
+			display: flex;
 			gap: 8px;
+			justify-content: center;
+			min-width: 0;
 			padding: 3px 8px;
 			transition: all 0.15s ease;
-			justify-content: center;
 		}
 
 		& .host__id {
 			align-items: center;
 			border-right: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
 			display: inline-flex;
+			flex: 0 1 auto;
 			gap: 6px;
-			min-width: min-content;
+			min-width: 0;
 			padding-right: 8px;
 		}
 
@@ -450,8 +452,7 @@
 		& .host__ip {
 			direction: rtl;
 			font-weight: var(--weight);
-			max-width: 16ch;
-			min-width: min-content;
+			min-inline-size: max-content;
 			overflow: hidden;
 			text-align: left;
 			text-overflow: ellipsis;
@@ -459,27 +460,35 @@
 
 		& .metrics {
 			align-items: stretch;
-			display: inline-flex;
+			display: flex;
+			flex: 1 1 auto;
 			gap: 5px;
-			min-width: min-content;
+			min-width: 0;
+			overflow: hidden;
 		}
 
 		& .metric {
 			align-items: center;
 			background: var(--surface-2);
-			border: 1px solid var(--stroke-2);
 			border-radius: var(--r-chip);
+			border: 1px solid var(--stroke-2);
 			display: inline-flex;
+			flex: 0 1 auto;
 			gap: 5px;
+			min-width: 0;
 			padding: 2px 6px;
 			transition: all 0.15s ease;
 		}
 
+		& .metric span {
+			align-items: center;
+			display: inline-flex;
+		}
+
 		& .metric svg {
 			fill: var(--stroke);
-			height: 1.3rem;
+			inline-size: 1.2rem;
 			stroke: var(--text);
-			width: 1.3rem;
 		}
 
 		& .metric:hover {
@@ -497,6 +506,7 @@
 
 		& .metric .v {
 			font-weight: var(--weight);
+			white-space: wrap;
 		}
 
 		& .metric .s {
@@ -532,20 +542,25 @@
 		}
 
 		& .metric--mem {
+			flex: 1 0 1.2rem;
 			gap: 6px;
+			min-width: max-content;
 		}
 
 		& .metric--mem .bar {
 			--pct: 0%;
 			background: color-mix(in oklab, oklch(1 0 231.14) 8%, transparent);
-			border: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
 			border-radius: var(--r-pill);
+			border: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
 			box-shadow: 0 1px 3px color-mix(in oklab, oklch(0 0 0) 20%, transparent) inset;
 			display: flex;
+			flex: 1 1 7rem;
 			height: var(--bar-h);
+			inline-size: auto;
+			max-inline-size: 11rem;
+			min-inline-size: 1.75rem;
 			overflow: hidden;
 			position: relative;
-			width: var(--bar-w);
 		}
 
 		& .metric--mem .bar__fill {
@@ -580,7 +595,7 @@
 		}
 
 		& .metric--mem .s {
-			max-width: 14ch;
+			min-inline-size: max-content;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;
@@ -590,16 +605,48 @@
 			display: none;
 		}
 
-		@container host (max-width: 1060px) {
-			& .metric--mem .bar {
-				/* display: none; */
+		/* 1) Start stacking the "s" strings (load + mem details) */
+		@container host (max-width: 640px) {
+			/* & .metric--cpu,
+			& .metric--mem {
+				flex-wrap: wrap;
+				row-gap: 2px;
 			}
 
+			& .metric--cpu .s,
 			& .metric--mem .s {
+				flex: 1 0 100%;
+				min-width: 0;
+				text-align: right;
+				text-wrap: wrap;
+				white-space: normal;
+			} */
+
+			/* optional: hides the dot "·" so it doesn't end up dangling */
+			& .metric--cpu .k {
 				/* display: none; */
 			}
 		}
 
+		/* 2) If it gets tighter, drop those strings entirely */
+		@container host (max-width: 560px) {
+			& .metric--cpu .s {
+				display: none;
+			}
+
+			& .metric--mem .s {
+				display: none;
+			}
+		}
+
+		/* 3) If still tighter, drop the bar */
+		@container host (max-width: 500px) {
+			& .metric--mem .bar {
+				display: none;
+			}
+		}
+
+		/* 4) Your existing "mem metric disappears" threshold (kept) */
 		@container host (max-width: 489.9px) {
 			& .metric--mem {
 				display: none;

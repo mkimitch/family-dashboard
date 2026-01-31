@@ -25,16 +25,16 @@
 	let hasTs = $state(false);
 	let timer: number | undefined;
 
-	function toDate(input: string | Date | null | undefined): Date | null {
+	const toDate = (input: string | Date | null | undefined): Date | null => {
 		if (!input) return null;
 		if (input instanceof Date) {
 			return Number.isNaN(input.getTime()) ? null : input;
 		}
 		const d = new Date(input);
 		return Number.isNaN(d.getTime()) ? null : d;
-	}
+	};
 
-	function formatRelative(ts: Date, now: Date): string {
+	const formatRelative = (ts: Date, now: Date): string => {
 		const diffMs = now.getTime() - ts.getTime();
 		const diffSec = Math.round(diffMs / 1000);
 		if (diffSec < 0) return 'just now';
@@ -45,9 +45,9 @@
 		if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
 		const diffDay = Math.round(diffHr / 24);
 		return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
-	}
+	};
 
-	function recompute() {
+	const recompute = () => {
 		const dt = toDate(timestamp);
 		if (!dt) {
 			hasTs = false;
@@ -62,7 +62,7 @@
 		abs = FMT_TIME.format(dt);
 		const datePart = FMT_FULL_DATE.format(dt);
 		aria = `Updated at ${abs} on ${datePart}`;
-	}
+	};
 
 	$effect(() => {
 		recompute();
@@ -117,6 +117,6 @@
 	}
 
 	.last-updated-text {
-		white-space: nowrap;
+		white-space: normal;
 	}
 </style>

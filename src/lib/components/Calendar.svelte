@@ -54,19 +54,19 @@
 	const keyOf = (d: Date) => keyFormatter.format(d);
 	const sameDay = (a: Date, b: Date) => keyOf(a) === keyOf(b);
 
-	function startOfWeek(d: Date) {
+	const startOfWeek = (d: Date): Date => {
 		const r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 		const dow = r.getDay();
 		r.setDate(r.getDate() - dow);
 		return r;
-	}
-	function addDays(d: Date, n: number) {
+	};
+	const addDays = (d: Date, n: number): Date => {
 		const r = new Date(d);
 		r.setDate(r.getDate() + n);
 		return r;
-	}
+	};
 	const DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
-	function parseCalDate(v: any): Date {
+	const parseCalDate = (v: any): Date => {
 		if (v instanceof Date) return v;
 		if (typeof v === 'string') {
 			const m = v.match(DATE_ONLY_RE);
@@ -74,8 +74,8 @@
 		}
 		const n = typeof v === 'number' ? v : Date.parse(v);
 		return Number.isFinite(n) ? new Date(n) : new Date();
-	}
-	function extractDateInfo(v: any): { ymd: string | null; dt: Date | null } {
+	};
+	const extractDateInfo = (v: any): { ymd: string | null; dt: Date | null } => {
 		if (v instanceof Date) return { ymd: null, dt: v };
 		if (typeof v === 'string') {
 			if (DATE_ONLY_RE.test(v)) {
@@ -102,16 +102,15 @@
 			}
 		}
 		return { ymd: null, dt: null };
-	}
-	function startOfDay(d: Date) {
-		return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-	}
-	function daysBetween(a: Date, b: Date) {
+	};
+	const startOfDay = (d: Date): Date =>
+		new Date(d.getFullYear(), d.getMonth(), d.getDate());
+	const daysBetween = (a: Date, b: Date): number => {
 		const A = startOfDay(a).getTime();
 		const B = startOfDay(b).getTime();
 		return Math.round((B - A) / 86400000);
-	}
-	function isMidnightInZone(d: Date, zone: string | undefined): boolean {
+	};
+	const isMidnightInZone = (d: Date, zone: string | undefined): boolean => {
 		const parts = new Intl.DateTimeFormat('en-US', {
 			timeZone: zone,
 			hour: 'numeric',
@@ -121,7 +120,7 @@
 		}).formatToParts(d);
 		const val = (t: string) => Number(parts.find((p) => p.type === t)?.value || 0);
 		return val('hour') === 0 && val('minute') === 0 && val('second') === 0;
-	}
+	};
 	let ICON_SEQ = 0;
 	const iconIsSvg = (s?: string) => typeof s === 'string' && s.includes('<svg');
 	const iconIsUrl = (s?: string) =>
@@ -130,7 +129,7 @@
 			/^https?:\/\//.test(s) ||
 			s.startsWith('/') ||
 			/\.svg(\?|$)/i.test(s));
-	function namespaceSvgIds(svg: string): string {
+	const namespaceSvgIds = (svg: string): string => {
 		try {
 			if (typeof window === 'undefined' || typeof (window as any).DOMParser === 'undefined')
 				return svg;
@@ -183,12 +182,12 @@
 		} catch {
 			return svg;
 		}
-	}
+	};
 	const iconHtml = (s?: string) => (iconIsSvg(s) ? namespaceSvgIds(String(s).trim()) : '');
 
 	const looksLikeUrl = (s?: string) => typeof s === 'string' && /^(https?:)?\/\//i.test(s);
 	const looksLikeEmail = (s?: string) => typeof s === 'string' && /@/.test(s || '');
-	function displayCalName(c?: CalInfo): string {
+	const displayCalName = (c?: CalInfo): string => {
 		const raw = (c?.name || c?.id || '').trim();
 		if (!raw) return '';
 		if (looksLikeUrl(raw)) {
@@ -201,9 +200,9 @@
 		}
 		if (looksLikeEmail(raw)) return raw.split('@')[0];
 		return raw;
-	}
+	};
 
-	async function loadCalendars() {
+	const loadCalendars = async () => {
 		try {
 			const [remoteRes, cfgRes] = await Promise.all([
 				fetch('/api/calendars'),
@@ -254,9 +253,9 @@
 			}
 			calendars = map;
 		} catch {}
-	}
+	};
 
-	async function loadEvents() {
+	const loadEvents = async () => {
 		try {
 			const start = new Date();
 			start.setHours(0, 0, 0, 0);
@@ -405,26 +404,26 @@
 				}
 			}
 		} catch {}
-	}
+	};
 
-	function buildVisibleDays() {
+	const buildVisibleDays = () => {
 		const ymd = keyFormatter.format(new Date());
 		const parts = ymd.split('-').map(Number);
 		const start = new Date(parts[0], parts[1] - 1, parts[2]);
 		visibleDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
-	}
+	};
 
-	function isCurrent(e: Event) {
+	const isCurrent = (e: Event) => {
 		const s = e.start as Date;
 		const end = e.end ? (e.end as Date) : s;
 		return +now >= +s && +now <= +end;
-	}
-	function isPast(e: Event) {
+	};
+	const isPast = (e: Event) => {
 		const end = e.end ? (e.end as Date) : (e.start as Date);
 		return +now > +end;
-	}
+	};
 
-	function computeAllDayLayout() {
+	const computeAllDayLayout = () => {
 		// Track allocation ensures overlapping all-day events render in consistent rows without collisions.
 		const countsByDay: Record<string, number> = {};
 		const rowsByDay: Record<string, Array<{ e: Event; isStart: boolean; isEnd: boolean }>> = {};
@@ -511,9 +510,9 @@
 			}
 		}
 		return { countsByDay, rowsByDay };
-	}
+	};
 
-	function groupTimedForDay(d: Date): Array<{ mins: number; items: Event[] }> {
+	const groupTimedForDay = (d: Date): Array<{ mins: number; items: Event[] }> => {
 		const list = events.filter((e) => !e.allDay && sameDay(e.start as Date, d));
 		const groups = new Map<number, Event[]>();
 		for (const e of list) {
@@ -525,7 +524,7 @@
 		return Array.from(groups.entries())
 			.sort((a, b) => a[0] - b[0])
 			.map(([mins, items]) => ({ mins, items }));
-	}
+	};
 
 	onMount(() => {
 		buildVisibleDays();
