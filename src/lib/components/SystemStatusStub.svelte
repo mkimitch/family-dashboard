@@ -365,6 +365,7 @@
 		--fs: 11.5px;
 		--gap: 8px;
 		--hot: oklch(0.73 0.16 25.78);
+		--icon-size: 1.2rem;
 		--info: oklch(0.79 0.12 246.66);
 		--muted: color-mix(in oklab, oklch(1 0 231.14) 65%, transparent);
 		--ok: oklch(0.84 0.16 145.75);
@@ -379,6 +380,7 @@
 		--tracking-k: 0.05em;
 		--warn: oklch(0.86 0.13 89.95);
 		--weight: 600;
+
 		align-content: center;
 		align-items: center;
 		color: var(--text);
@@ -394,29 +396,13 @@
 		min-width: 0;
 		padding: 0;
 
-		& * {
+		* {
 			text-box: trim-both cap alphabetic;
 			text-wrap: nowrap;
 			white-space: nowrap;
 		}
 
-		/* .statusbar {
-			align-items: center;
-			container-type: inline-size;
-			display: flex;
-			flex-wrap: nowrap;
-			font-size: var(--fs);
-			font-variant-numeric: tabular-nums;
-			gap: var(--gap);
-			letter-spacing: 0.01em;
-			line-height: 1;
-			min-width: 0;
-			overflow: hidden;
-			white-space: nowrap;
-			width: 100%;
-		} */
-
-		& .host {
+		.host {
 			align-items: center;
 			container-name: host;
 			container-type: inline-size;
@@ -426,39 +412,45 @@
 			min-width: 0;
 			padding: 3px 8px;
 			transition: all 0.15s ease;
+
+			.host__id {
+				align-items: center;
+				border-right: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
+				display: inline-flex;
+				flex: 0 1 auto;
+				gap: 6px;
+				min-width: 0;
+				padding-right: 8px;
+			}
+
+			.host__id img {
+				block-size: var(--icon-size);
+				flex: 0 0 auto;
+				inline-size: var(--icon-size);
+			}
+
+			.host__dot {
+				background: var(--accent);
+				border-radius: 2px;
+				box-shadow:
+					0 0 0 2px color-mix(in oklab, oklch(1 0 231.14) 8%, transparent),
+					0 0 8px color-mix(in oklab, var(--accent) 40%, transparent);
+				flex: 0 0 auto;
+				height: 8px;
+				width: 8px;
+			}
+
+			.host__ip {
+				direction: rtl;
+				font-weight: var(--weight);
+				min-inline-size: max-content;
+				overflow: hidden;
+				text-align: left;
+				text-overflow: ellipsis;
+			}
 		}
 
-		& .host__id {
-			align-items: center;
-			border-right: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
-			display: inline-flex;
-			flex: 0 1 auto;
-			gap: 6px;
-			min-width: 0;
-			padding-right: 8px;
-		}
-
-		& .host__dot {
-			background: var(--accent);
-			border-radius: 2px;
-			box-shadow:
-				0 0 0 2px color-mix(in oklab, oklch(1 0 231.14) 8%, transparent),
-				0 0 8px color-mix(in oklab, var(--accent) 40%, transparent);
-			flex: 0 0 auto;
-			height: 8px;
-			width: 8px;
-		}
-
-		& .host__ip {
-			direction: rtl;
-			font-weight: var(--weight);
-			min-inline-size: max-content;
-			overflow: hidden;
-			text-align: left;
-			text-overflow: ellipsis;
-		}
-
-		& .metrics {
+		.metrics {
 			align-items: stretch;
 			display: flex;
 			flex: 1 1 auto;
@@ -467,7 +459,7 @@
 			overflow: hidden;
 		}
 
-		& .metric {
+		.metric {
 			align-items: center;
 			background: var(--surface-2);
 			border-radius: var(--r-chip);
@@ -478,177 +470,153 @@
 			min-width: 0;
 			padding: 2px 6px;
 			transition: all 0.15s ease;
-		}
 
-		& .metric span {
-			align-items: center;
-			display: inline-flex;
-		}
-
-		& .metric svg {
-			fill: var(--stroke);
-			inline-size: 1.2rem;
-			stroke: var(--text);
-		}
-
-		& .metric:hover {
-			background: color-mix(in oklab, oklch(1 0 231.14) 6%, transparent);
-			border-color: color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
-		}
-
-		& .metric .k {
-			color: var(--muted);
-			font-size: var(--fs-k);
-			font-weight: 500;
-			letter-spacing: var(--tracking-k);
-			text-transform: uppercase;
-		}
-
-		& .metric .v {
-			font-weight: var(--weight);
-			white-space: wrap;
-		}
-
-		& .metric .s {
-			color: var(--faint);
-			font-size: var(--fs-s);
-		}
-
-		& .metric[data-tone='ok'] .v {
-			color: var(--ok);
-			text-shadow: 0 0 8px color-mix(in oklab, var(--ok) 30%, transparent);
-		}
-
-		& .metric[data-tone='warn'] .v {
-			color: var(--warn);
-			text-shadow: 0 0 8px color-mix(in oklab, var(--warn) 30%, transparent);
-		}
-
-		& .metric[data-tone='hot'] .v {
-			color: var(--hot);
-			text-shadow: 0 0 8px color-mix(in oklab, var(--hot) 30%, transparent);
-		}
-
-		& .metric[data-tone='info'] .v {
-			color: var(--info);
-		}
-
-		& .metric--load .k {
-			display: none;
-		}
-
-		& .metric--load .v {
-			letter-spacing: 0.02em;
-		}
-
-		& .metric--mem {
-			flex: 1 0 1.2rem;
-			gap: 6px;
-			min-width: max-content;
-		}
-
-		& .metric--mem .bar {
-			--pct: 0%;
-			background: color-mix(in oklab, oklch(1 0 231.14) 8%, transparent);
-			border-radius: var(--r-pill);
-			border: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
-			box-shadow: 0 1px 3px color-mix(in oklab, oklch(0 0 0) 20%, transparent) inset;
-			display: flex;
-			flex: 1 1 7rem;
-			height: var(--bar-h);
-			inline-size: auto;
-			max-inline-size: 11rem;
-			min-inline-size: 1.75rem;
-			overflow: hidden;
-			position: relative;
-		}
-
-		& .metric--mem .bar__fill {
-			background: linear-gradient(
-				90deg,
-				var(--accent),
-				color-mix(in oklab, var(--accent) 70%, transparent)
-			);
-			border-radius: var(--r-pill);
-			box-shadow:
-				0 0 8px color-mix(in oklab, var(--accent) 50%, transparent),
-				0 1px 0 color-mix(in oklab, oklch(1 0 231.14) 20%, transparent) inset;
-			height: 100%;
-			position: relative;
-			transition: width 0.3s ease;
-			width: var(--pct);
-		}
-
-		& .metric--mem .bar__fill::after {
-			background: linear-gradient(
-				180deg,
-				color-mix(in oklab, oklch(1 0 231.14) 25%, transparent),
-				transparent
-			);
-			border-radius: var(--r-pill);
-			content: '';
-			height: 50%;
-			left: 0;
-			position: absolute;
-			right: 0;
-			top: 0;
-		}
-
-		& .metric--mem .s {
-			min-inline-size: max-content;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		& .metric--up .k {
-			display: none;
-		}
-
-		/* 1) Start stacking the "s" strings (load + mem details) */
-		@container host (max-width: 640px) {
-			/* & .metric--cpu,
-			& .metric--mem {
-				flex-wrap: wrap;
-				row-gap: 2px;
+			span {
+				align-items: center;
+				display: inline-flex;
 			}
 
-			& .metric--cpu .s,
-			& .metric--mem .s {
-				flex: 1 0 100%;
-				min-width: 0;
-				text-align: right;
-				text-wrap: wrap;
-				white-space: normal;
-			} */
+			svg {
+				fill: var(--stroke);
+				block-size: var(--icon-size);
+				flex: 0 0 auto;
+				inline-size: var(--icon-size);
+				stroke: var(--text);
+			}
 
-			/* optional: hides the dot "·" so it doesn't end up dangling */
-			& .metric--cpu .k {
-				/* display: none; */
+			&:hover {
+				background: color-mix(in oklab, oklch(1 0 231.14) 6%, transparent);
+				border-color: color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
+			}
+
+			.k {
+				color: var(--muted);
+				font-size: var(--fs-k);
+				font-weight: 500;
+				letter-spacing: var(--tracking-k);
+				text-transform: uppercase;
+			}
+
+			.v {
+				font-weight: var(--weight);
+				white-space: nowrap;
+			}
+
+			.s {
+				color: var(--faint);
+				font-size: var(--fs-s);
+			}
+
+			&[data-tone='ok'] .v {
+				color: var(--ok);
+				text-shadow: 0 0 8px color-mix(in oklab, var(--ok) 30%, transparent);
+			}
+
+			&[data-tone='warn'] .v {
+				color: var(--warn);
+				text-shadow: 0 0 8px color-mix(in oklab, var(--warn) 30%, transparent);
+			}
+
+			&[data-tone='hot'] .v {
+				color: var(--hot);
+				text-shadow: 0 0 8px color-mix(in oklab, var(--hot) 30%, transparent);
+			}
+
+			&[data-tone='info'] .v {
+				color: var(--info);
+			}
+
+			&.metric--load {
+				.k {
+					display: none;
+				}
+
+				.v {
+					letter-spacing: 0.02em;
+				}
+			}
+
+			&.metric--mem {
+				flex: 1 0 1.2rem;
+				gap: 6px;
+				min-width: max-content;
+
+				.bar {
+					--pct: 0%;
+
+					background: color-mix(in oklab, oklch(1 0 231.14) 8%, transparent);
+					border-radius: var(--r-pill);
+					border: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
+					box-shadow: 0 1px 3px color-mix(in oklab, oklch(0 0 0) 20%, transparent) inset;
+					display: flex;
+					flex: 1 1 7rem;
+					height: var(--bar-h);
+					inline-size: auto;
+					max-inline-size: 11rem;
+					min-inline-size: 1.75rem;
+					overflow: hidden;
+					position: relative;
+
+					.bar__fill {
+						background: linear-gradient(
+							90deg,
+							var(--accent),
+							color-mix(in oklab, var(--accent) 70%, transparent)
+						);
+						border-radius: var(--r-pill);
+						box-shadow:
+							0 0 8px color-mix(in oklab, var(--accent) 50%, transparent),
+							0 1px 0 color-mix(in oklab, oklch(1 0 231.14) 20%, transparent) inset;
+						height: 100%;
+						position: relative;
+						transition: width 0.3s ease;
+						width: var(--pct);
+
+						&::after {
+							background: linear-gradient(
+								180deg,
+								color-mix(in oklab, oklch(1 0 231.14) 25%, transparent),
+								transparent
+							);
+							border-radius: var(--r-pill);
+							content: '';
+							height: 50%;
+							left: 0;
+							position: absolute;
+							right: 0;
+							top: 0;
+						}
+					}
+				}
+
+				.s {
+					min-inline-size: max-content;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+			}
+
+			&.metric--up .k {
+				display: none;
 			}
 		}
 
-		/* 2) If it gets tighter, drop those strings entirely */
 		@container host (max-width: 560px) {
-			& .metric--cpu .s {
-				display: none;
-			}
-
-			& .metric--mem .s {
+			.metric--cpu .s,
+			.metric--mem .s {
 				display: none;
 			}
 		}
 
-		/* 3) If still tighter, drop the bar */
 		@container host (max-width: 500px) {
-			& .metric--mem .bar {
+			.metric--mem .bar {
 				display: none;
 			}
 		}
 
-		/* 4) Your existing "mem metric disappears" threshold (kept) */
 		@container host (max-width: 489.9px) {
-			& .metric--mem {
+			.metric--mem {
 				display: none;
 			}
 		}
