@@ -14,7 +14,9 @@ export const GET: RequestHandler = async ({ url }) => {
 		const body = await r.text();
 		return new Response(body, {
 			status: r.status,
-			headers: { 'content-type': r.headers.get('content-type') ?? 'application/json; charset=utf-8' }
+			headers: {
+				'content-type': r.headers.get('content-type') ?? 'application/json; charset=utf-8'
+			}
 		});
 	} catch (err) {
 		console.error('Weather API fetch failed:', err);

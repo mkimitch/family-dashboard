@@ -85,22 +85,70 @@
 </script>
 
 {#if menu?.vegetarian?.length || menu?.ambiguous?.length}
-	<aside class="hero-lunch hero-card" aria-label="School Lunch">
-		<div class="lunch-header">
-			<img src="/svg/static/school-lunch-tray-2.svg" alt="" class="lunch-icon" />
-			<div class="lunch-header-text">
-				<span class="lunch-title">School Lunch Options</span>
-				<span class="lunch-date">{formatMenuDate(menu.date)}</span>
-			</div>
+	<div class="lunch-header">
+		<img src="/svg/static/school-lunch-tray-2.svg" alt="" class="lunch-icon" />
+		<div class="lunch-header-text">
+			<span class="lunch-title">School Lunch Options</span>
+			<span class="lunch-date">{formatMenuDate(menu.date)}</span>
 		</div>
-		<ul class="lunch-items">
-			{#each menu.vegetarian as item}
-				<li class="lunch-chip">{item.name}</li>
-			{/each}
-			{#each menu.ambiguous as item}
-				<li class="lunch-chip lunch-chip--maybe" title="May or may not be vegetarian">{item.name}</li>
-			{/each}
-		</ul>
-	</aside>
+	</div>
+	<ul class="lunch-items">
+		{#each menu.vegetarian as item}
+			<li class="lunch-chip">{item.name}</li>
+		{/each}
+		{#each menu.ambiguous as item}
+			<li class="lunch-chip lunch-chip--maybe" title="May or may not be vegetarian">{item.name}</li>
+		{/each}
+	</ul>
 {/if}
 
+<style>
+	.lunch-header {
+		align-items: center;
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.lunch-icon {
+		height: 2rem;
+		width: 2rem;
+	}
+
+	.lunch-header-text {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.lunch-title {
+		font-weight: 600;
+		font-size: 1.125rem;
+	}
+
+	.lunch-date {
+		font-size: 0.875rem;
+		color: var(--muted-foreground);
+	}
+
+	.lunch-items {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.lunch-chip {
+		background: var(--accent);
+		color: var(--accent-foreground);
+		padding: 0.25rem 0.75rem;
+		border-radius: 9999px;
+		font-size: 0.875rem;
+	}
+
+	.lunch-chip--maybe {
+		background: var(--muted);
+		color: var(--muted-foreground);
+	}
+</style>

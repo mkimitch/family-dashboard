@@ -103,8 +103,7 @@
 		}
 		return { ymd: null, dt: null };
 	};
-	const startOfDay = (d: Date): Date =>
-		new Date(d.getFullYear(), d.getMonth(), d.getDate());
+	const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 	const daysBetween = (a: Date, b: Date): number => {
 		const A = startOfDay(a).getTime();
 		const B = startOfDay(b).getTime();
