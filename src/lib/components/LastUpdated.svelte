@@ -6,7 +6,7 @@
 		className?: string;
 	};
 
-	let { timestamp = null, className = '' } = $props<LastUpdatedProps>();
+	let { timestamp = null, className = '' }: LastUpdatedProps = $props();
 
 	const FMT_TIME = new Intl.DateTimeFormat(undefined, {
 		hour: 'numeric',

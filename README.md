@@ -56,16 +56,16 @@ yarn format  # Apply Prettier formatting
 
 Create a `.env` alongside the project root with the variables used by the proxy endpoints:
 
-| Variable                      | Purpose                                                                               |
-| ----------------------------- | ------------------------------------------------------------------------------------- |
-| `CAL_URL`                     | Base URL for the calendar events feed                                                 |
-| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints                                    |
-| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service                                     |
-| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend                               |
-| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`                                      |
-| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs                        |
-| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting (server only, not Pi)                |
-| `PI_SYSINFO_URL`              | Optional HTTP endpoint for Raspberry Pi system metrics (see Pi setup section below)   |
+| Variable                      | Purpose                                                                             |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| `CAL_URL`                     | Base URL for the calendar events feed                                               |
+| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints                                  |
+| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service                                   |
+| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend                             |
+| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`                                    |
+| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs                      |
+| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting (server only, not Pi)              |
+| `PI_SYSINFO_URL`              | Optional HTTP endpoint for Raspberry Pi system metrics (see Pi setup section below) |
 
 Example:
 

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
 	import LastUpdated from './LastUpdated.svelte';
-	import SnowCap from "$lib/components/SnowCap.svelte"
+	import SnowCap from '$lib/components/SnowCap.svelte';
 
 	type Condition = { icon?: string; main?: string; desc?: string };
 	type Day = {
@@ -388,17 +388,13 @@
 						{#if typeof windMphVal === 'number'}
 							<span class="item wind"
 								><span
-										class="ico"
-										style={now?.windDeg !== undefined
-											? `transform: rotate(${now.windDeg}deg);`
-											: ''}
+									class="ico"
+									style={now?.windDeg !== undefined ? `transform: rotate(${now.windDeg}deg);` : ''}
 									><LottieWeatherIcon
-											src="/lottie/weather/wind.json"
-											className="wi wi-stat"
-											ariaLabel={now?.windDeg !== undefined
-												? `Wind ${windDir(now.windDeg)}`
-												: 'Wind'}
-										/></span
+										src="/lottie/weather/wind.json"
+										className="wi wi-stat"
+										ariaLabel={now?.windDeg !== undefined ? `Wind ${windDir(now.windDeg)}` : 'Wind'}
+									/></span
 								>{windMphVal} mph</span
 							>
 						{/if}
@@ -406,10 +402,10 @@
 							<span class="item humidity"
 								><span class="ico"
 									><LottieWeatherIcon
-											src="/lottie/weather/humidity.json"
-											className="wi wi-stat"
-											ariaLabel="Humidity"
-										/></span
+										src="/lottie/weather/humidity.json"
+										className="wi wi-stat"
+										ariaLabel="Humidity"
+									/></span
 								>{(now?.humidity ?? (now as any)?.rh) as number}%</span
 							>
 						{/if}
@@ -420,19 +416,19 @@
 						{#if sunrise}<span class="item sunrise" class:is-past={sunriseIsPast}
 								><span class="ico"
 									><LottieWeatherIcon
-											src="/lottie/weather/sunrise.json"
-											className="wi wi-astro"
-											ariaLabel="Sunrise"
-										/></span
+										src="/lottie/weather/sunrise.json"
+										className="wi wi-astro"
+										ariaLabel="Sunrise"
+									/></span
 								>{hm(sunrise)}</span
 							>{/if}
 						{#if sunset}<span class="item sunset" class:is-past={sunsetIsPast}
 								><span class="ico"
 									><LottieWeatherIcon
-											src="/lottie/weather/sunset.json"
-											className="wi wi-astro"
-											ariaLabel="Sunset"
-										/></span
+										src="/lottie/weather/sunset.json"
+										className="wi wi-astro"
+										ariaLabel="Sunset"
+									/></span
 								>{hm(sunset)}</span
 							>{/if}
 					</div>
@@ -441,38 +437,38 @@
 							{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
 									><span class="ico"
 										><LottieWeatherIcon
-												src="/lottie/weather/moonrise.json"
-												className="wi wi-astro"
-												ariaLabel="Moonrise"
-											/></span
+											src="/lottie/weather/moonrise.json"
+											className="wi wi-astro"
+											ariaLabel="Moonrise"
+										/></span
 									>{hm(moonrise)}</span
 								>{/if}
 							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
 									><span class="ico"
 										><LottieWeatherIcon
-												src="/lottie/weather/moonset.json"
-												className="wi wi-astro"
-												ariaLabel="Moonset"
-											/></span
+											src="/lottie/weather/moonset.json"
+											className="wi wi-astro"
+											ariaLabel="Moonset"
+										/></span
 									>{hm(moonset)}</span
 								>{/if}
 						{:else}
 							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
 									><span class="ico"
 										><LottieWeatherIcon
-												src="/lottie/weather/moonset.json"
-												className="wi wi-astro"
-												ariaLabel="Moonset"
-											/></span
+											src="/lottie/weather/moonset.json"
+											className="wi wi-astro"
+											ariaLabel="Moonset"
+										/></span
 									>{hm(moonset)}</span
 								>{/if}
 							{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
 									><span class="ico"
 										><LottieWeatherIcon
-												src="/lottie/weather/moonrise.json"
-												className="wi wi-astro"
-												ariaLabel="Moonrise"
-											/></span
+											src="/lottie/weather/moonrise.json"
+											className="wi wi-astro"
+											ariaLabel="Moonrise"
+										/></span
 									>{hm(moonrise)}</span
 								>{/if}
 						{/if}
