@@ -415,6 +415,7 @@
 
 		align-content: center;
 		align-items: center;
+		backdrop-filter: blur(0.3rem);
 		color: var(--text);
 		container-type: inline-size;
 		display: grid;
@@ -428,13 +429,13 @@
 		min-width: 0;
 		padding: 0;
 
-		* {
+		& * {
 			text-box: trim-both cap alphabetic;
 			text-wrap: nowrap;
 			white-space: nowrap;
 		}
 
-		.host {
+		& .host {
 			align-items: center;
 			container-name: host;
 			container-type: inline-size;
@@ -445,7 +446,7 @@
 			padding: 3px 8px;
 			transition: all 0.15s ease;
 
-			.host__id {
+			& .host__id {
 				align-items: center;
 				border-right: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
 				display: inline-flex;
@@ -453,15 +454,15 @@
 				gap: 6px;
 				min-width: 0;
 				padding-right: 8px;
+
+				& img {
+					block-size: var(--icon-size);
+					flex: 0 0 auto;
+					inline-size: var(--icon-size);
+				}
 			}
 
-			.host__id img {
-				block-size: var(--icon-size);
-				flex: 0 0 auto;
-				inline-size: var(--icon-size);
-			}
-
-			.host__dot {
+			& .host__dot {
 				background: var(--accent);
 				border-radius: 2px;
 				box-shadow:
@@ -472,7 +473,7 @@
 				width: 8px;
 			}
 
-			.host__ip {
+			& .host__ip {
 				direction: rtl;
 				font-weight: var(--weight);
 				min-inline-size: max-content;
@@ -482,7 +483,7 @@
 			}
 		}
 
-		.metrics {
+		& .metrics {
 			align-items: stretch;
 			display: flex;
 			flex: 1 1 auto;
@@ -491,11 +492,11 @@
 			overflow: hidden;
 		}
 
-		.metric {
+		& .metric {
 			align-items: center;
 			background: var(--surface-2);
-			border-radius: var(--r-chip);
 			border: 1px solid var(--stroke-2);
+			border-radius: var(--r-chip);
 			display: inline-flex;
 			flex: 0 1 auto;
 			gap: 5px;
@@ -503,14 +504,14 @@
 			padding: 2px 6px;
 			transition: all 0.15s ease;
 
-			span {
+			& span {
 				align-items: center;
 				display: inline-flex;
 			}
 
-			svg {
-				fill: var(--stroke);
+			& svg {
 				block-size: var(--icon-size);
+				fill: var(--stroke);
 				flex: 0 0 auto;
 				inline-size: var(--icon-size);
 				stroke: var(--text);
@@ -521,7 +522,7 @@
 				border-color: color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
 			}
 
-			.k {
+			& .k {
 				color: var(--muted);
 				font-size: var(--fs-k);
 				font-weight: 500;
@@ -529,12 +530,12 @@
 				text-transform: uppercase;
 			}
 
-			.v {
+			& .v {
 				font-weight: var(--weight);
 				white-space: nowrap;
 			}
 
-			.s {
+			& .s {
 				color: var(--faint);
 				font-size: var(--fs-s);
 			}
@@ -559,11 +560,11 @@
 			}
 
 			&.metric--load {
-				.k {
+				& .k {
 					display: none;
 				}
 
-				.v {
+				& .v {
 					letter-spacing: 0.02em;
 				}
 			}
@@ -573,12 +574,12 @@
 				gap: 6px;
 				min-width: max-content;
 
-				.bar {
+				& .bar {
 					--pct: 0%;
 
 					background: color-mix(in oklab, oklch(1 0 231.14) 8%, transparent);
-					border-radius: var(--r-pill);
 					border: 1px solid color-mix(in oklab, oklch(1 0 231.14) 12%, transparent);
+					border-radius: var(--r-pill);
 					box-shadow: 0 1px 3px color-mix(in oklab, oklch(0 0 0) 20%, transparent) inset;
 					display: flex;
 					flex: 1 1 7rem;
@@ -589,7 +590,7 @@
 					overflow: hidden;
 					position: relative;
 
-					.bar__fill {
+					& .bar__fill {
 						background: linear-gradient(
 							90deg,
 							var(--accent),
@@ -621,7 +622,7 @@
 					}
 				}
 
-				.s {
+				& .s {
 					min-inline-size: max-content;
 					overflow: hidden;
 					text-overflow: ellipsis;
@@ -629,26 +630,28 @@
 				}
 			}
 
-			&.metric--up .k {
-				display: none;
+			&.metric--up {
+				& .k {
+					display: none;
+				}
 			}
 		}
 
 		@container host (max-width: 560px) {
-			.metric--cpu .s,
-			.metric--mem .s {
+			& .metric--cpu .s,
+			& .metric--mem .s {
 				display: none;
 			}
 		}
 
 		@container host (max-width: 500px) {
-			.metric--mem .bar {
+			& .metric--mem .bar {
 				display: none;
 			}
 		}
 
 		@container host (max-width: 489.9px) {
-			.metric--mem {
+			& .metric--mem {
 				display: none;
 			}
 		}

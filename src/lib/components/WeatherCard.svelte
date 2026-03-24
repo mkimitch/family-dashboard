@@ -529,3 +529,347 @@
 		{/key}
 	</div>
 {/if}
+
+<style>
+	.wx-now {
+		--wx-alert-desc-line-clamp: 4;
+
+		align-items: center;
+		display: grid;
+		gap: 0.375rem;
+
+		& .wx-topline {
+			align-items: flex-end;
+			color: var(--muted);
+			display: flex;
+			flex-direction: column;
+			font-size: 0.95rem;
+			gap: 0.25rem;
+			justify-content: flex-end;
+		}
+
+		& .wx-alerts {
+			display: grid;
+			gap: 0.25rem;
+			justify-content: flex-end;
+			width: 100%;
+		}
+
+		& .wx-alert-pill {
+			align-items: center;
+			background:
+				linear-gradient(
+					to bottom right,
+					color-mix(in oklch, var(--accent), transparent 86%),
+					transparent
+				),
+				color-mix(in oklch, var(--card), transparent 40%);
+			border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 82%);
+			border-radius: 0.75rem;
+			display: inline-flex;
+			font-size: 0.8rem;
+			gap: 0.35rem;
+			line-height: 1.2;
+			margin-left: auto;
+			max-width: 100%;
+			padding: 0.15rem 0.6rem 0.15rem 0.25rem;
+		}
+
+		& .wx-alert-pill--warning {
+			background:
+				linear-gradient(
+					to bottom right,
+					color-mix(in oklch, var(--accent), transparent 70%),
+					transparent
+				),
+				color-mix(in oklch, var(--card), transparent 10%);
+			border-color: color-mix(in oklch, var(--accent), transparent 35%);
+		}
+
+		& .wx-alert-pill--watch {
+			background:
+				linear-gradient(
+					to bottom right,
+					color-mix(in oklch, var(--accent), transparent 80%),
+					transparent
+				),
+				color-mix(in oklch, var(--card), transparent 8%);
+			border-color: color-mix(in oklch, var(--accent), transparent 50%);
+		}
+
+		& .wx-alert-pill--advisory,
+		& .wx-alert-pill--info {
+			background: color-mix(in oklch, var(--card), transparent 40%);
+		}
+
+		& .wx-alert-icon {
+			align-items: center;
+			display: inline-flex;
+			flex-shrink: 0;
+		}
+
+		& .wx-alert-icon :global(.wx-alert-icon-img) {
+			display: block;
+			height: 1.25rem;
+			width: 1.25rem;
+		}
+
+		& .wx-alert-text {
+			display: grid;
+			gap: 0.05rem;
+			min-width: 0;
+		}
+
+		& .wx-alert-label {
+			font-weight: 700;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		& .wx-alert-desc {
+			-webkit-box-orient: vertical;
+			color: var(--muted);
+			display: -webkit-box;
+			font-size: 0.75rem;
+			font-weight: 400;
+			-webkit-line-clamp: var(--wx-alert-desc-line-clamp, 2);
+			line-clamp: var(--wx-alert-desc-line-clamp, 2);
+			max-width: 26rem;
+			overflow: hidden;
+
+			/* text-overflow: ellipsis; */
+
+			/* white-space: nowrap; */
+		}
+	}
+
+	.wx-forecast {
+		display: grid;
+		gap: 0.1rem;
+		grid-template-columns: repeat(7, max-content);
+		list-style: none;
+		margin: 0;
+		padding: 0;
+
+		& li {
+			background: color-mix(in oklch, var(--card), transparent 40%);
+			border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 88%);
+			border-radius: 0.75rem;
+			display: flex;
+			flex-direction: column;
+			gap: 0.2rem;
+			padding: 0.5rem 0.375rem;
+			text-align: center;
+		}
+
+		& .wxi :global(.wi-forecast) {
+			display: inline-block;
+			height: 3rem;
+			width: 3rem;
+		}
+
+		& .day {
+			font-weight: 700;
+		}
+
+		& .pop {
+			font-size: 0.8rem;
+			opacity: 0.8;
+		}
+
+		& .hilow {
+			display: flex;
+			flex-direction: column;
+			font-size: 0.9rem;
+			font-weight: 700;
+
+			& .hi {
+				color: var(--accent);
+			}
+
+			& .lo {
+				opacity: 0.8;
+			}
+		}
+	}
+
+	.wx-current-main {
+		align-items: end;
+		display: flex;
+		flex-direction: column;
+		justify-content: end;
+
+		& .wx-current {
+			display: grid;
+			font-size: clamp(2.5rem, 7vw, 5.5rem);
+			font-weight: 800;
+			gap: 1.25rem;
+			grid-template-columns: auto auto 1fr;
+			justify-content: space-between;
+			line-height: 1;
+			text-align: start;
+			width: 100%;
+
+			& .wx-current-temp {
+				align-items: center;
+				display: flex;
+
+				& .temp {
+					font-weight: 800;
+				}
+
+				& .unit {
+					font-weight: 600;
+				}
+			}
+
+			& .wx-feels {
+				color: var(--muted);
+			}
+
+			& .wx-feels,
+			& .wx-hilow-now {
+				font-size: 1.05rem;
+				opacity: 0.8;
+			}
+
+			& .wx-hilow-now {
+				font-weight: 700;
+
+				& .hi {
+					color: var(--accent);
+				}
+
+				& .lo {
+					opacity: 0.8;
+				}
+			}
+		}
+
+		& .wx-feels-row {
+			align-items: start;
+			display: flex;
+			flex-direction: column;
+			font-weight: 600;
+			gap: 0.25rem;
+			justify-content: center;
+			line-height: 1;
+		}
+
+		& .wx-summary {
+			color: var(--muted);
+			font-size: 0.95rem;
+			font-weight: 500;
+			max-width: 10rem;
+			text-align: center;
+		}
+
+		& .wx-icon {
+			align-items: center;
+			display: flex;
+			flex-direction: column;
+			opacity: 0.9;
+
+			& :global(.wi-now),
+			& :global(img.wi-now) {
+				display: block;
+				height: clamp(1em, 9vw, 6rem);
+				width: auto;
+			}
+		}
+	}
+
+	.wx-stats {
+		align-items: start;
+		column-gap: 0.5rem;
+		display: grid;
+		grid-template-columns: repeat(3, max-content);
+		justify-content: end;
+		row-gap: 0.25rem;
+
+		& > .wx-info,
+		& > .wx-astro {
+			display: contents;
+		}
+
+		& .wx-info {
+			align-items: start;
+			column-gap: 0.75rem;
+			display: grid;
+			grid-template-columns: repeat(2, max-content);
+			justify-content: end;
+			row-gap: 0.375rem;
+
+			& .col,
+			& .metrics {
+				display: grid;
+				gap: 0.375rem;
+			}
+
+			& .item {
+				align-items: center;
+				display: inline-flex;
+				gap: 0.375rem;
+			}
+		}
+
+		& .wx-astro {
+			color: var(--muted);
+			display: grid;
+			font-weight: 600;
+			gap: 0.5rem;
+			grid-template-columns: repeat(2, max-content);
+			justify-content: end;
+
+			& .col {
+				display: grid;
+				gap: 0.375rem;
+			}
+
+			& .item {
+				align-items: center;
+				display: inline-flex;
+				gap: 0.375rem;
+			}
+
+			& .item.is-past {
+				opacity: 0.6;
+			}
+
+			& .ico {
+				opacity: 0.9;
+			}
+
+			& :global(.wi-astro) {
+				align-items: center;
+				display: flex;
+				height: 1.4rem;
+				width: 1.4rem;
+			}
+		}
+
+		& :global(.wi-stat) {
+			align-items: center;
+			display: flex;
+			height: 1.2rem;
+			width: 1.2rem;
+		}
+	}
+
+	.wx-now,
+	.wx-current-main,
+	.wx-stats,
+	.wx-forecast {
+		& :global(path[stroke='rgb(55,65,81)']) {
+			stroke: oklch(1 0 0);
+		}
+	}
+
+	@media (orientation: landscape) and (width >= 1100px) {
+		.wx-forecast {
+			grid-template-columns: repeat(7, minmax(0, 1fr));
+			width: 100%;
+		}
+	}
+</style>

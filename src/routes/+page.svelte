@@ -78,3 +78,40 @@
 
 	<SystemStatusStub />
 </main>
+
+<style>
+	.board {
+		display: grid;
+		gap: 0.25rem;
+		grid-template-areas: 'hero' 'cal' 'sys';
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr auto max-content;
+		margin-inline: auto;
+		min-height: 100vh;
+		padding: 0;
+		width: 100%;
+	}
+
+	.cal {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		grid-area: cal;
+		min-height: 0;
+	}
+
+	@media (orientation: landscape) and (width >= 1100px) {
+		.board {
+			gap: 0.25rem;
+			grid-template-areas: 'hero cal' 'sys sys';
+			grid-template-columns: minmax(22rem, 0.9fr) minmax(28rem, 1.1fr);
+			grid-template-rows: 1fr max-content;
+			padding: 0.5rem 0.5rem 41px;
+		}
+
+		.cal {
+			align-self: end;
+			height: max-content;
+		}
+	}
+</style>

@@ -51,6 +51,7 @@
 		align-items: start;
 		display: grid;
 		gap: 1rem;
+		grid-area: hero;
 		grid-template-areas:
 			'lunch banner weather'
 			'.     .      weather'
@@ -63,42 +64,66 @@
 			auto
 			minmax(0, 1fr)
 			auto;
+		min-height: 0;
+		padding: 0.25rem 0.25rem 0;
 
-		.hero-lunch {
-			grid-area: lunch;
-		}
-
-		.hero-banner {
+		& .hero-banner {
 			align-self: start;
 			grid-area: banner;
 			justify-self: center;
 		}
 
-		.hero-clock {
-			align-self: end;
-			grid-area: clock;
+		& .hero-message-title {
+			font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+			font-weight: 800;
 		}
 
-		.hero-center {
+		& .hero-message-subtitle {
+			color: var(--muted);
+			font-size: clamp(0.95rem, 1.6vw, 1.125rem);
+		}
+
+		& .hero-card {
+			backdrop-filter: blur(0.3rem);
+			background: color-mix(in oklch, var(--card), transparent 40%);
+			background-image: linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent);
+			border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 85%);
+			border-radius: var(--radius);
+			box-shadow: 0 0.5rem 1.5rem color-mix(in oklch, var(--bg), transparent 60%);
+			padding: 0.5rem;
+		}
+
+		& .hero-center {
 			align-self: end;
 			grid-area: center;
 			justify-self: center;
 		}
 
-		.hero-weather {
+		& .countdown-list {
+			display: grid;
+			font-weight: 600;
+			gap: 0.25rem;
+			list-style: none;
+			margin: 0;
+			padding: 0.375rem 0.5rem;
+		}
+
+		& .hero-clock {
+			align-self: end;
+			grid-area: clock;
+		}
+
+		& .hero-lunch {
+			display: grid;
+			grid-area: lunch;
+			grid-template-columns: 1fr;
+			width: 15rem;
+		}
+
+		& .hero-weather {
 			align-self: end;
 			grid-area: weather;
 			justify-self: end;
-		}
-
-		.hero-card {
-			backdrop-filter: blur(0.3rem);
-			background: color-mix(in oklch, var(--card), transparent 40%);
-			background-image: linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent);
-			border-radius: var(--radius);
-			border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 85%);
-			box-shadow: 0 0.5rem 1.5rem color-mix(in oklch, var(--bg), transparent 60%);
-			padding: 0.5rem;
 		}
 	}
 </style>

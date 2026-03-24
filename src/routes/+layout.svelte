@@ -23,6 +23,6 @@
 
 <div class="app-root">
 	<Wallpaper initialPhotos={data.photos} />
-	<SnowOverlay />
+	<!-- <SnowOverlay /> -->
 	<div class="app-content">{@render children()}</div>
 </div>
