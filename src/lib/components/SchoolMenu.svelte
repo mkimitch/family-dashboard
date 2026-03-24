@@ -111,6 +111,8 @@
 	}
 
 	.lunch-icon {
+		filter: drop-shadow(0 0 4px rgba(74, 222, 128, 0.5));
+		flex-shrink: 0;
 		height: 2rem;
 		width: 2rem;
 	}
@@ -118,37 +120,42 @@
 	.lunch-header-text {
 		display: flex;
 		flex-direction: column;
+		gap: 0.125rem;
 	}
 
 	.lunch-title {
-		font-weight: 600;
 		font-size: 1.125rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		line-height: 1.1;
 	}
 
 	.lunch-date {
+		color: var(--muted);
 		font-size: 0.875rem;
-		color: var(--muted-foreground);
+		font-weight: 500;
 	}
 
-	.lunch-items {
+	ul.lunch-items {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
 		list-style: none;
-		padding: 0;
 		margin: 0;
+		padding: 0;
 	}
 
-	.lunch-chip {
-		background: var(--accent);
-		color: var(--accent-foreground);
-		padding: 0.25rem 0.75rem;
+	li.lunch-chip {
+		background: color-mix(in oklch, var(--card), transparent 40%);
+		border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 88%);
 		border-radius: 9999px;
 		font-size: 0.875rem;
+		font-weight: 500;
+		padding: 0.25rem 0.75rem;
 	}
 
-	.lunch-chip--maybe {
-		background: var(--muted);
-		color: var(--muted-foreground);
+	li.lunch-chip--maybe {
+		border: 1px dashed rgba(251, 191, 36, 0.5);
+		opacity: 0.75;
 	}
 </style>

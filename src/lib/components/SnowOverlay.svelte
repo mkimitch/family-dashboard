@@ -34,12 +34,13 @@
 
 <style>
 	.snow-overlay {
-		bottom: auto;
 		height: var(--wp-height, 60vh);
-		inset: 0;
+		left: 0;
 		overflow: hidden;
 		pointer-events: none;
 		position: fixed;
+		right: 0;
+		top: 0;
 		z-index: 1;
 	}
 
