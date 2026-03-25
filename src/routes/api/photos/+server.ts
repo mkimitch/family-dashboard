@@ -11,7 +11,9 @@ export const GET: RequestHandler = async () => {
 			? path.resolve(env.PHOTO_DIR)
 			: path.resolve(process.cwd(), 'static', 'photos');
 
-		let entries = await fs.readdir(path.join(dir, 'kiosk'), { withFileTypes: true }).catch(() => null);
+		let entries = await fs
+			.readdir(path.join(dir, 'kiosk'), { withFileTypes: true })
+			.catch(() => null);
 		let urlPrefix = '/photos/kiosk';
 
 		if (!entries || !entries.some((d) => d.isFile() && IMAGES_RX.test(d.name))) {

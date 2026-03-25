@@ -6,7 +6,7 @@
 		className?: string;
 	};
 
-	let { timestamp = null, className = '' } = $props<LastUpdatedProps>();
+	let { timestamp = null, className = '' }: LastUpdatedProps = $props();
 
 	const FMT_TIME = new Intl.DateTimeFormat(undefined, {
 		hour: 'numeric',
@@ -99,24 +99,24 @@
 		justify-self: end;
 		line-height: 1.2;
 
-		& .sep {
-			opacity: 0.7;
+		& .abs {
+			opacity: 0.9;
+		}
+
+		& .last-updated-text {
+			white-space: normal;
 		}
 
 		& .rel {
 			font-weight: 400;
 		}
 
-		& .abs {
-			opacity: 0.9;
+		& .sep {
+			opacity: 0.7;
 		}
 
 		& .unknown {
 			opacity: 0.7;
 		}
-	}
-
-	.last-updated-text {
-		white-space: normal;
 	}
 </style>

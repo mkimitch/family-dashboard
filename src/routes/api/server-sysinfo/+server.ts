@@ -36,7 +36,8 @@ const readGpuTempC = async (): Promise<number | null> => {
 const readIpv4 = (): string | null => {
 	const nets = os.networkInterfaces();
 	const names = Object.keys(nets);
-	const excluded = (name: string) => /^(lo|docker|br-|veth|virbr|vmnet|tun|tap|wg|tailscale|zt)/.test(name);
+	const excluded = (name: string) =>
+		/^(lo|docker|br-|veth|virbr|vmnet|tun|tap|wg|tailscale|zt)/.test(name);
 	const preferred = names.filter((name) => /^(eth|en|wl|wlan)/.test(name));
 	const candidates = [preferred, names.filter((name) => !excluded(name)), names];
 

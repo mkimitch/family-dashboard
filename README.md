@@ -1,29 +1,67 @@
-# Family Dashboard (Svelte)
+# Family Dashboard (SvelteKit)
 
-An information board for the family room built with SvelteKit. The layout is tuned for a 1920×1200 portrait display and surfaces:
+A family-room information board built with SvelteKit. The UI is tuned for a 1920×1200 portrait display and combines shared household information, ambient visuals, and host health metrics in a single kiosk-friendly screen.
 
-- A hero section with clock, messages, and optional alerts
-- Current weather conditions plus a rolling seven-day forecast (excluding today)
-- A one-week calendar view with all-day and timed events
-- System status metrics for the Raspberry Pi display and the backend server
+## Feature overview
+
+- Hero area with:
+  - current time/date
+  - school lunch options
+  - optional message banner
+  - optional countdown list
+- Weather card with:
+  - current conditions
+  - alert pills
+  - sunrise/sunset and moonrise/moonset
+  - rolling seven-day forecast (excluding today)
+- One-week calendar with:
+  - all-day and timed events
+  - calendar legend with per-calendar colors/icons
+  - merged duplicate all-day events across calendars
+- System status chips for:
+  - the Raspberry Pi display host
+  - the backend/server host
+- Rotating wallpaper background with responsive photo sizes
+- Optional snow overlay component (present in the repo, currently disabled in `src/routes/+layout.svelte`)
 
 ## Project architecture
 
-| Layer          | Responsibility                                             | Key files                                              |
-| -------------- | ---------------------------------------------------------- | ------------------------------------------------------ |
-| UI components  | Hero, calendar, weather, wallpaper, system status          | `src/lib/components/*.svelte`                          |
-| Routes (pages) | Compose dashboard layout and load initial data             | `src/routes/+page.svelte`, `src/routes/+layout.svelte` |
-| Server load    | Prefetch weather and wallpaper photos for fast first paint | `src/routes/+layout.server.ts`                         |
-| API proxies    | Fetch upstream calendar, weather, and system metrics       | `src/routes/api/**`                                    |
-| Static assets  | Wallpapers, icons, SVGs                                    | `static/`                                              |
+| Layer                | Responsibility                                                                 | Key files                                                             |
+| -------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| UI components        | Clock, school lunch, weather, calendar, wallpaper, system status               | `src/lib/components/*.svelte`                                         |
+| Shared UI logic      | Calendar duplicate-merge behavior and config helpers                           | `src/lib/calendarMerge.ts`, `src/lib/config/**`                       |
+| Routes               | Compose the dashboard shell and page layout                                    | `src/routes/+layout.svelte`, `src/routes/+page.svelte`                |
+| Server load          | Prefetch weather, wallpaper metadata, and school lunch for first paint         | `src/routes/+layout.server.ts`                                        |
+| API and media routes | Proxy upstream calendar/weather/school-menu/system data and serve photos/icons | `src/routes/api/**`, `src/routes/photos/**`, `src/routes/vendor/**`   |
+| Styling              | Global tokens/app shell plus component-local styles                            | `src/app.css`, component `<style>` blocks, `docs/css-architecture.md` |
+| Static assets        | Lottie weather animations, SVGs, wallpapers, manifest assets                   | `static/`                                                             |
 
-State is managed through the Svelte 5 `$state` primitive inside components. Server routes proxy external APIs so browser clients never need upstream credentials.
+This project uses Svelte 5 runes such as `$state` and `$derived` for local component state. Server routes proxy upstream APIs so browser clients do not need direct access to external services or credentials.
+
+## CSS ownership
+
+The project has been incrementally refactored toward component-owned styles.
+
+- `src/app.css` owns:
+  - global design tokens
+  - font-face declarations
+  - resets/base element styles
+  - app-shell layering and layout primitives
+  - a small set of intentional global exceptions
+- Component `<style>` blocks own:
+  - component internals
+  - component states and modifiers
+  - component-local responsive behavior
+- Route components may style child roots for placement, but should not style child internals.
+
+See `docs/css-architecture.md` for the current rules and stylelint rollout guidance.
 
 ## Prerequisites
 
 - Node.js 20+
-- Yarn 4 (PnP is enabled via `.pnp.cjs`)
-- ImageMagick (`mogrify`) if you intend to run the photo optimization script
+- Yarn 4 with Plug'n'Play enabled
+- ImageMagick (`mogrify`) if you want photo resizing in `yarn optimize:photos`
+- Python 3.7+ on the Raspberry Pi if you want live Pi system metrics via the sidecar script
 
 ## Getting started
 
@@ -33,39 +71,58 @@ State is managed through the Svelte 5 `$state` primitive inside components. Serv
    yarn install
    ```
 
-2. Add a `.env` file (see [Environment configuration](#environment-configuration)).
-3. Start the dev server:
+2. Create a `.env` file in the project root. See [Environment configuration](#environment-configuration).
+
+3. Add wallpaper photos if needed:
+   - either place JPGs under `static/photos/`
+   - or point `PHOTO_DIR` at an external photo directory
+
+4. Start the development server:
 
    ```sh
    yarn dev
    ```
 
-   Then open the port shown in the terminal (default `http://localhost:5173`).
+   For LAN access from another device on your network:
 
-### Quality checks
+   ```sh
+   yarn dev:lan
+   ```
 
-Run these locally before pushing—this mirrors the CI workflow and guards against regressions:
+5. Open the URL shown in the terminal (default `http://localhost:5173`).
+
+## Useful local checks
 
 ```sh
-yarn check   # Type checking via svelte-check
-yarn lint    # ESLint + Prettier check
-yarn format  # Apply Prettier formatting
+yarn check
+yarn lint
+yarn lint:css
+yarn fix:css
+yarn format
 ```
+
+Notes:
+
+- `yarn lint` runs Prettier in check mode, ESLint, and the scoped CSS lint script.
+- `yarn lint:css` / `yarn fix:css` currently follow the scoped rollout documented in `docs/css-architecture.md`.
+- `src/app.css` is still excluded from the package CSS lint script to avoid forcing broad global rewrites during the incremental ownership migration.
 
 ## Environment configuration
 
-Create a `.env` alongside the project root with the variables used by the proxy endpoints:
+Create a `.env` file alongside the project root with the variables consumed by the server routes:
 
-| Variable                      | Purpose                                                                               |
-| ----------------------------- | ------------------------------------------------------------------------------------- |
-| `CAL_URL`                     | Base URL for the calendar events feed                                                 |
-| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints                                    |
-| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service                                     |
-| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend                               |
-| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`                                      |
-| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs                        |
-| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting (server only, not Pi)                |
-| `PI_SYSINFO_URL`              | Optional HTTP endpoint for Raspberry Pi system metrics (see Pi setup section below)   |
+| Variable                      | Purpose                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `CAL_URL`                     | Base URL for the calendar events feed                                     |
+| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints                        |
+| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service                         |
+| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend                   |
+| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`                          |
+| `SCHOOL_MENU_URL`             | Optional override for the school menu upstream used by `/api/school-menu` |
+| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs            |
+| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting (server only, not Pi)    |
+
+If `PHOTO_DIR` is not set, the app serves photos from `static/photos`.
 
 Example:
 
@@ -75,28 +132,45 @@ CAL_API_KEY="your-api-key-here"
 CAL_CLIENT_ZONE="America/Chicago"
 CAL_CALENDARS_URL="https://example.com/api/calendars"
 WX_URL="https://example.com/api/weather"
+SCHOOL_MENU_URL="https://example.com/api/school-menu/next"
 PHOTO_DIR="/mnt/photos/dashboard"
 GPU_TEMP_FILE="/sys/class/hwmon/hwmon2/temp1_input"
-PI_SYSINFO_URL="http://192.168.1.100:9000/sysinfo"
 ```
 
 ## Raspberry Pi system monitor setup
 
-The dashboard displays system metrics (CPU/GPU temperature, load, memory, uptime, IP address) for both the Raspberry Pi display host and the backend server. The server metrics are collected automatically via the `/api/server-sysinfo` endpoint, but the **Raspberry Pi metrics require a separate Python sidecar script** running on the Pi itself.
+The dashboard shows system metrics for two machines:
+
+- the server host, via `/api/server-sysinfo`
+- the Raspberry Pi display host, via the standalone `scripts/pi_sysinfo.py` sidecar
+
+### Important current behavior
+
+In the current UI implementation:
+
+- **development mode** uses deterministic mock Pi data when the sidecar is unavailable
+- **non-dev builds** fetch Pi metrics directly from `http://127.0.0.1:9000/sysinfo` in the browser
+
+That means the common deployment model is:
+
+- run the dashboard on the Pi display host, and
+- run `pi_sysinfo.py` on that same Pi listening on port `9000`
+
+The current app does **not** consume a `PI_SYSINFO_URL` environment variable.
 
 ### What `pi_sysinfo.py` does
 
 The `scripts/pi_sysinfo.py` script is a lightweight HTTP service that:
 
-- Reads Pi-specific metrics from `/proc/` (CPU temp, GPU temp via `vcgencmd`, load, memory, uptime)
-- Detects the Pi's local network IPv4 address (filtering out loopback, link-local, and Docker bridges)
-- Exposes this data as JSON at `http://<pi-ip>:9000/sysinfo`
+- reads Pi-specific metrics from `/proc/` and related system tools
+- reports CPU temperature, GPU temperature, load, memory, uptime, CPU count, and IPv4 address
+- exposes this data as JSON at `http://<pi-ip>:9000/sysinfo`
 
 ### Prerequisites on the Raspberry Pi
 
 - Python 3.7+
 - `vcgencmd` (included by default on Raspberry Pi OS)
-- Network connectivity between your Pi and the machine running the SvelteKit app
+- network access if you want to test the endpoint from another machine
 
 ### Step-by-step installation
 
@@ -139,15 +213,15 @@ This should return JSON with `ipv4`, `cpuTempC`, `gpuTempC`, `cpuCount`, `load`,
 
 Press `Ctrl+C` to stop the script once verified.
 
-#### 3. Set up systemd service for autostart
+#### 3. Set up a systemd service for autostart
 
-Create a systemd service file to run the script automatically at boot:
+Create a service file:
 
 ```sh
 sudo nano /etc/systemd/system/pi-sysinfo.service
 ```
 
-Add the following configuration (replace `<username>` with your actual username):
+Add the following configuration, replacing `<username>` with your actual username:
 
 ```ini
 [Unit]
@@ -168,103 +242,71 @@ StandardError=journal
 WantedBy=multi-user.target
 ```
 
-Save and exit (`Ctrl+X`, `Y`, `Enter`).
-
 #### 4. Enable and start the service
 
 ```sh
-# Reload systemd to recognize the new service
 sudo systemctl daemon-reload
-
-# Enable the service to start at boot
 sudo systemctl enable pi-sysinfo.service
-
-# Start the service now
 sudo systemctl start pi-sysinfo.service
 ```
 
 #### 5. Verify the service is running
 
 ```sh
-# Check service status
 sudo systemctl status pi-sysinfo.service
-
-# View recent logs
 sudo journalctl -u pi-sysinfo.service -n 50
-
-# Follow logs in real-time
-sudo journalctl -u pi-sysinfo.service -f
 ```
 
 You should see `Active: active (running)` in the status output.
 
-#### 6. Test from your development machine
-
-From your dev machine, verify you can reach the endpoint:
-
-```sh
-curl http://<pi-ip>:9000/sysinfo
-```
-
-Replace `<pi-ip>` with your Pi's actual IP address (e.g., `192.168.1.100`).
-
-### Configuring the SvelteKit app
-
-In your `.env` file on the development/server machine, add the Pi endpoint URL:
-
-```env
-PI_SYSINFO_URL=http://192.168.1.100:9000/sysinfo
-```
-
-The `SystemStatusStub` component will automatically poll this endpoint every 15 seconds and display the Pi's metrics in the dashboard.
-
 ### Useful service management commands
 
 ```sh
-# Restart the service (e.g., after updating the script)
 sudo systemctl restart pi-sysinfo.service
-
-# Stop the service
 sudo systemctl stop pi-sysinfo.service
-
-# Disable autostart
 sudo systemctl disable pi-sysinfo.service
-
-# View all logs since boot
-sudo journalctl -u pi-sysinfo.service
+sudo journalctl -u pi-sysinfo.service -f
 ```
 
 ### Troubleshooting
 
 - **Service fails with "Failed at step USER"**: Check that the `User=` field in the service file matches your actual username. Run `whoami` on the Pi to confirm.
-- **IP shows as "unknown"**: The script may not be running, or the `hostname -I` command on your Pi isn't returning valid IPs. Check the service logs with `sudo journalctl -u pi-sysinfo.service`.
-- **Connection refused from SvelteKit app**: Ensure port 9000 is not blocked by a firewall on the Pi. Check with `sudo ufw status` if using UFW.
-- **Metrics not updating**: Verify the `PI_SYSINFO_URL` in your `.env` file matches your Pi's actual IP address and port.
+- **IP shows as `unknown`**: The script may not be running, or the Pi is not exposing a usable IPv4 address. Check the service logs with `sudo journalctl -u pi-sysinfo.service`.
+- **Metrics not updating in production**: Ensure the browser host can reach `http://127.0.0.1:9000/sysinfo`. The current UI expects the Pi sidecar there in non-dev mode.
 
 ## Data flow
 
-1. `+layout.server.ts` prefetches weather and wallpaper metadata so the initial render has meaningful content.
-2. The calendar, weather, and system status components fetch their respective proxy endpoints on mount and refresh periodically.
-3. Wallpaper images are shuffled client-side and cycled with fade transitions.
+1. `src/routes/+layout.server.ts` prefetches weather, wallpaper metadata, and school lunch data for the first render.
+2. `SchoolMenu`, `WeatherCard`, `Calendar`, and `SystemStatusStub` refresh their own data on mount using the app's route proxies.
+3. `Calendar` loads calendar metadata from `/api/calendars`, event data from `/api/calendar`, and overlay data from `/api/calendar-overlays`.
+4. Duplicate all-day events across calendars are merged client-side by `src/lib/calendarMerge.ts` when `MERGE_ALLDAY_DUPLICATES` is enabled.
+5. `Wallpaper` rotates between kiosk/mid/HQ photo variants and updates the visible background height to match the composed board layout.
 
-All network calls use the SvelteKit fetch polyfill, keeping credentials on the server and allowing caching/polling policies to live in one place.
+Most upstream data flows through SvelteKit routes so credentials and upstream URLs stay server-side. The main exception is the Pi sidecar, which the browser reads directly from `http://127.0.0.1:9000/sysinfo` in non-dev mode.
 
 ## Scripts
 
-| Script                 | Description                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| `yarn dev`             | Run Vite dev server                                                            |
-| `yarn build`           | Optimize photos (if `photos-src` exists) then build SvelteKit                  |
-| `yarn preview`         | Preview the production build                                                   |
-| `yarn check`           | Run `svelte-check` against `tsconfig.json`                                     |
-| `yarn lint`            | Run Prettier in check mode and ESLint                                          |
-| `yarn format`          | Format the codebase with Prettier                                              |
-| `yarn optimize:photos` | Downscale JPGs from `photos-src/` into `static/photos/` (requires ImageMagick) |
+| Script                 | Description                                                             |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `yarn dev`             | Run the Vite dev server                                                 |
+| `yarn dev:lan`         | Run the dev server on `0.0.0.0:5173` for LAN testing                    |
+| `yarn check`           | Run `svelte-check` after `svelte-kit sync`                              |
+| `yarn check:watch`     | Run `svelte-check` in watch mode                                        |
+| `yarn lint`            | Run Prettier check, ESLint, and the scoped CSS lint script              |
+| `yarn lint:css`        | Run the scoped stylelint pass defined in `package.json`                 |
+| `yarn fix:css`         | Apply scoped stylelint fixes, then run Prettier on those files          |
+| `yarn format`          | Format the repository with Prettier                                     |
+| `yarn optimize:photos` | Resize/copy JPGs from `photos-src/` into `static/photos/{kiosk,mid,hq}` |
+| `yarn build`           | Run `optimize:photos`, then build the adapter-node output               |
+| `yarn preview`         | Preview the production build with Vite                                  |
+| `yarn start`           | Run the built Node server                                               |
 
 ## Assets and attribution
 
-- Wallpapers live in `static/photos/` and are ignored by git to keep personal photos private. Add your own JPGs manually or via `yarn optimize:photos`.
-- Weather icons come from `@lxg/weather-icons` and render from `/vendor/weather-icons/fill/svg/`.
+- Wallpapers live under `static/photos/` by default and are typically ignored by git to keep personal photos private.
+- Weather animations live under `static/lottie/weather/` and are rendered with `lottie-web` via `src/lib/components/LottieWeatherIcon.svelte`.
+- The repo also exposes installed weather icon packages through `src/routes/vendor/weather-icons/[...path]/+server.ts` for package-hosted SVG assets.
+- Static SVG assets live under `static/svg/static/`.
 - System status SVG assets (e.g., `rpi.svg`, `server.svg`, `cpu-filled.svg`, `gpu-filled.svg`, `uptime-1.svg`) are from the **Uicons by [Flaticon](https://www.flaticon.com/uicons)** set and require attribution when published.
 
 ## Deployment
@@ -275,16 +317,31 @@ Create a production build:
 yarn build
 ```
 
-The default adapter is `@sveltejs/adapter-auto`. If deploying to Node, install `@sveltejs/adapter-node` and update `svelte.config.js` accordingly. Serve the contents of the `build/` directory or integrate with your preferred adapter target.
+This project currently uses `@sveltejs/adapter-node` in `svelte.config.js`.
+
+Run the built server:
+
+```sh
+yarn start
+```
+
+Notes:
+
+- `yarn build` runs `yarn optimize:photos` first; that script safely no-ops if `photos-src/` does not exist.
+- `yarn preview` is still useful for local build verification, but `yarn start` reflects the adapter-node production target.
 
 ## Troubleshooting
 
-- Missing adapters: install `@sveltejs/adapter-node` (or your adapter of choice) if the build complains about unavailable adapters.
-- Weather or calendar data missing: confirm your `.env` configuration and that upstream services are reachable from the server.
-- Wallpapers not rotating: ensure JPG files exist in the configured directory and that the browser can reach `/photos/<file>`. Check console logs for fetch errors.
+- **Missing adapters or build startup issues**: run `yarn install` and make sure `@sveltejs/adapter-node` is present, since the repo is configured for adapter-node builds.
+- **Weather or calendar data missing**: verify your `.env` configuration and confirm the upstream services are reachable from the SvelteKit server.
+- **School lunch is empty**: check `SCHOOL_MENU_URL`, or verify the default upstream host is reachable from the server.
+- **Pi metrics missing in production**: make sure the browser host can reach `http://127.0.0.1:9000/sysinfo`.
+- **Wallpapers not rotating**: ensure JPGs exist in `PHOTO_DIR` or `static/photos`, and confirm the generated `/photos/...` routes can read them.
+- **Photo optimization is not resizing**: install ImageMagick so `mogrify` is available; otherwise the script copies photos without resizing.
 
 ## Contributing
 
-1. Fork or branch.
-2. Run the quality checks listed above.
-3. Open a PR summarizing UI changes with screenshots/gifs when applicable.
+1. Branch from the current mainline.
+2. Run the relevant local checks before submitting changes.
+3. If you touch CSS ownership or style structure, consult `docs/css-architecture.md`.
+4. Summarize UI-visible changes with screenshots or short recordings when practical.

@@ -1,27 +1,45 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { CalendarConfig, CalendarOverlayEvent } from '$lib/config/types';
+	import type {
+		CalendarConfig,
+		CalendarOverlayEvent,
+		CalInfo,
+		CalEvent,
+		MergedEvent
+	} from '$lib/config/types';
+	import { isMerged } from '$lib/config/types';
+	import { mergeAllDayDuplicates, MERGE_ALLDAY_DUPLICATES } from '$lib/calendarMerge';
 	import LastUpdated from './LastUpdated.svelte';
 
-	type CalInfo = { id: string; name?: string; color?: string; icon?: string; sortOrder?: number };
-	type Event = {
-		id?: string;
-		title: string;
-		start: string | number | Date;
-		end?: string | number | Date;
-		calendarId?: string;
-		allDay?: boolean;
-		rawStartYMD?: string | null;
-		rawEndYMD?: string | null;
-	};
 	type ApiEvent = any;
+	type MergedTileMode = 'svg' | 'url' | 'text' | 'color';
+	type MergedIconTile = {
+		key: string;
+		calendarId: string;
+		name: string;
+		color: string;
+		mode: MergedTileMode;
+		style: string;
+		html?: string;
+		src?: string;
+		text?: string;
+	};
+	type MergedIconModel = {
+		className: string;
+		totalCount: number;
+		badge: string | null;
+		tiles: MergedIconTile[];
+	};
 
 	let calendars = $state(new Map<string, CalInfo>());
-	let events = $state<Event[]>([]);
+	let rawEvents = $state<CalEvent[]>([]);
+	let displayEvents = $derived<CalEvent[]>(
+		MERGE_ALLDAY_DUPLICATES ? mergeAllDayDuplicates(rawEvents, calendars) : [...rawEvents]
+	);
 	let visibleDays = $state<Date[]>([]);
 	let allDayMinHeights = $state<Record<string, string>>({});
 	let allDayRowsByDay = $state<
-		Record<string, Array<{ e: Event; isStart: boolean; isEnd: boolean }>>
+		Record<string, Array<{ e: CalEvent; isStart: boolean; isEnd: boolean }>>
 	>({});
 	let allDayTrackCountByDay = $state<Record<string, number>>({});
 	let now = $state(new Date());
@@ -103,8 +121,7 @@
 		}
 		return { ymd: null, dt: null };
 	};
-	const startOfDay = (d: Date): Date =>
-		new Date(d.getFullYear(), d.getMonth(), d.getDate());
+	const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 	const daysBetween = (a: Date, b: Date): number => {
 		const A = startOfDay(a).getTime();
 		const B = startOfDay(b).getTime();
@@ -200,6 +217,90 @@
 		}
 		if (looksLikeEmail(raw)) return raw.split('@')[0];
 		return raw;
+	};
+	const MERGED_TILE_LAYOUTS: Record<
+		2 | 3 | 4,
+		Array<{ left: number; top: number; width: number; height: number }>
+	> = {
+		2: [
+			{ left: 0, top: 0, width: 50, height: 100 },
+			{ left: 50, top: 0, width: 50, height: 100 }
+		],
+		3: [
+			{ left: 0, top: 0, width: 50, height: 100 },
+			{ left: 50, top: 0, width: 50, height: 50 },
+			{ left: 50, top: 50, width: 50, height: 50 }
+		],
+		4: [
+			{ left: 0, top: 0, width: 50, height: 50 },
+			{ left: 50, top: 0, width: 50, height: 50 },
+			{ left: 0, top: 50, width: 50, height: 50 },
+			{ left: 50, top: 50, width: 50, height: 50 }
+		]
+	};
+	const mergedTileStyle = (bounds: {
+		left: number;
+		top: number;
+		width: number;
+		height: number;
+	}): string =>
+		`left:${bounds.left}%;top:${bounds.top}%;width:${bounds.width}%;height:${bounds.height}%;`;
+	const mergedCalendarNames = (calendarIds: string[]): string =>
+		calendarIds
+			.map((cid) => {
+				const cal = calendars.get(cid);
+				return displayCalName(cal) || cid;
+			})
+			.join(', ');
+	const mergedContextText = (merged: MergedEvent): string => {
+		const count = merged.sourceCalendarIds.length;
+		const label = count === 1 ? 'calendar' : 'calendars';
+		return `Merged across ${count} ${label}: ${mergedCalendarNames(merged.sourceCalendarIds)}`;
+	};
+	const mergedChipTitle = (title: string, merged: MergedEvent): string =>
+		`${title} (${mergedContextText(merged)})`;
+	const mergedCountBadge = (count: number): string => (count > 9 ? '9+' : `+${count}`);
+	const getMergedIconModel = (merged: MergedEvent): MergedIconModel => {
+		const totalCount = merged.sourceCalendarIds.length;
+		if (totalCount >= 5) {
+			return {
+				className: 'merged-icon--aggregate',
+				totalCount,
+				badge: mergedCountBadge(totalCount),
+				tiles: []
+			};
+		}
+		const layout =
+			MERGED_TILE_LAYOUTS[Math.max(2, Math.min(totalCount, 4)) as 2 | 3 | 4] ||
+			MERGED_TILE_LAYOUTS[4];
+		const tiles = merged.sourceCalendarIds.slice(0, layout.length).map((calendarId, index) => {
+			const cal = calendars.get(calendarId);
+			const icon = typeof cal?.icon === 'string' ? cal.icon.trim() : '';
+			const mode: MergedTileMode = iconIsSvg(icon)
+				? 'svg'
+				: iconIsUrl(icon)
+					? 'url'
+					: icon
+						? 'text'
+						: 'color';
+			return {
+				key: `${calendarId}:${index}`,
+				calendarId,
+				name: displayCalName(cal) || calendarId,
+				color: cal?.color || '#888',
+				mode,
+				style: mergedTileStyle(layout[index]),
+				html: mode === 'svg' ? iconHtml(icon) : undefined,
+				src: mode === 'url' ? icon : undefined,
+				text: mode === 'text' ? icon : undefined
+			} satisfies MergedIconTile;
+		});
+		return {
+			className: `merged-icon--tiles merged-icon--count-${tiles.length}`,
+			totalCount,
+			badge: null,
+			tiles
+		};
 	};
 
 	const loadCalendars = async () => {
@@ -309,7 +410,7 @@
 				: Array.isArray(data)
 					? data
 					: [];
-			let listEvents: Event[] = arr.map((e) => {
+			let listEvents: CalEvent[] = arr.map((e) => {
 				const sI = extractDateInfo(e.start);
 				const eI = extractDateInfo(e.end);
 				const start = sI.dt ?? parseCalDate(e.start);
@@ -337,7 +438,7 @@
 					allDay,
 					rawStartYMD,
 					rawEndYMD
-				} as Event;
+				} as CalEvent;
 			});
 			let overlays: CalendarOverlayEvent[] = [];
 			if (overlayRes.ok) {
@@ -348,7 +449,7 @@
 					overlays = [];
 				}
 			}
-			const overlayEvents: Event[] = [];
+			const overlayEvents: CalEvent[] = [];
 			for (const ov of overlays) {
 				if (!ov?.title || !ov.startDate) continue;
 				const start = parseCalDate(ov.startDate);
@@ -369,7 +470,7 @@
 			if (overlayEvents.length) {
 				listEvents = listEvents.concat(overlayEvents);
 			}
-			events = listEvents;
+			rawEvents = listEvents;
 			// Ensure calendars map entries and improve names/colors from events when needed
 			for (const e of arr) {
 				const id = e.calendarId ?? e.calendar ?? e.cal ?? 'default';
@@ -413,12 +514,12 @@
 		visibleDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
 	};
 
-	const isCurrent = (e: Event) => {
+	const isCurrent = (e: CalEvent) => {
 		const s = e.start as Date;
 		const end = e.end ? (e.end as Date) : s;
 		return +now >= +s && +now <= +end;
 	};
-	const isPast = (e: Event) => {
+	const isPast = (e: CalEvent) => {
 		const end = e.end ? (e.end as Date) : (e.start as Date);
 		return +now > +end;
 	};
@@ -426,7 +527,7 @@
 	const computeAllDayLayout = () => {
 		// Track allocation ensures overlapping all-day events render in consistent rows without collisions.
 		const countsByDay: Record<string, number> = {};
-		const rowsByDay: Record<string, Array<{ e: Event; isStart: boolean; isEnd: boolean }>> = {};
+		const rowsByDay: Record<string, Array<{ e: CalEvent; isStart: boolean; isEnd: boolean }>> = {};
 		if (!visibleDays.length) return { countsByDay, rowsByDay };
 		const weeks = Math.ceil(visibleDays.length / 7) || 1;
 		for (let wi = 0; wi < weeks; wi++) {
@@ -434,9 +535,9 @@
 			if (!weekStart) continue;
 			const weekEnd = addDays(weekStart, 6);
 			const visKeys = Array.from({ length: 7 }, (_, di) => keyOf(addDays(weekStart, di)));
-			const multi = events.filter((e) => e.allDay);
+			const multi = displayEvents.filter((e) => e.allDay);
 			const trackEnds: number[] = [];
-			const allocations: Array<{ ti: number; si: number; ei: number; e: Event }> = [];
+			const allocations: Array<{ ti: number; si: number; ei: number; e: CalEvent }> = [];
 			for (const e of multi) {
 				const s0 = e.start as Date;
 				const e0 = (e.end as Date) || s0;
@@ -500,7 +601,7 @@
 				const day = addDays(weekStart, di);
 				const key = keyOf(day);
 				countsByDay[key] = trackEnds.length;
-				const rows: Array<{ e: Event; isStart: boolean; isEnd: boolean }> = [];
+				const rows: Array<{ e: CalEvent; isStart: boolean; isEnd: boolean }> = [];
 				for (const a of allocations) {
 					if (di >= a.si && di <= a.ei) {
 						rows[a.ti] = { e: a.e, isStart: di === a.si, isEnd: di === a.ei };
@@ -512,9 +613,9 @@
 		return { countsByDay, rowsByDay };
 	};
 
-	const groupTimedForDay = (d: Date): Array<{ mins: number; items: Event[] }> => {
-		const list = events.filter((e) => !e.allDay && sameDay(e.start as Date, d));
-		const groups = new Map<number, Event[]>();
+	const groupTimedForDay = (d: Date): Array<{ mins: number; items: CalEvent[] }> => {
+		const list = displayEvents.filter((e) => !e.allDay && sameDay(e.start as Date, d));
+		const groups = new Map<number, CalEvent[]>();
 		for (const e of list) {
 			const dt = e.start as Date;
 			const mins = dt.getHours() * 60 + dt.getMinutes();
@@ -635,14 +736,44 @@
 						{@const row = rows[ti]}
 						{#if row}
 							{@const cal = calendars.get(row.e.calendarId || '')}
+							{@const merged = isMerged(row.e) ? row.e : null}
+							{@const mergedIconModel = merged ? getMergedIconModel(merged) : null}
 							<div
 								class={`event-chip all-day-chip ${row.isStart ? 'is-start' : ''} ${row.isEnd ? 'is-end' : ''}`}
 								class:is-current={isCurrent(row.e)}
 								class:is-past={isPast(row.e)}
 								style={`--cal-color: ${cal?.color || '#888'}`}
-								title={row.e.title}
+								title={merged ? mergedChipTitle(row.e.title, merged) : row.e.title}
 							>
-								{#if iconIsSvg(cal?.icon)}
+								{#if merged}
+									<span
+										class={`event-icon merged-icon ${mergedIconModel?.className || ''}`}
+										aria-hidden="true"
+									>
+										{#if mergedIconModel?.badge}
+											<span class="merged-icon-badge">{mergedIconModel.badge}</span>
+										{:else}
+											{#each mergedIconModel?.tiles || [] as tile (tile.key)}
+												<span
+													class="merged-icon-tile"
+													style={`--tile-color: ${tile.color}; ${tile.style}`}
+												>
+													{#if tile.mode === 'svg'}
+														<span class="merged-icon-glyph" style={`color: ${tile.color}`}>
+															{@html tile.html || ''}
+														</span>
+													{:else if tile.mode === 'url'}
+														<img class="merged-icon-glyph" src={tile.src || ''} alt="" />
+													{:else if tile.mode === 'text'}
+														<span class="merged-icon-text" style={`color: ${tile.color}`}
+															>{tile.text || ''}</span
+														>
+													{/if}
+												</span>
+											{/each}
+										{/if}
+									</span>
+								{:else if iconIsSvg(cal?.icon)}
 									<span class="event-icon" aria-hidden="true" style="color: var(--cal-color)"
 										>{@html iconHtml(cal?.icon as string)}</span
 									>
@@ -654,6 +785,9 @@
 									<span class="event-icon" aria-hidden="true">{cal?.icon}</span>
 								{/if}
 								<span class="event-title">{row.e.title}</span>
+								{#if merged}
+									<span class="event-sr-only">. {mergedContextText(merged)}</span>
+								{/if}
 							</div>
 						{:else}
 							<div class="event-chip placeholder" aria-hidden="true"></div>
@@ -708,3 +842,467 @@
 		{/each}
 	</div>
 </section>
+
+<style>
+	.cal-header {
+		align-items: end;
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 0.375rem;
+
+		& :global(.cal-last-updated) {
+			margin-left: auto;
+		}
+	}
+
+	.cal-legend {
+		align-items: center;
+		display: flex;
+		flex-wrap: nowrap;
+		gap: 0.375rem;
+		margin: 0;
+
+		& .cal-legend-item {
+			align-items: center;
+			background:
+				linear-gradient(
+					to bottom right,
+					color-mix(in oklch, var(--cal-color, var(--accent)), transparent 90%),
+					color-mix(in oklch, var(--cal-color, var(--accent)), transparent 82%)
+				),
+				color-mix(in oklch, var(--card), transparent 6%);
+			border: 0.0625rem solid color-mix(in oklch, var(--cal-color, var(--accent)), transparent 0%);
+			border-radius: 62.4375rem;
+			box-shadow: 0 0.25rem 0.75rem color-mix(in oklch, var(--bg), transparent 70%);
+			color: var(--fg);
+			display: inline-flex;
+			font-size: 0.85rem;
+			gap: 0.375rem;
+			max-width: 12rem;
+			padding: 0.25rem 0.5rem;
+
+			& .swatch {
+				border-radius: 62.4375rem;
+				display: none;
+				height: 0.75rem;
+				width: 0.75rem;
+			}
+
+			& .icon {
+				display: inline-block;
+				height: 1.2em;
+				margin-left: 0.125rem;
+				margin-right: 0.125rem;
+				width: 1.2em;
+			}
+
+			& .name {
+				font-weight: 400;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+		}
+	}
+
+	.cal-grid {
+		backdrop-filter: blur(0.3rem);
+		background: color-mix(in oklch, var(--card), transparent 60%);
+		background-image: linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent);
+		border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 85%);
+		border-radius: var(--radius);
+		box-shadow: 0 0.5rem 1.5rem color-mix(in oklch, var(--bg), transparent 60%);
+		display: grid;
+		grid-template-columns: repeat(7, 1fr);
+		min-height: 0;
+		overflow: hidden;
+
+		& .dow {
+			border-bottom: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 85%);
+			border-right: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 90%);
+			font-weight: 600;
+			padding: 0.1rem;
+			text-align: center;
+
+			&.is-today {
+				backdrop-filter: saturate(3.5);
+				border-left: 0.25rem solid var(--accent);
+				border-radius: var(--radius) 0 0 0;
+				padding-left: calc(0.5rem - 0.25rem);
+			}
+
+			&.is-weekend {
+				background:
+					linear-gradient(180deg, var(--weekend-wash), transparent 55%),
+					linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent),
+					repeating-linear-gradient(
+						135deg,
+						color-mix(in oklch, var(--muted), transparent 97%) 0 6px,
+						transparent 6px 14px
+					);
+				color: color-mix(in oklch, var(--accent), var(--muted) 70%);
+			}
+		}
+
+		& .week-sep {
+			grid-column: 1 / -1;
+			height: 0.25rem;
+		}
+	}
+
+	.day-cell {
+		border-bottom: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 90%);
+		border-right: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 90%);
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		min-height: 8rem;
+		padding: 0.175rem;
+		position: relative;
+
+		&.is-weekend {
+			background:
+				linear-gradient(180deg, var(--weekend-wash), transparent 55%),
+				linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent),
+				repeating-linear-gradient(
+					135deg,
+					color-mix(in oklch, var(--muted), transparent 97%) 0 6px,
+					transparent 6px 14px
+				);
+		}
+
+		&.is-today {
+			backdrop-filter: saturate(3.5);
+			border-left: 0.25rem solid var(--accent);
+			border-radius: 0 0 0 var(--radius);
+			padding-left: calc(0.5rem - 0.25rem);
+		}
+
+		& .day-head {
+			align-items: baseline;
+			display: inline-flex;
+			flex-shrink: 0;
+			font-weight: 800;
+			gap: 0.4rem;
+
+			& .dom {
+				font-size: 1.05rem;
+			}
+		}
+	}
+
+	.event-sr-only {
+		border: 0;
+		clip: rect(0 0 0 0);
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		padding: 0;
+		position: absolute;
+		white-space: nowrap;
+		width: 1px;
+	}
+
+	.event-title {
+		-webkit-box-orient: vertical;
+		display: -webkit-box;
+		font-size: 0.8rem;
+		font-weight: 300;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		line-height: 1;
+		overflow: hidden;
+		overflow-wrap: anywhere;
+		text-overflow: ellipsis;
+	}
+
+	.event-chip {
+		align-items: center;
+		background:
+			linear-gradient(
+				to bottom right,
+				color-mix(in oklch, var(--cal-color, var(--accent)), transparent 78%),
+				color-mix(in oklch, var(--cal-color, var(--accent)), transparent 66%)
+			),
+			color-mix(in oklch, var(--card), transparent 6%);
+		border: 1px solid color-mix(in oklch, var(--cal-color, var(--accent)), transparent 0%);
+		border-radius: 0.5rem;
+		color: white;
+		display: inline-flex;
+		font-weight: 400;
+		gap: 0.35em;
+		padding: 0.1rem 0.2rem;
+
+		&.placeholder {
+			background: transparent;
+			border-color: transparent;
+			border-left-color: transparent;
+			visibility: hidden;
+		}
+
+		&.is-current {
+			box-shadow: 0 0.375rem 1rem color-mix(in oklch, var(--bg), transparent 55%);
+			filter: brightness(1.05) saturate(1.05);
+		}
+
+		&.is-past {
+			opacity: 0.65;
+		}
+
+		& .merged-icon-badge {
+			align-items: center;
+			display: inline-flex;
+			height: 100%;
+			justify-content: center;
+			text-align: center;
+			text-shadow: 0 0.03em 0.1em color-mix(in oklch, black, transparent 60%);
+			white-space: nowrap;
+			width: 100%;
+
+			&::selection {
+				background: transparent;
+			}
+		}
+
+		& .merged-icon-glyph {
+			display: block;
+			height: 100%;
+			width: 100%;
+
+			& svg {
+				display: block;
+				height: 100%;
+				width: 100%;
+			}
+		}
+
+		& .merged-icon-text {
+			align-items: center;
+			display: inline-flex;
+			font-size: 0.52em;
+			font-weight: 700;
+			height: 100%;
+			justify-content: center;
+			line-height: 1;
+			text-shadow: 0 0.03em 0.08em color-mix(in oklch, black, transparent 65%);
+			width: 100%;
+		}
+
+		& .merged-icon-tile {
+			align-items: center;
+			display: flex;
+			justify-content: center;
+			overflow: hidden;
+			position: absolute;
+
+			& img.merged-icon-glyph {
+				object-fit: cover;
+				object-position: center;
+			}
+		}
+
+		& .event-icon {
+			align-items: center;
+			display: inline-flex;
+			flex: 0 0 1.5em;
+
+			& img {
+				display: block;
+				height: 1.2em;
+				width: 1.6em;
+			}
+
+			& svg {
+				display: block;
+				height: 1.2em;
+				width: 1.6em;
+			}
+		}
+
+		& .event-title {
+			min-width: 0;
+		}
+	}
+
+	.all-day-chip {
+		&.is-end:not(.is-start) {
+			border-radius: 0 0.75rem 0.75rem 0;
+		}
+
+		&.is-start.is-end {
+			border-radius: 0.75rem;
+		}
+
+		&.is-start:not(.is-end) {
+			border-radius: 0.75rem 0 0 0.75rem;
+		}
+
+		&:not(.is-start, .is-end) {
+			border-radius: 0;
+		}
+	}
+
+	.day-events-allday {
+		display: grid;
+		flex-shrink: 0;
+		gap: 0.25rem;
+		grid-auto-rows: 1.7rem;
+		min-height: var(--allday-min-h, 0.5rem);
+		min-width: 0;
+
+		& .event-chip {
+			width: 100%;
+		}
+	}
+
+	.day-events-timed {
+		display: grid;
+		gap: 0.2rem;
+	}
+
+	.event-time {
+		align-items: center;
+		background:
+			linear-gradient(
+				to bottom right,
+				color-mix(in oklch, var(--cal-color, var(--muted)), transparent 88%),
+				color-mix(in oklch, var(--cal-color, var(--muted)), transparent 76%)
+			),
+			color-mix(in oklch, var(--card), transparent 8%);
+		border: 0.0625rem solid color-mix(in oklch, var(--cal-color, var(--muted)), transparent 65%);
+		border-radius: 62.4375rem;
+		color: var(--fg);
+		display: inline-flex;
+		font-size: 0.8rem;
+		font-variant-numeric: tabular-nums;
+		gap: 0.5rem;
+		line-height: 1;
+		padding: 0.0625rem 0.5rem;
+		white-space: nowrap;
+
+		&.is-current {
+			box-shadow: 0 0.25rem 0.75rem color-mix(in oklch, var(--bg), transparent 70%);
+		}
+
+		&.is-past {
+			opacity: 0.6;
+		}
+	}
+
+	.time-events {
+		display: grid;
+		gap: 0.15rem;
+		min-width: 0;
+	}
+
+	.time-group {
+		align-items: start;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+
+		& .time-events {
+			flex: 1;
+		}
+
+		& .time-label {
+			flex: 1;
+		}
+	}
+
+	.time-event {
+		align-items: center;
+		border-left: 0.1875rem solid
+			color-mix(in oklch, var(--cal-color, var(--accent)), transparent 0%);
+		border-radius: 0.375rem;
+		display: flex;
+		gap: 0.375rem;
+		justify-content: start;
+		padding: 0.125rem 0.25rem;
+
+		&.is-current {
+			background: color-mix(in oklch, var(--cal-color, var(--accent)), transparent 85%);
+			border: 1px solid color-mix(in oklch, var(--cal-color, var(--accent)), transparent 70%);
+			box-shadow: 0 0.25rem 0.75rem color-mix(in oklch, var(--bg), transparent 60%);
+		}
+
+		&.is-past {
+			opacity: 0.6;
+		}
+
+		& .day-events-timed .time-group + .time-group {
+			border-top: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 90%);
+			margin-top: 0;
+			padding-top: 0.25rem;
+		}
+
+		& .event-icon {
+			align-items: center;
+			display: inline-flex;
+			flex-shrink: 0;
+			opacity: 0.9;
+
+			& img {
+				display: block;
+				height: 1.2em;
+				width: 1.2em;
+			}
+
+			& svg {
+				display: block;
+				height: 1.2em;
+				width: 1.2em;
+			}
+		}
+
+		& .event-title {
+			min-width: 0;
+		}
+	}
+
+	.event-chip .event-icon.merged-icon {
+		align-items: center;
+		background: transparent;
+		border-radius: 0.28em;
+		flex: 0 0 1.6em;
+		height: 100%;
+		justify-content: center;
+		overflow: hidden;
+		position: relative;
+		width: 1.6em;
+
+		&.merged-icon--aggregate {
+			box-shadow: inset 0 0 0 0.05em color-mix(in oklch, white, transparent 87%);
+			color: color-mix(in oklch, white, var(--accent) 8%);
+			font-size: 0.58em;
+			font-weight: 700;
+			letter-spacing: -0.03em;
+			line-height: 1;
+		}
+
+		& .merged-icon-glyph,
+		& .merged-icon-glyph svg,
+		& img.merged-icon-glyph {
+			display: block;
+			height: 100%;
+			width: 100%;
+		}
+
+		& img.merged-icon-glyph {
+			object-fit: cover;
+			object-position: center;
+		}
+	}
+
+	@media (orientation: landscape) and (width >= 1100px) {
+		.cal-grid {
+			background: color-mix(in oklch, var(--card), transparent 20%);
+			flex: 1;
+			grid-template-rows: auto 1fr;
+		}
+
+		.day-cell {
+			min-height: 0;
+		}
+	}
+</style>

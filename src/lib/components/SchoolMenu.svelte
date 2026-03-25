@@ -85,22 +85,77 @@
 </script>
 
 {#if menu?.vegetarian?.length || menu?.ambiguous?.length}
-	<aside class="hero-lunch hero-card" aria-label="School Lunch">
-		<div class="lunch-header">
-			<img src="/svg/static/school-lunch-tray-2.svg" alt="" class="lunch-icon" />
-			<div class="lunch-header-text">
-				<span class="lunch-title">School Lunch Options</span>
-				<span class="lunch-date">{formatMenuDate(menu.date)}</span>
-			</div>
+	<div class="lunch-header">
+		<img src="/svg/static/school-lunch-tray-2.svg" alt="" class="lunch-icon" />
+		<div class="lunch-header-text">
+			<span class="lunch-title">School Lunch Options</span>
+			<span class="lunch-date">{formatMenuDate(menu.date)}</span>
 		</div>
-		<ul class="lunch-items">
-			{#each menu.vegetarian as item}
-				<li class="lunch-chip">{item.name}</li>
-			{/each}
-			{#each menu.ambiguous as item}
-				<li class="lunch-chip lunch-chip--maybe" title="May or may not be vegetarian">{item.name}</li>
-			{/each}
-		</ul>
-	</aside>
+	</div>
+	<ul class="lunch-items">
+		{#each menu.vegetarian as item}
+			<li class="lunch-chip">{item.name}</li>
+		{/each}
+		{#each menu.ambiguous as item}
+			<li class="lunch-chip lunch-chip--maybe" title="May or may not be vegetarian">{item.name}</li>
+		{/each}
+	</ul>
 {/if}
 
+<style>
+	.lunch-header {
+		align-items: center;
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.lunch-icon {
+		filter: drop-shadow(0 0 4px rgba(74, 222, 128, 0.5));
+		flex-shrink: 0;
+		height: 2rem;
+		width: 2rem;
+	}
+
+	.lunch-header-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.lunch-title {
+		font-size: 1.125rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		line-height: 1.1;
+	}
+
+	.lunch-date {
+		color: var(--muted);
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	ul.lunch-items {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	li.lunch-chip {
+		background: color-mix(in oklch, var(--card), transparent 40%);
+		border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 88%);
+		border-radius: 9999px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		padding: 0.25rem 0.75rem;
+	}
+
+	li.lunch-chip--maybe {
+		border: 1px dashed rgba(251, 191, 36, 0.5);
+		opacity: 0.75;
+	}
+</style>
