@@ -53,7 +53,11 @@
 
 	const FMT_SHORT = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
 	const FMT_DAY = new Intl.DateTimeFormat(undefined, { day: 'numeric' });
-	const FMT_TIME = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+	const FMT_TIME = new Intl.DateTimeFormat('en-US', {
+		hour: 'numeric',
+		minute: '2-digit',
+		hour12: true
+	});
 	const createKeyFormatter = (zone?: string) =>
 		new Intl.DateTimeFormat('en-CA', {
 			timeZone: zone || undefined,
@@ -135,7 +139,9 @@
 			second: 'numeric',
 			hour12: false
 		}).formatToParts(d);
+
 		const val = (t: string) => Number(parts.find((p) => p.type === t)?.value || 0);
+
 		return val('hour') === 0 && val('minute') === 0 && val('second') === 0;
 	};
 	let ICON_SEQ = 0;
@@ -844,6 +850,12 @@
 </section>
 
 <style>
+	section.cal {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
 	.cal-header {
 		align-items: end;
 		display: flex;
@@ -1072,7 +1084,7 @@
 			& svg {
 				display: block;
 				height: 100%;
-				width: 100%;
+				/* width: 100%; */
 			}
 		}
 
@@ -1093,7 +1105,7 @@
 			display: flex;
 			justify-content: center;
 			overflow: hidden;
-			position: absolute;
+			/* position: absolute; */
 
 			& img.merged-icon-glyph {
 				object-fit: cover;
@@ -1283,9 +1295,9 @@
 		& .merged-icon-glyph,
 		& .merged-icon-glyph svg,
 		& img.merged-icon-glyph {
-			display: block;
+			display: inline-flex;
 			height: 100%;
-			width: 100%;
+			/* width: 100%; */
 		}
 
 		& img.merged-icon-glyph {
