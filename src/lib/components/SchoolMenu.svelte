@@ -148,7 +148,7 @@
 	li.lunch-chip {
 		background: color-mix(in oklch, var(--card), transparent 40%);
 		border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 88%);
-		border-radius: 9999px;
+		border-radius: var(--radius);
 		font-size: 0.875rem;
 		font-weight: 500;
 		padding: 0.25rem 0.75rem;

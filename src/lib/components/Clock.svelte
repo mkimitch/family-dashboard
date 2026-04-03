@@ -150,14 +150,14 @@
 
 			& .dow {
 				color: color-mix(in oklch, var(--fg), var(--muted) 80%);
-				font-size: clamp(0.82rem, 1.15vw, 1rem);
+				font-size: clamp(0.82rem, 1.35vw, 1rem);
 				font-weight: 700;
 				letter-spacing: 0.01em;
 			}
 
 			& .year {
 				color: color-mix(in oklch, var(--fg), var(--muted) 100%);
-				font-size: clamp(0.68rem, 1.02vw, 0.9rem);
+				font-size: clamp(0.68rem, 1.25vw, 0.9rem);
 				font-weight: 700;
 				letter-spacing: 0.015em;
 				opacity: 0.9;
