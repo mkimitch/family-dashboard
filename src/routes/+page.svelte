@@ -3,8 +3,10 @@
 	import Hero from '$lib/components/Hero.svelte';
 	import SystemStatusStub from '$lib/components/SystemStatusStub.svelte';
 	import { onMount } from 'svelte';
+	import type { PageData } from './$types';
 
-	let { data } = $props();
+	type PageProps = { data: PageData };
+	let { data }: PageProps = $props();
 
 	const alerts: string[] = [];
 	const messageTitle = '';
@@ -66,6 +68,7 @@
 	<Hero
 		{alerts}
 		{countdowns}
+		dateTimeDisplay={data.dateTimeDisplay}
 		{messageSubtitle}
 		{messageTitle}
 		schoolMenu={data.schoolMenu}
@@ -73,10 +76,10 @@
 	/>
 
 	<div class="cal" bind:this={calEl}>
-		<Calendar />
+		<Calendar dateTimeDisplay={data.dateTimeDisplay} />
 	</div>
 
-	<SystemStatusStub />
+	<SystemStatusStub dateTimeDisplay={data.dateTimeDisplay} />
 </main>
 
 <style>

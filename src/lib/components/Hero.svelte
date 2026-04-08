@@ -1,18 +1,29 @@
 <script lang="ts">
+	import type { ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
 	import type { SchoolMenu as SchoolMenuType } from '../../routes/+layout.server';
 	import Clock from './Clock.svelte';
 	import SchoolMenu from './SchoolMenu.svelte';
 	import WeatherCard from './WeatherCard.svelte';
 
 	type Countdown = { label: string; value: string | number };
+	type HeroProps = {
+		alerts?: string[];
+		messageTitle?: string;
+		messageSubtitle?: string;
+		countdowns?: Countdown[];
+		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+		weather?: any;
+		schoolMenu?: SchoolMenuType | null;
+	};
 	let {
 		alerts = [] as string[],
 		messageTitle = '',
 		messageSubtitle = '',
 		countdowns = [] as Countdown[],
+		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null,
 		weather = null,
 		schoolMenu = null as SchoolMenuType | null
-	} = $props();
+	}: HeroProps = $props();
 </script>
 
 <header class="hero">
@@ -36,13 +47,13 @@
 	{/if}
 
 	<div class="hero-lunch hero-card">
-		<SchoolMenu {schoolMenu} />
+		<SchoolMenu {dateTimeDisplay} {schoolMenu} />
 	</div>
 	<section class="hero-clock hero-card" aria-label="Current time">
-		<Clock />
+		<Clock {dateTimeDisplay} />
 	</section>
 	<section class="hero-weather hero-card" aria-labelledby="wx-h">
-		<WeatherCard initialWeather={weather} />
+		<WeatherCard {dateTimeDisplay} initialWeather={weather} />
 	</section>
 </header>
 

@@ -1,9 +1,14 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
-	import { onMount } from 'svelte';
+ 	import { dev } from '$app/environment';
+ 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+ 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
+ 	import { onMount } from 'svelte';
 
 	type Load = { '1m': number; '5m': number; '15m': number };
 	type Mem = { totalMB: number; usedMB: number; freeMB: number };
+	type SystemStatusStubProps = {
+		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+	};
 	type SysInfo = {
 		ipv4?: string | null;
 		cpuTempC?: number | null;
@@ -26,11 +31,13 @@
 	};
 
 	// Refresh both endpoints every 15s to keep the dashboard metrics current without overloading the Pi.
-	const POLL_INTERVAL_MS = 15000;
+ 	const POLL_INTERVAL_MS = 15000;
+ 	let { dateTimeDisplay = null }: SystemStatusStubProps = $props();
 
-	let pi: SysInfo | null = null;
-	let server: SysInfo | null = null;
-	let interval: number | undefined;
+	let pi = $state<SysInfo | null>(null);
+	let server = $state<SysInfo | null>(null);
+ 	let interval: number | undefined;
+ 	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
 
 	const clamp = (min: number, n: number, max: number): number => Math.min(max, Math.max(min, n));
 
@@ -64,17 +71,6 @@
 	};
 
 	const padNum = (n: number): string => (n < 10 ? ` ${n}` : `${n}`);
-
-	const formatUptime = (sec: number | null | undefined): string => {
-		if (sec == null || !Number.isFinite(sec)) return '';
-		const s = Math.floor(sec);
-		const days = Math.floor(s / 86400);
-		const hours = Math.floor((s % 86400) / 3600);
-		const minutes = Math.floor((s % 3600) / 60);
-		if (days > 0) return `${days}d ${hours}h`;
-		if (hours > 0) return `${hours}h ${minutes}m`;
-		return `${minutes}m`;
-	};
 
 	const formatLoad = (load: Load | null | undefined, cpuCount?: number | null): string => {
 		if (!load) return '';
@@ -252,7 +248,7 @@
 					{/if}
 
 					{#if typeof pi.uptimeSec === 'number'}
-						{@const up = formatUptime(pi.uptimeSec)}
+						{@const up = dateTime.formatUptime(pi.uptimeSec)}
 						<span class="metric metric--up" data-tone="info" title={`Uptime ${up}`}>
 							<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 24 24">
 								<path
@@ -370,7 +366,7 @@
 					{/if}
 
 					{#if typeof server.uptimeSec === 'number'}
-						{@const up = formatUptime(server.uptimeSec)}
+						{@const up = dateTime.formatUptime(server.uptimeSec)}
 						<span class="metric metric--up" data-tone="info" title={`Uptime ${up}`}>
 							<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 24 24">
 								<path
