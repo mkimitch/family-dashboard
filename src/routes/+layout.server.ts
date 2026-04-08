@@ -1,3 +1,4 @@
+import { resolveRequestDateTimeDisplaySettings } from '$lib/server/dateTime';
 import type { LayoutServerLoad } from './$types';
 
 export type SchoolMenuItem = {
@@ -23,7 +24,9 @@ export type SchoolMenu = {
 	};
 } | null;
 
-export const load: LayoutServerLoad = async ({ fetch }) => {
+export const load: LayoutServerLoad = async (event: Parameters<LayoutServerLoad>[0]) => {
+	const { fetch } = event;
+	const dateTimeDisplay = resolveRequestDateTimeDisplaySettings();
 	const [weatherRes, photosRes, schoolMenuRes] = await Promise.all([
 		fetch('/api/weather', { cache: 'no-store' }),
 		fetch('/api/photos', { cache: 'no-store' }),
@@ -61,6 +64,7 @@ export const load: LayoutServerLoad = async ({ fetch }) => {
 	}
 
 	return {
+		dateTimeDisplay,
 		weather,
 		photos,
 		schoolMenu

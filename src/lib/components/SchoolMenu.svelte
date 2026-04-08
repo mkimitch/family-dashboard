@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
 	import { onMount } from 'svelte';
 	import type { SchoolMenu } from '../../routes/+layout.server';
 
@@ -7,8 +9,16 @@
 	const DAILY_POLL_MINUTE = 5;
 	const TIMEZONE = 'America/Chicago';
 
-	let { schoolMenu: initialMenu = null as SchoolMenu | null } = $props();
-	let menu = $state<SchoolMenu | null>(initialMenu);
+	let {
+		schoolMenu: initialMenu = null as SchoolMenu | null,
+		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null
+	} = $props();
+	let menu = $state<SchoolMenu | null>(null);
+	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
+
+	$effect(() => {
+		menu = initialMenu;
+	});
 
 	const fetchMenu = async () => {
 		try {
@@ -47,17 +57,7 @@
 	};
 
 	const formatMenuDate = (dateStr: string): string => {
-		const d = new Date(dateStr + 'T12:00:00');
-		const today = new Date();
-		const tomorrow = new Date(today);
-		tomorrow.setDate(tomorrow.getDate() + 1);
-
-		const isToday = d.toDateString() === today.toDateString();
-		const isTomorrow = d.toDateString() === tomorrow.toDateString();
-
-		if (isToday) return 'Today';
-		if (isTomorrow) return 'Tomorrow';
-		return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+		return dateTime.formatMenuDateLabel(dateStr);
 	};
 
 	onMount(() => {

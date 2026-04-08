@@ -1,15 +1,17 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import type {
-		CalendarConfig,
-		CalendarOverlayEvent,
-		CalInfo,
-		CalEvent,
-		MergedEvent
-	} from '$lib/config/types';
-	import { isMerged } from '$lib/config/types';
-	import { mergeAllDayDuplicates, MERGE_ALLDAY_DUPLICATES } from '$lib/calendarMerge';
-	import LastUpdated from './LastUpdated.svelte';
+ 	import { MERGE_ALLDAY_DUPLICATES, mergeAllDayDuplicates } from '$lib/calendarMerge';
+ 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+ 	import type {
+ 		CalendarConfig,
+ 		CalendarOverlayEvent,
+ 		CalEvent,
+ 		CalInfo,
+ 		MergedEvent
+ 	} from '$lib/config/types';
+ 	import { isMerged } from '$lib/config/types';
+ 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
+ 	import { onMount } from 'svelte';
+ 	import LastUpdated from './LastUpdated.svelte';
 
 	type ApiEvent = any;
 	type MergedTileMode = 'svg' | 'url' | 'text' | 'color';
@@ -49,15 +51,11 @@
 	const EVENTS_POLL_MINUTES = 5;
 	const EVENTS_POLL_MS = EVENTS_POLL_MINUTES * 60 * 1000;
 	let lastEventsReloadAt = 0;
-	let { class: className = '' } = $props();
-
-	const FMT_SHORT = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
-	const FMT_DAY = new Intl.DateTimeFormat(undefined, { day: 'numeric' });
-	const FMT_TIME = new Intl.DateTimeFormat('en-US', {
-		hour: 'numeric',
-		minute: '2-digit',
-		hour12: true
-	});
+	let {
+		class: className = '',
+		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null
+	} = $props();
+	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
 	const createKeyFormatter = (zone?: string) =>
 		new Intl.DateTimeFormat('en-CA', {
 			timeZone: zone || undefined,
@@ -67,7 +65,7 @@
 		});
 
 	let keyFormatter = createKeyFormatter(timeZone);
-	let lastDayKey = keyFormatter.format(now);
+	let lastDayKey = '';
 	$effect(() => {
 		keyFormatter = createKeyFormatter(timeZone);
 		lastDayKey = keyFormatter.format(now);
@@ -152,6 +150,7 @@
 			/^https?:\/\//.test(s) ||
 			s.startsWith('/') ||
 			/\.svg(\?|$)/i.test(s));
+	const iconSrc = (s?: string) => (typeof s === 'string' ? s : '');
 	const namespaceSvgIds = (svg: string): string => {
 		try {
 			if (typeof window === 'undefined' || typeof (window as any).DOMParser === 'undefined')
@@ -699,10 +698,10 @@
 					<span class="swatch" aria-hidden="true"></span>
 					{#if iconIsSvg(c.icon)}
 						<span class="icon" aria-hidden="true" style="color: var(--cal-color)"
-							>{@html iconHtml(c.icon)}</span
+							>{@html iconHtml(c.icon || undefined)}</span
 						>
 					{:else if iconIsUrl(c.icon)}
-						<span class="icon" aria-hidden="true"><img src={c.icon as string} alt="" /></span>
+						<span class="icon" aria-hidden="true"><img src={iconSrc(c.icon)} alt="" /></span>
 					{:else if c.icon}
 						<span class="icon" aria-hidden="true">{c.icon}</span>
 					{/if}
@@ -710,14 +709,14 @@
 				</div>
 			{/each}
 		</div>
-		<LastUpdated timestamp={updatedAt} className="cal-last-updated" />
+		<LastUpdated {dateTimeDisplay} timestamp={updatedAt} className="cal-last-updated" />
 	</div>
 	<div class="cal-grid">
 		{#each visibleDays as d}
 			{@const isWeekend = d.getDay() === 0 || d.getDay() === 6}
 			{@const isToday = visibleDays.length === 7 && sameDay(d, new Date())}
 			<div class="dow {isWeekend ? 'is-weekend' : ''} {isToday ? 'is-today' : ''}">
-				{FMT_SHORT.format(d)}
+				{dateTime.formatDate(d, { preset: 'calendarWeekday', timeZone: null })}
 			</div>
 		{/each}
 		{#each visibleDays as d, i}
@@ -735,7 +734,7 @@
 				style={`--allday-min-h: ${allDayMinHeights[dayKey] || '0.5rem'}`}
 			>
 				<div class="day-head">
-					<span class="dom">{FMT_DAY.format(d)}</span>
+					<span class="dom">{dateTime.formatDate(d, { preset: 'calendarDayNumber', timeZone: null })}</span>
 				</div>
 				<div class="day-events-allday">
 					{#each Array.from({ length: trackCount }) as _, ti}
@@ -781,11 +780,11 @@
 									</span>
 								{:else if iconIsSvg(cal?.icon)}
 									<span class="event-icon" aria-hidden="true" style="color: var(--cal-color)"
-										>{@html iconHtml(cal?.icon as string)}</span
+										>{@html iconHtml(cal?.icon || undefined)}</span
 									>
 								{:else if iconIsUrl(cal?.icon)}
 									<span class="event-icon" aria-hidden="true"
-										><img src={cal?.icon as string} alt="" /></span
+										><img src={iconSrc(cal?.icon)} alt="" /></span
 									>
 								{:else if cal?.icon}
 									<span class="event-icon" aria-hidden="true">{cal?.icon}</span>
@@ -809,8 +808,9 @@
 								class="event-time time-label"
 								class:is-current={grpIsCurrent}
 								class:is-past={grpIsPast}
-								>{FMT_TIME.format(
-									new Date(2000, 0, 1, Math.floor(grp.mins / 60), grp.mins % 60)
+								>{dateTime.formatTime(
+									new Date(2000, 0, 1, Math.floor(grp.mins / 60), grp.mins % 60),
+									{ preset: 'eventTime', timeZone: null }
 								)}</span
 							>
 							<div class="time-events">
@@ -825,11 +825,11 @@
 									>
 										{#if iconIsSvg(cal?.icon)}
 											<span class="event-icon" aria-hidden="true" style="color: var(--cal-color)"
-												>{@html iconHtml(cal?.icon as string)}</span
+												>{@html iconHtml(cal?.icon || undefined)}</span
 											>
 										{:else if iconIsUrl(cal?.icon)}
 											<span class="event-icon" aria-hidden="true"
-												><img src={cal?.icon as string} alt="" /></span
+												><img src={iconSrc(cal?.icon)} alt="" /></span
 											>
 										{:else if cal?.icon}
 											<span class="event-icon" aria-hidden="true">{cal?.icon}</span>

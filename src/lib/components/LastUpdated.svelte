@@ -1,51 +1,23 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+ 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+ 	import { toDate } from '$lib/utils/dateTime';
+ 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
+ 	import { onDestroy, onMount } from 'svelte';
 
 	type LastUpdatedProps = {
 		timestamp: string | Date | null;
 		className?: string;
+		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
 	};
 
-	let { timestamp = null, className = '' }: LastUpdatedProps = $props();
-
-	const FMT_TIME = new Intl.DateTimeFormat(undefined, {
-		hour: 'numeric',
-		minute: '2-digit'
-	});
-
-	const FMT_FULL_DATE = new Intl.DateTimeFormat(undefined, {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric'
-	});
+	let { timestamp = null, className = '', dateTimeDisplay = null }: LastUpdatedProps = $props();
+	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
 
 	let rel = $state('');
 	let abs = $state('');
 	let aria = $state('Update time unknown');
 	let hasTs = $state(false);
 	let timer: number | undefined;
-
-	const toDate = (input: string | Date | null | undefined): Date | null => {
-		if (!input) return null;
-		if (input instanceof Date) {
-			return Number.isNaN(input.getTime()) ? null : input;
-		}
-		const d = new Date(input);
-		return Number.isNaN(d.getTime()) ? null : d;
-	};
-
-	const formatRelative = (ts: Date, now: Date): string => {
-		const diffMs = now.getTime() - ts.getTime();
-		const diffSec = Math.round(diffMs / 1000);
-		if (diffSec < 0) return 'just now';
-		if (diffSec < 60) return 'just now';
-		const diffMin = Math.round(diffSec / 60);
-		if (diffMin < 60) return `${diffMin} min${diffMin === 1 ? '' : 's'} ago`;
-		const diffHr = Math.round(diffMin / 60);
-		if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
-		const diffDay = Math.round(diffHr / 24);
-		return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
-	};
 
 	const recompute = () => {
 		const dt = toDate(timestamp);
@@ -58,9 +30,9 @@
 		}
 		const now = new Date();
 		hasTs = true;
-		rel = formatRelative(dt, now);
-		abs = FMT_TIME.format(dt);
-		const datePart = FMT_FULL_DATE.format(dt);
+		rel = dateTime.formatUpdatedAgo(dt, { now });
+		abs = dateTime.formatTime(dt, { preset: 'statusTime' });
+		const datePart = dateTime.formatDate(dt, { preset: 'statusDate' });
 		aria = `Updated at ${abs} on ${datePart}`;
 	};
 

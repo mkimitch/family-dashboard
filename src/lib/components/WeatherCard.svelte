@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
-	import LastUpdated from './LastUpdated.svelte';
-	import SnowCap from '$lib/components/SnowCap.svelte';
+ 	import SnowCap from '$lib/components/SnowCap.svelte';
+ 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+ 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
+ 	import { onMount } from 'svelte';
+ 	import LastUpdated from './LastUpdated.svelte';
+ 	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
 
 	type Condition = { icon?: string; main?: string; desc?: string };
 	type Day = {
@@ -69,15 +71,32 @@
 		sunset?: string | number;
 	};
 
-	let { initialWeather = null } = $props();
-	let wx = $state<WeatherRoot | null>(initialWeather);
+	type WeatherAstro = {
+		moonrise?: string | number;
+		moonset?: string | number;
+		sunrise?: string | number;
+		sunset?: string | number;
+	};
+
+	type WeatherCardProps = {
+		initialWeather?: WeatherRoot | null;
+		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+	};
+
+	let {
+		initialWeather = null,
+		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null
+	}: WeatherCardProps = $props();
+	let wx = $state<WeatherRoot | null>(null);
 	let nowClock = $state(new Date());
 	let interval: number | undefined;
 	let clockTick: number | undefined;
 	let updatedAt = $state<string | null>(null);
+	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
 
-	const FMT_TIME = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
-	const FMT_WEEKDAY_SHORT = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
+	$effect(() => {
+		wx = initialWeather;
+	});
 
 	const c2f = (c: number) => Math.round((c * 9) / 5 + 32);
 	const pick = <T extends object>(o: T | null | undefined, keys: (keyof any)[]): any => {
@@ -107,7 +126,6 @@
 	};
 	const lottiePathOf = (code?: string, main?: string) =>
 		`/lottie/weather/${iconSlugOf(code, main)}.json`;
-	const hm = (t?: string | number) => (t ? FMT_TIME.format(new Date(t)) : '—');
 	const windDir = (deg?: number) => {
 		if (typeof deg !== 'number') return '';
 		const dirs = [
@@ -159,6 +177,59 @@
 		}
 		return null;
 	};
+	const hm = (t?: string | number) => {
+		if (!t) return '—';
+		const direct = dateTime.formatTime(new Date(t), { preset: 'astroTime', timeZone: null });
+		if (direct) return direct;
+		const parsed = parseAstroTime(t, nowClock);
+		return parsed ? dateTime.formatTime(parsed, { preset: 'astroTime', timeZone: null }) : '—';
+	};
+
+	const getCurrentWeather = (root: WeatherRoot): WeatherNow => (root.current || root.now || root) as WeatherNow;
+	const getForecastDays = (root: WeatherRoot | null | undefined): Day[] => {
+		if (!root) return [];
+		if (Array.isArray(root.daily)) return root.daily;
+		if (Array.isArray(root.forecast)) return root.forecast;
+		if (Array.isArray(root.days)) return root.days;
+		return [];
+	};
+	const getAstro = (root: WeatherRoot): WeatherAstro => {
+		const anyRoot = root as Record<string, string | number | WeatherAstro | undefined>;
+		const astro = root.astronomy || ((anyRoot.astro as WeatherAstro | undefined) ?? {});
+		return {
+			sunrise: astro.sunrise || (anyRoot.sunrise as string | number | undefined),
+			sunset: astro.sunset || (anyRoot.sunset as string | number | undefined),
+			moonrise: astro.moonrise || (anyRoot.moonrise as string | number | undefined),
+			moonset: astro.moonset || (anyRoot.moonset as string | number | undefined)
+		};
+	};
+	const getWindMph = (now: WeatherNow): number | undefined => {
+		if (typeof now.windMph === 'number') return Math.round(now.windMph);
+		const anyNow = now as Record<string, unknown>;
+		if (typeof anyNow.wind_kph === 'number') return Math.round(anyNow.wind_kph * 0.621371);
+		if (typeof anyNow.windKph === 'number') return Math.round(anyNow.windKph * 0.621371);
+		return undefined;
+	};
+	const getHumidity = (now: WeatherNow): number | undefined => {
+		if (typeof now.humidity === 'number') return now.humidity;
+		const value = (now as Record<string, unknown>).rh;
+		return typeof value === 'number' ? value : undefined;
+	};
+	const getDayDateValue = (day: Day): string | number => {
+		const anyDay = day as Record<string, unknown>;
+		return (anyDay.date as string | number | undefined) ?? day.day ?? day.time ?? day.ts ?? Date.now();
+	};
+	const getDayName = (day: Day): string => {
+		const value = (day as Record<string, unknown>).name;
+		return typeof value === 'string' ? value : '';
+	};
+	const getDayPop = (day: Day): number | undefined => {
+		const anyDay = day as Record<string, unknown>;
+		if (anyDay.pop === null) return 0;
+		if (typeof anyDay.pop === 'number') return Math.round(anyDay.pop <= 1 ? anyDay.pop * 100 : anyDay.pop);
+		if (typeof anyDay.precipPct === 'number') return Math.round(anyDay.precipPct);
+		return undefined;
+	};
 
 	const extractUpdatedAt = (root: WeatherRoot | null | undefined): string | null => {
 		if (!root) return null;
@@ -175,6 +246,7 @@
 
 	type WxAlert = {
 		id?: string | number;
+		event?: string;
 		headline?: string;
 		title?: string;
 		name?: string;
@@ -194,27 +266,30 @@
 		description?: string;
 	};
 
-	const normalizeAlerts = (root: any): NormalizedAlert[] => {
-		if (!root) return [];
-		const raw = (root.alerts ?? root.alert ?? root.warnings ?? []) as any;
-		const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
-		return arr
-			.map((a: WxAlert | null | undefined, idx: number) => {
-				if (!a) return null;
-				const titleSource = a.event ?? a.headline ?? a.title ?? a.name ?? a.description ?? a.desc;
-				const title = String(titleSource || '').trim();
-				if (!title) return null;
-				const sevRaw = String((a.severity ?? '') || '').toLowerCase();
-				let level = 'info';
-				if (/(extreme|warning|red)/.test(sevRaw)) level = 'warning';
-				else if (/(watch|orange|yellow)/.test(sevRaw)) level = 'watch';
-				else if (/advisory|statement/.test(sevRaw)) level = 'advisory';
-				const rawDesc = (a.description ?? a.desc) as any;
-				const description = typeof rawDesc === 'string' ? rawDesc.trim() || undefined : undefined;
-				const id = String((a.id ?? idx) as any);
-				return { id, title, severity: level, description };
-			})
-			.filter((x): x is NormalizedAlert => !!x);
+	const normalizeAlerts = (root: unknown): NormalizedAlert[] => {
+		if (!root || typeof root !== 'object') return [];
+		const anyRoot = root as Record<string, unknown>;
+		const raw = anyRoot.alerts ?? anyRoot.alert ?? anyRoot.warnings ?? [];
+		const arr: Array<WxAlert | null | undefined> = Array.isArray(raw) ? raw : raw ? [raw as WxAlert] : [];
+		return arr.reduce<NormalizedAlert[]>((items, a, idx) => {
+			if (!a) return items;
+			const titleSource = a.event ?? a.headline ?? a.title ?? a.name ?? a.description ?? a.desc;
+			const title = String(titleSource || '').trim();
+			if (!title) return items;
+			const sevRaw = String((a.severity ?? '') || '').toLowerCase();
+			let level = 'info';
+			if (/(extreme|warning|red)/.test(sevRaw)) level = 'warning';
+			else if (/(watch|orange|yellow)/.test(sevRaw)) level = 'watch';
+			else if (/advisory|statement/.test(sevRaw)) level = 'advisory';
+			const descriptionSource = a.description ?? a.desc;
+			const description =
+				typeof descriptionSource === 'string' ? descriptionSource.trim() || undefined : undefined;
+			const next: NormalizedAlert = description
+				? { id: String(a.id ?? idx), title, severity: level, description }
+				: { id: String(a.id ?? idx), title, severity: level };
+			items.push(next);
+			return items;
+		}, []);
 	};
 
 	const alertLottieFor = (severity: string): string => {
@@ -265,7 +340,7 @@
 	<!-- Now block -->
 	<div class="wx-now">
 		<div class="wx-topline">
-			<LastUpdated timestamp={updatedAt} className="wx-last-updated" />
+			<LastUpdated {dateTimeDisplay} timestamp={updatedAt} className="wx-last-updated" />
 			{#if alerts.length}
 				<div class="wx-alerts" aria-live="polite" aria-label="Weather alerts">
 					{#each alerts.slice(0, 3) as a (a.id)}
@@ -286,7 +361,7 @@
 			{/if}
 		</div>
 		{#key wx}
-			{@const now = (wx.current || wx.now || wx) as WeatherNow}
+			{@const now = getCurrentWeather(wx)}
 			{@const root = wx}
 			{@const tempF =
 				typeof now?.tempF === 'number'
@@ -306,7 +381,7 @@
 							: typeof now?.feels_like === 'number'
 								? Math.round(now.feels_like)
 								: undefined}
-			{@const days = (root.daily || root.forecast || root.days || []) as Day[]}
+			{@const days = getForecastDays(root)}
 			{@const d0 = days[0]}
 			{@const todayHiF = d0
 				? typeof d0?.tempF?.max === 'number'
@@ -322,25 +397,19 @@
 						? c2f(d0.tempC.min)
 						: pick(d0, ['low', 'min', 'minTemp', 'lo'])
 				: undefined}
-			{@const windMphVal =
-				typeof now?.windMph === 'number'
-					? Math.round(now.windMph)
-					: typeof (now as any)?.wind_kph === 'number'
-						? Math.round((now as any).wind_kph * 0.621371)
-						: typeof (now as any)?.windKph === 'number'
-							? Math.round((now as any).windKph * 0.621371)
-							: undefined}
+			{@const windMphVal = getWindMph(now)}
+			{@const humidity = getHumidity(now)}
 			{@const summary =
 				(now?.condition && (now.condition.desc || now.condition.main)) ||
 				(pick(now, ['summary', 'desc', 'text']) ?? '')}
 			{@const iconCode = now?.condition?.icon}
 			{@const iconMain = now?.condition?.main || now?.condition?.desc}
 			{@const lottieSrc = lottiePathOf(iconCode, iconMain)}
-			{@const astro = (root.astronomy || (root as any).astro || {}) as any}
-			{@const sunrise = astro.sunrise || (root as any).sunrise}
-			{@const sunset = astro.sunset || (root as any).sunset}
-			{@const moonrise = astro.moonrise || (root as any).moonrise}
-			{@const moonset = astro.moonset || (root as any).moonset}
+			{@const astro = getAstro(root)}
+			{@const sunrise = astro.sunrise}
+			{@const sunset = astro.sunset}
+			{@const moonrise = astro.moonrise}
+			{@const moonset = astro.moonset}
 			{@const sunriseDate = parseAstroTime(sunrise, nowClock)}
 			{@const sunsetDate = parseAstroTime(sunset, nowClock)}
 			{@const moonriseDate = parseAstroTime(moonrise, nowClock)}
@@ -398,7 +467,7 @@
 								>{windMphVal} mph</span
 							>
 						{/if}
-						{#if (now?.humidity ?? (now as any)?.rh) !== undefined}
+						{#if humidity !== undefined}
 							<span class="item humidity"
 								><span class="ico"
 									><LottieWeatherIcon
@@ -406,7 +475,7 @@
 										className="wi wi-stat"
 										ariaLabel="Humidity"
 									/></span
-								>{(now?.humidity ?? (now as any)?.rh) as number}%</span
+								>{humidity}%</span
 							>
 						{/if}
 					</div>
@@ -477,15 +546,15 @@
 			</div>
 
 			<!-- Forecast shows the next seven days after today for a full week at a glance. -->
-			{@const forecast = (wx.daily || wx.forecast || wx.days || []) as Day[]}
+			{@const forecast = getForecastDays(wx)}
 			{#if forecast.length}
 				<ol class="wx-forecast" aria-label="Forecast">
 					{#each forecast.slice(1, 8) as d}
-						{@const dateStr = (d as any).date ?? d.day ?? d.time ?? d.ts ?? Date.now()}
+						{@const dateStr = getDayDateValue(d)}
 						{@const dDate = parseYmdLocal(dateStr)}
 						{@const label = Number.isNaN(+dDate)
-							? (d as any)?.name || ''
-							: FMT_WEEKDAY_SHORT.format(dDate)}
+							? getDayName(d)
+							: dateTime.formatForecastWeekday(dDate)}
 						{@const hiF =
 							typeof d?.tempF?.max === 'number'
 								? Math.round(d.tempF.max)
@@ -498,14 +567,7 @@
 								: typeof d?.tempC?.min === 'number'
 									? c2f(d.tempC.min)
 									: pick(d, ['low', 'min', 'minTemp', 'lo'])}
-						{@const pop =
-							(d as any)?.pop === null
-								? 0
-								: typeof (d as any)?.pop === 'number'
-									? Math.round((d as any).pop <= 1 ? (d as any).pop * 100 : (d as any).pop)
-									: typeof (d as any)?.precipPct === 'number'
-										? Math.round((d as any).precipPct)
-										: undefined}
+						{@const pop = getDayPop(d)}
 						{@const slug = iconSlugOf(d?.condition?.icon, d?.condition?.main || d?.condition?.desc)}
 						{@const forecastLottie = `/lottie/weather/${slug}.json`}
 						<li>

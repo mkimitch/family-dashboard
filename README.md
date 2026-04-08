@@ -111,18 +111,27 @@ Notes:
 
 Create a `.env` file alongside the project root with the variables consumed by the server routes:
 
-| Variable                      | Purpose                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `CAL_URL`                     | Base URL for the calendar events feed                                     |
-| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints                        |
-| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service                         |
-| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend                   |
-| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`                          |
-| `SCHOOL_MENU_URL`             | Optional override for the school menu upstream used by `/api/school-menu` |
-| `PHOTO_DIR`                   | Optional absolute/relative directory containing wallpaper JPGs            |
-| `GPU_TEMP_FILE`               | Optional file path for GPU temperature reporting (server only, not Pi)    |
+| Variable                      | Purpose                                                    |
+| ----------------------------- | ---------------------------------------------------------- |
+| `CAL_URL`                     | Base URL for the calendar events feed                      |
+| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints         |
+| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service          |
+| `DISPLAY_LOCALE`              | Optional locale for absolute date/time display formatting  |
+| `DISPLAY_TIMEZONE`            | Optional timezone for date/time display format             |
+| `DISPLAY_HOUR12`              | Optional 12-hour/24-hour display override                  |
+| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend    |
+| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`           |
+| `SCHOOL_MENU_URL`             | Optional override for the school-menu upstream             |
+| `PHOTO_DIR`                   | Optional absolute/relative directory for wallpaper JPGs    |
+| `GPU_TEMP_FILE`               | Optional server-side GPU temperature file path             |
 
 If `PHOTO_DIR` is not set, the app serves photos from `static/photos`.
+
+`DISPLAY_HOUR12` accepts common boolean forms such as `true`/`false`, `1`/`0`, `yes`/`no`, and `on`/`off`.
+
+`DISPLAY_*` settings affect display formatting only. They do not change operational scheduling or query logic such as school-menu polling, calendar bucketing/query behavior, all-day boundaries, or similar domain-time calculations.
+
+Current v1 locale scope is intentionally narrow: locale settings apply to absolute date/time formatting via `Intl`, while English strings such as `just now`, `x mins ago`, `Today`, and `Tomorrow` remain hardcoded.
 
 Example:
 
@@ -130,6 +139,9 @@ Example:
 CAL_URL="https://example.com/api/calendar"
 CAL_API_KEY="your-api-key-here"
 CAL_CLIENT_ZONE="America/Chicago"
+DISPLAY_LOCALE="en-US"
+DISPLAY_TIMEZONE="America/Chicago"
+DISPLAY_HOUR12="true"
 CAL_CALENDARS_URL="https://example.com/api/calendars"
 WX_URL="https://example.com/api/weather"
 SCHOOL_MENU_URL="https://example.com/api/school-menu/next"

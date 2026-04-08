@@ -1,26 +1,13 @@
 <script lang="ts">
+	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
 	import { onMount } from 'svelte';
 
 	let now = $state(new Date());
 	let timer: number | undefined;
-	const props = $props<{ className?: string }>();
+	const props = $props<{ className?: string; dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null }>();
 	const className = $derived(props.className ?? '');
-
-	const FMT_DATE_PARTS = new Intl.DateTimeFormat(undefined, {
-		weekday: 'long',
-		month: 'long',
-		day: 'numeric',
-		year: 'numeric'
-	});
-	const FMT_TIME_PARTS = new Intl.DateTimeFormat(undefined, {
-		hour: 'numeric',
-		minute: '2-digit',
-		second: '2-digit',
-		hour12: true
-	});
-
-	const part = (parts: Intl.DateTimeFormatPart[], type: string): string =>
-		parts.find((p) => p.type === type)?.value || '';
+	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings(props));
 
 	const updateNow = () => {
 		now = new Date();
@@ -41,16 +28,15 @@
 		};
 	});
 
-	const dparts = $derived(FMT_DATE_PARTS.formatToParts(now));
-	const tparts = $derived(FMT_TIME_PARTS.formatToParts(now));
-	const dow = $derived(part(dparts, 'weekday'));
-	const month = $derived(part(dparts, 'month'));
-	const day = $derived(part(dparts, 'day'));
-	const year = $derived(part(dparts, 'year'));
-	const hour = $derived(part(tparts, 'hour'));
-	const minute = $derived(part(tparts, 'minute'));
-	const second = $derived(part(tparts, 'second'));
-	const ampm = $derived(part(tparts, 'dayPeriod'));
+	const clockParts = $derived(dateTime.formatClockParts(now));
+	const dow = $derived(clockParts.weekday);
+	const month = $derived(clockParts.month);
+	const day = $derived(clockParts.day);
+	const year = $derived(clockParts.year);
+	const hour = $derived(clockParts.hour);
+	const minute = $derived(clockParts.minute);
+	const second = $derived(clockParts.second);
+	const ampm = $derived(clockParts.dayPeriod);
 </script>
 
 <time class={`clock ${className}`.trim()} aria-live="polite">
