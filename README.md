@@ -320,6 +320,11 @@ Most upstream data flows through SvelteKit routes so credentials and upstream UR
 - The repo also exposes installed weather icon packages through `src/routes/vendor/weather-icons/[...path]/+server.ts` for package-hosted SVG assets.
 - Static SVG assets live under `static/svg/static/`.
 - System status SVG assets (e.g., `rpi.svg`, `server.svg`, `cpu-filled.svg`, `gpu-filled.svg`, `uptime-1.svg`) are from the **Uicons by [Flaticon](https://www.flaticon.com/uicons)** set and require attribution when published.
+- Moon phase imagery derived from "Moon Phases Loop" by NASA's Scientific Visualization Studio.
+  - Visualizer: Ernie Wright (USRA).
+  - Source frames: NASA SVS ID 4310.
+  - Images were processed for this project by cropping, removing the black background, resizing, and exporting as transparent PNG icons.
+  - NASA does not endorse this project.
 
 ## Deployment
 

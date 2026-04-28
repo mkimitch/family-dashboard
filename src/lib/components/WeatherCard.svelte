@@ -2,6 +2,12 @@
  	import SnowCap from '$lib/components/SnowCap.svelte';
  	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
  	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
+ 	import {
+ 		computeMoonPhase,
+ 		getMoonIconPath,
+ 		getMoonIlluminationPct,
+ 		getMoonPhaseName
+ 	} from '$lib/utils/moon';
  	import { onMount } from 'svelte';
  	import LastUpdated from './LastUpdated.svelte';
  	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
@@ -19,6 +25,8 @@
 		maxTemp?: number;
 		min?: number;
 		minTemp?: number;
+		moonPhase?: number;
+		moon_phase?: number;
 		name?: string;
 		pop?: number | null;
 		precipPct?: number;
@@ -36,7 +44,7 @@
 		feelsLikeC?: number;
 		feelsLikeF?: number;
 		humidity?: number;
-		pressure?: number;
+		pressureHpa?: number;
 		rh?: number;
 		summary?: string;
 		temp?: number;
@@ -54,6 +62,7 @@
 
 	type WeatherRoot = {
 		astronomy?: {
+			moonPhase?: number;
 			moonrise?: string | number;
 			moonset?: string | number;
 			sunrise?: string | number;
@@ -72,6 +81,7 @@
 	};
 
 	type WeatherAstro = {
+		moonPhase?: number;
 		moonrise?: string | number;
 		moonset?: string | number;
 		sunrise?: string | number;
@@ -196,12 +206,32 @@
 	const getAstro = (root: WeatherRoot): WeatherAstro => {
 		const anyRoot = root as Record<string, string | number | WeatherAstro | undefined>;
 		const astro = root.astronomy || ((anyRoot.astro as WeatherAstro | undefined) ?? {});
+		const astroAny = astro as Record<string, unknown>;
+		const moonPhase =
+			typeof astroAny.moonPhase === 'number'
+				? astroAny.moonPhase
+				: typeof astroAny.moon_phase === 'number'
+					? astroAny.moon_phase
+					: undefined;
 		return {
 			sunrise: astro.sunrise || (anyRoot.sunrise as string | number | undefined),
 			sunset: astro.sunset || (anyRoot.sunset as string | number | undefined),
 			moonrise: astro.moonrise || (anyRoot.moonrise as string | number | undefined),
-			moonset: astro.moonset || (anyRoot.moonset as string | number | undefined)
+			moonset: astro.moonset || (anyRoot.moonset as string | number | undefined),
+			moonPhase
 		};
+	};
+	const getMoonPhaseValue = (
+		root: WeatherRoot,
+		astro: WeatherAstro,
+		now: Date
+	): number => {
+		if (typeof astro.moonPhase === 'number') return astro.moonPhase;
+		const days = getForecastDays(root);
+		const today = days[0] as Day | undefined;
+		if (typeof today?.moonPhase === 'number') return today.moonPhase;
+		if (typeof today?.moon_phase === 'number') return today.moon_phase;
+		return computeMoonPhase(now);
 	};
 	const getWindMph = (now: WeatherNow): number | undefined => {
 		if (typeof now.windMph === 'number') return Math.round(now.windMph);
@@ -215,6 +245,26 @@
 		const value = (now as Record<string, unknown>).rh;
 		return typeof value === 'number' ? value : undefined;
 	};
+	const getUVIndex = (now: WeatherNow): number | undefined => {
+		if (typeof now.uvIndex === 'number') return now.uvIndex;
+		if (typeof now.uv === 'number') return now.uv;
+		return undefined;
+	};
+	const getUVCategory = (uv: number): string => {
+		if (uv < 3) return 'Low';
+		if (uv < 6) return 'Moderate';
+		if (uv < 8) return 'High';
+		if (uv < 11) return 'Very High';
+		return 'Extreme';
+	};
+	const uvLottiePath = (uv: number | undefined): string => {
+		if (typeof uv !== 'number' || uv < 1) return '/lottie/weather/uv-index.json';
+		const level = Math.min(11, Math.max(1, Math.round(uv)));
+		return `/lottie/weather/uv-index-${level}.json`;
+	};
+	const getPressureHpa = (now: WeatherNow): number | undefined =>
+		typeof now.pressureHpa === 'number' ? now.pressureHpa : undefined;
+	const formatPressureInHg = (pressureHpa: number): string => (pressureHpa * 0.02953).toFixed(2);
 	const getDayDateValue = (day: Day): string | number => {
 		const anyDay = day as Record<string, unknown>;
 		return (anyDay.date as string | number | undefined) ?? day.day ?? day.time ?? day.ts ?? Date.now();
@@ -245,25 +295,25 @@
 	};
 
 	type WxAlert = {
-		id?: string | number;
+		desc?: string;
+		description?: string;
 		event?: string;
 		headline?: string;
-		title?: string;
+		id?: string | number;
 		name?: string;
-		description?: string;
-		desc?: string;
-		severity?: string;
-		urgency?: string;
-		sender?: string;
 		sender_name?: string;
+		sender?: string;
+		severity?: string;
 		source?: string;
+		title?: string;
+		urgency?: string;
 	};
 
 	type NormalizedAlert = {
-		id: string;
-		title: string;
-		severity: string;
 		description?: string;
+		id: string;
+		severity: string;
+		title: string;
 	};
 
 	const normalizeAlerts = (root: unknown): NormalizedAlert[] => {
@@ -399,6 +449,11 @@
 				: undefined}
 			{@const windMphVal = getWindMph(now)}
 			{@const humidity = getHumidity(now)}
+			{@const uvIdx = getUVIndex(now)}
+			{@const uvIconPath = uvLottiePath(uvIdx)}
+			{@const uvCategory = uvIdx !== undefined ? getUVCategory(uvIdx) : ''}
+			{@const pressureHpa = getPressureHpa(now)}
+			{@const pressureInHg = pressureHpa !== undefined ? formatPressureInHg(pressureHpa) : ''}
 			{@const summary =
 				(now?.condition && (now.condition.desc || now.condition.main)) ||
 				(pick(now, ['summary', 'desc', 'text']) ?? '')}
@@ -419,6 +474,10 @@
 			{@const moonriseIsPast = moonriseDate ? +nowClock > +moonriseDate : false}
 			{@const moonsetIsPast = moonsetDate ? +nowClock > +moonsetDate : false}
 			{@const moonriseFirst = !moonsetDate || (moonriseDate && +moonriseDate <= +moonsetDate)}
+			{@const moonPhaseValue = getMoonPhaseValue(root, astro, nowClock)}
+			{@const moonPhaseName = getMoonPhaseName(moonPhaseValue)}
+			{@const moonIllumPct = getMoonIlluminationPct(moonPhaseValue)}
+			{@const moonIconPath = getMoonIconPath({ moonPhase: moonPhaseValue })}
 
 			<div class="wx-current-main">
 				<div class="wx-current">
@@ -453,6 +512,30 @@
 
 			<div class="wx-stats">
 				<div class="wx-info">
+					<div class="col metrics-extra">
+						{#if typeof uvIdx === 'number'}
+							<span class="item uv" aria-label={`UV index ${Math.round(uvIdx)}, ${uvCategory}`}
+								><span class="ico"
+									><LottieWeatherIcon
+										src={uvIconPath}
+										className="wi wi-stat"
+										ariaLabel="UV index"
+									/></span
+								>UV {Math.round(uvIdx)}</span
+							>
+						{/if}
+						{#if pressureInHg}
+							<span class="item pressure" aria-label={`Pressure ${pressureInHg} inches of mercury`}
+								><span class="ico"
+									><LottieWeatherIcon
+										src="/lottie/weather/barometer.json"
+										className="wi wi-stat"
+										ariaLabel="Pressure"
+									/></span
+								>{pressureInHg} inHg</span
+							>
+						{/if}
+					</div>
 					<div class="col metrics">
 						{#if typeof windMphVal === 'number'}
 							<span class="item wind"
@@ -515,9 +598,9 @@
 							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
 									><span class="ico"
 										><LottieWeatherIcon
-											src="/lottie/weather/moonset.json"
-											className="wi wi-astro"
 											ariaLabel="Moonset"
+											className="wi wi-astro"
+											src="/lottie/weather/moonset.json"
 										/></span
 									>{hm(moonset)}</span
 								>{/if}
@@ -525,22 +608,38 @@
 							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
 									><span class="ico"
 										><LottieWeatherIcon
-											src="/lottie/weather/moonset.json"
-											className="wi wi-astro"
 											ariaLabel="Moonset"
+											className="wi wi-astro"
+											src="/lottie/weather/moonset.json"
 										/></span
 									>{hm(moonset)}</span
 								>{/if}
 							{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
 									><span class="ico"
 										><LottieWeatherIcon
-											src="/lottie/weather/moonrise.json"
-											className="wi wi-astro"
 											ariaLabel="Moonrise"
+											className="wi wi-astro"
+											src="/lottie/weather/moonrise.json"
 										/></span
 									>{hm(moonrise)}</span
 								>{/if}
 						{/if}
+					</div>
+					<div
+						aria-label={`Moon phase: ${moonPhaseName}, ${moonIllumPct}% illuminated`}
+						class="col moon-phase"
+					>
+						<img
+							alt={moonPhaseName}
+							class="moon-phase-img"
+							decoding="async"
+							loading="lazy"
+							src={moonIconPath}
+						/>
+						<!-- <div class="moon-phase-info">
+							<span class="moon-phase-name">{moonPhaseName}</span>
+							<span class="moon-phase-illum">{moonIllumPct}%</span>
+						</div> -->
 					</div>
 				</div>
 			</div>
@@ -574,9 +673,9 @@
 							<div class="day">{label}</div>
 							<div class="wxi">
 								<LottieWeatherIcon
-									src={forecastLottie}
-									className="wi wi-forecast"
 									ariaLabel={d?.condition?.main || d?.condition?.desc || ''}
+									className="wi wi-forecast"
+									src={forecastLottie}
 								/>
 							</div>
 							<div class="pop">{pop === undefined ? '' : `${pop}%`}</div>
@@ -699,9 +798,7 @@
 			line-clamp: var(--wx-alert-desc-line-clamp, 2);
 			max-width: 26rem;
 			overflow: hidden;
-
 			/* text-overflow: ellipsis; */
-
 			/* white-space: nowrap; */
 		}
 	}
@@ -846,7 +943,7 @@
 		align-items: start;
 		column-gap: 0.5rem;
 		display: grid;
-		grid-template-columns: repeat(3, max-content);
+		grid-template-columns: repeat(2, max-content);
 		justify-content: end;
 		row-gap: 0.25rem;
 
@@ -881,12 +978,44 @@
 			display: grid;
 			font-weight: 600;
 			gap: 0.5rem;
-			grid-template-columns: repeat(2, max-content);
+			grid-template-columns: repeat(3, max-content);
 			justify-content: end;
 
 			& .col {
 				display: grid;
 				gap: 0.375rem;
+			}
+
+			& .col.moon-phase {
+				align-items: center;
+				display: flex;
+				flex-direction: column;
+				gap: 0.5rem;
+				text-align: center;
+
+				& .moon-phase-img {
+					display: block;
+					height: 40px;
+					width: auto;
+					/* filter: brightness(0.8); */
+				}
+
+				& .moon-phase-info {
+					display: flex;
+					flex-direction: column;
+					gap: 0.1rem;
+
+					& .moon-phase-name {
+						font-size: 0.75rem;
+						font-weight: 400;
+						line-height: 1.1;
+					}
+
+					& .moon-phase-illum {
+						font-size: 0.75rem;
+						opacity: 0.7;
+					}
+				}
 			}
 
 			& .item {
