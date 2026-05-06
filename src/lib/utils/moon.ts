@@ -8,6 +8,8 @@ export type MoonPhaseName =
 	| 'Last Quarter'
 	| 'Waning Crescent';
 
+export type MoonPhaseAbbreviation = 'New' | 'WaxC' | 'First' | 'WaxG' | 'Full' | 'WanG' | 'Last' | 'WanC';
+
 export type MoonImageSize = 50 | 100;
 
 export type GetMoonIconPathOptions = {
@@ -32,6 +34,17 @@ const PHASE_NAMES: MoonPhaseName[] = [
 	'Waning Gibbous',
 	'Last Quarter',
 	'Waning Crescent'
+];
+
+const MOON_PHASE_ABBREVIATIONS: MoonPhaseAbbreviation[] = [
+	'New',
+	'WaxC',
+	'First',
+	'WanG',
+	'Full',
+	'WanG',
+	'Last',
+	'WanC'
 ];
 
 export const normalizeMoonPhase = (moonPhase: number): number => {
@@ -63,6 +76,12 @@ export const getMoonPhaseName = (moonPhase: number): MoonPhaseName => {
 	const phase = normalizeMoonPhase(moonPhase);
 	const eighth = Math.round(phase * 8) % 8;
 	return PHASE_NAMES[eighth] ?? 'New Moon';
+};
+
+export const getMoonPhaseAbbreviation = (moonPhase: number): MoonPhaseAbbreviation => {
+	const phase = normalizeMoonPhase(moonPhase);
+	const eighth = Math.round(phase * 8) % 8;
+	return MOON_PHASE_ABBREVIATIONS[eighth] ?? 'New';
 };
 
 export const getMoonIlluminationPct = (moonPhase: number): number => {

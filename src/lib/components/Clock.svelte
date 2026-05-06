@@ -1,11 +1,17 @@
 <script lang="ts">
 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
-	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
+	import {
+		createDateTimeFormatter,
+		getResolvedDateTimeDisplaySettings
+	} from '$lib/utils/dateTimeContext';
 	import { onMount } from 'svelte';
 
 	let now = $state(new Date());
 	let timer: number | undefined;
-	const props = $props<{ className?: string; dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null }>();
+	const props = $props<{
+		className?: string;
+		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+	}>();
 	const className = $derived(props.className ?? '');
 	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings(props));
 
@@ -80,6 +86,7 @@
 			font-size: clamp(2.5rem, 6vw, 5.25rem);
 			font-weight: 700;
 			gap: 0.1em;
+			justify-content: center;
 			letter-spacing: 0.01em;
 		}
 
@@ -115,7 +122,7 @@
 
 			& .date-main {
 				color: var(--fg);
-				font-size: clamp(1.5rem, 2.8vw, 2.05rem);
+				font-size: clamp(1.5rem, 3.1vw, 2.65rem);
 				font-weight: 700;
 				letter-spacing: -0.015em;
 				line-height: 1;
@@ -136,14 +143,14 @@
 
 			& .dow {
 				color: color-mix(in oklch, var(--fg), var(--muted) 80%);
-				font-size: clamp(0.82rem, 1.35vw, 1rem);
+				font-size: clamp(0.82rem, 1.65vw, 1.4rem);
 				font-weight: 700;
 				letter-spacing: 0.01em;
 			}
 
 			& .year {
 				color: color-mix(in oklch, var(--fg), var(--muted) 100%);
-				font-size: clamp(0.68rem, 1.25vw, 0.9rem);
+				font-size: clamp(0.68rem, 1.45vw, 1.4rem);
 				font-weight: 700;
 				letter-spacing: 0.015em;
 				opacity: 0.9;

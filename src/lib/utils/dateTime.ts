@@ -59,10 +59,10 @@ const UPTIME_UNITS: Array<{
 	shortLabel: string;
 	longLabel: string;
 }> = [
-		{ unit: 'day', shortLabel: 'd', longLabel: 'day' },
-		{ unit: 'hour', shortLabel: 'h', longLabel: 'hour' },
-		{ unit: 'minute', shortLabel: 'm', longLabel: 'minute' }
-	];
+	{ unit: 'day', shortLabel: 'd', longLabel: 'day' },
+	{ unit: 'hour', shortLabel: 'h', longLabel: 'hour' },
+	{ unit: 'minute', shortLabel: 'm', longLabel: 'minute' }
+];
 // Passing `timeZone: null` intentionally preserves source/local-day semantics for labels
 // derived from date-only values, rather than rebucketing them through the display timezone.
 const LOCAL_DAY_FORMAT_OVERRIDES = { timeZone: null } as const;
@@ -112,7 +112,8 @@ const resolveIntlOptions = (
 	const locale = overrides?.locale ?? settings.locale;
 	const hour12 = overrides?.hour12 ?? settings.hour12;
 	// `null` is an explicit escape hatch for helpers that need local-day behavior.
-	const timeZone = overrides?.timeZone === undefined ? settings.timeZone : overrides.timeZone ?? undefined;
+	const timeZone =
+		overrides?.timeZone === undefined ? settings.timeZone : (overrides.timeZone ?? undefined);
 	const next: Intl.DateTimeFormatOptions = {
 		...baseOptions,
 		...overrides?.options,
@@ -256,7 +257,8 @@ export const formatMenuDateLabel = (
 export const formatForecastWeekday = (
 	value: DateTimeInput,
 	settings?: ResolvedDateTimeDisplaySettings
-): string => formatDate(value, settings, { preset: 'forecastWeekday', ...LOCAL_DAY_FORMAT_OVERRIDES });
+): string =>
+	formatDate(value, settings, { preset: 'forecastWeekday', ...LOCAL_DAY_FORMAT_OVERRIDES });
 
 export const formatClockParts = (
 	value: DateTimeInput,
