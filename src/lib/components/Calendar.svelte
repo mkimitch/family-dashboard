@@ -1,17 +1,20 @@
 <script lang="ts">
- 	import { MERGE_ALLDAY_DUPLICATES, mergeAllDayDuplicates } from '$lib/calendarMerge';
- 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
- 	import type {
- 		CalendarConfig,
- 		CalendarOverlayEvent,
- 		CalEvent,
- 		CalInfo,
- 		MergedEvent
- 	} from '$lib/config/types';
- 	import { isMerged } from '$lib/config/types';
- 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
- 	import { onMount } from 'svelte';
- 	import LastUpdated from './LastUpdated.svelte';
+	import { MERGE_ALLDAY_DUPLICATES, mergeAllDayDuplicates } from '$lib/calendarMerge';
+	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+	import type {
+		CalendarConfig,
+		CalendarOverlayEvent,
+		CalEvent,
+		CalInfo,
+		MergedEvent
+	} from '$lib/config/types';
+	import { isMerged } from '$lib/config/types';
+	import {
+		createDateTimeFormatter,
+		getResolvedDateTimeDisplaySettings
+	} from '$lib/utils/dateTimeContext';
+	import { onMount } from 'svelte';
+	import LastUpdated from './LastUpdated.svelte';
 
 	type ApiEvent = any;
 	type MergedTileMode = 'svg' | 'url' | 'text' | 'color';
@@ -51,11 +54,11 @@
 	const EVENTS_POLL_MINUTES = 5;
 	const EVENTS_POLL_MS = EVENTS_POLL_MINUTES * 60 * 1000;
 	let lastEventsReloadAt = 0;
-	let {
-		class: className = '',
-		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null
-	} = $props();
-	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
+	let { class: className = '', dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null } =
+		$props();
+	const dateTime = createDateTimeFormatter(() =>
+		getResolvedDateTimeDisplaySettings({ dateTimeDisplay })
+	);
 	const createKeyFormatter = (zone?: string) =>
 		new Intl.DateTimeFormat('en-CA', {
 			timeZone: zone || undefined,
@@ -734,7 +737,9 @@
 				style={`--allday-min-h: ${allDayMinHeights[dayKey] || '0.5rem'}`}
 			>
 				<div class="day-head">
-					<span class="dom">{dateTime.formatDate(d, { preset: 'calendarDayNumber', timeZone: null })}</span>
+					<span class="dom"
+						>{dateTime.formatDate(d, { preset: 'calendarDayNumber', timeZone: null })}</span
+					>
 				</div>
 				<div class="day-events-allday">
 					{#each Array.from({ length: trackCount }) as _, ti}

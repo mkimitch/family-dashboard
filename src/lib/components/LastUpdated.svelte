@@ -1,8 +1,11 @@
 <script lang="ts">
- 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
- 	import { toDate } from '$lib/utils/dateTime';
- 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
- 	import { onDestroy, onMount } from 'svelte';
+	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+	import { toDate } from '$lib/utils/dateTime';
+	import {
+		createDateTimeFormatter,
+		getResolvedDateTimeDisplaySettings
+	} from '$lib/utils/dateTimeContext';
+	import { onDestroy, onMount } from 'svelte';
 
 	type LastUpdatedProps = {
 		timestamp: string | Date | null;
@@ -11,7 +14,9 @@
 	};
 
 	let { timestamp = null, className = '', dateTimeDisplay = null }: LastUpdatedProps = $props();
-	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
+	const dateTime = createDateTimeFormatter(() =>
+		getResolvedDateTimeDisplaySettings({ dateTimeDisplay })
+	);
 
 	let rel = $state('');
 	let abs = $state('');

@@ -40,6 +40,7 @@ This repository is standardizing CSS ownership incrementally.
 Current CSS lint coverage is intentionally scoped to the component-local files standardized in this pass:
 
 - `src/lib/components/Clock.svelte`
+- `src/lib/components/CountdownList.svelte`
 - `src/lib/components/Hero.svelte`
 - `src/lib/components/LastUpdated.svelte`
 - `src/lib/components/LottieWeatherIcon.svelte`

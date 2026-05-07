@@ -1,8 +1,11 @@
 <script lang="ts">
- 	import { dev } from '$app/environment';
- 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
- 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
- 	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
+	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+	import {
+		createDateTimeFormatter,
+		getResolvedDateTimeDisplaySettings
+	} from '$lib/utils/dateTimeContext';
+	import { onMount } from 'svelte';
 
 	type Load = { '1m': number; '5m': number; '15m': number };
 	type Mem = { totalMB: number; usedMB: number; freeMB: number };
@@ -31,13 +34,15 @@
 	};
 
 	// Refresh both endpoints every 15s to keep the dashboard metrics current without overloading the Pi.
- 	const POLL_INTERVAL_MS = 15000;
- 	let { dateTimeDisplay = null }: SystemStatusStubProps = $props();
+	const POLL_INTERVAL_MS = 15000;
+	let { dateTimeDisplay = null }: SystemStatusStubProps = $props();
 
 	let pi = $state<SysInfo | null>(null);
 	let server = $state<SysInfo | null>(null);
- 	let interval: number | undefined;
- 	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
+	let interval: number | undefined;
+	const dateTime = createDateTimeFormatter(() =>
+		getResolvedDateTimeDisplaySettings({ dateTimeDisplay })
+	);
 
 	const clamp = (min: number, n: number, max: number): number => Math.min(max, Math.max(min, n));
 

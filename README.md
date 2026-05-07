@@ -111,19 +111,19 @@ Notes:
 
 Create a `.env` file alongside the project root with the variables consumed by the server routes:
 
-| Variable                      | Purpose                                                    |
-| ----------------------------- | ---------------------------------------------------------- |
-| `CAL_URL`                     | Base URL for the calendar events feed                      |
-| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints         |
-| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service          |
-| `DISPLAY_LOCALE`              | Optional locale for absolute date/time display formatting  |
-| `DISPLAY_TIMEZONE`            | Optional timezone for date/time display format             |
-| `DISPLAY_HOUR12`              | Optional 12-hour/24-hour display override                  |
-| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend    |
-| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`           |
-| `SCHOOL_MENU_URL`             | Optional override for the school-menu upstream             |
-| `PHOTO_DIR`                   | Optional absolute/relative directory for wallpaper JPGs    |
-| `GPU_TEMP_FILE`               | Optional server-side GPU temperature file path             |
+| Variable                      | Purpose                                                   |
+| ----------------------------- | --------------------------------------------------------- |
+| `CAL_URL`                     | Base URL for the calendar events feed                     |
+| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints        |
+| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service         |
+| `DISPLAY_LOCALE`              | Optional locale for absolute date/time display formatting |
+| `DISPLAY_TIMEZONE`            | Optional timezone for date/time display format            |
+| `DISPLAY_HOUR12`              | Optional 12-hour/24-hour display override                 |
+| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend   |
+| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`          |
+| `SCHOOL_MENU_URL`             | Optional override for the school-menu upstream            |
+| `PHOTO_DIR`                   | Optional absolute/relative directory for wallpaper JPGs   |
+| `GPU_TEMP_FILE`               | Optional server-side GPU temperature file path            |
 
 If `PHOTO_DIR` is not set, the app serves photos from `static/photos`.
 

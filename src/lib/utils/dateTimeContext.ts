@@ -22,10 +22,7 @@ export type DateTimeDisplaySettingsGetter = () => ResolvedDateTimeDisplaySetting
 const fallbackSettingsGetter: DateTimeDisplaySettingsGetter = () => DATE_TIME_APP_DEFAULTS;
 
 export const getResolvedDateTimeDisplaySettings = (
-	value:
-		| { dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null }
-		| null
-		| undefined
+	value: { dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null } | null | undefined
 ): ResolvedDateTimeDisplaySettings => value?.dateTimeDisplay ?? DATE_TIME_APP_DEFAULTS;
 
 export const createDateTimeFormatter = (

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
-	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
+	import {
+		createDateTimeFormatter,
+		getResolvedDateTimeDisplaySettings
+	} from '$lib/utils/dateTimeContext';
 	import { onMount } from 'svelte';
 	import type { SchoolMenu } from '../../routes/+layout.server';
 
@@ -14,7 +17,9 @@
 		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null
 	} = $props();
 	let menu = $state<SchoolMenu | null>(null);
-	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
+	const dateTime = createDateTimeFormatter(() =>
+		getResolvedDateTimeDisplaySettings({ dateTimeDisplay })
+	);
 
 	$effect(() => {
 		menu = initialMenu;

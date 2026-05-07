@@ -2,6 +2,7 @@
 	import Calendar from '$lib/components/Calendar.svelte';
 	import Hero from '$lib/components/Hero.svelte';
 	import SystemStatusStub from '$lib/components/SystemStatusStub.svelte';
+	import countdowns from '$lib/config/countdowns';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
@@ -11,7 +12,6 @@
 	const alerts: string[] = [];
 	const messageTitle = '';
 	const messageSubtitle = '';
-	const countdowns: { label: string; value: string | number }[] = [];
 
 	let calEl: HTMLElement | null = null;
 	let raf = 0;

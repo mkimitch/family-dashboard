@@ -1,16 +1,20 @@
 <script lang="ts">
- 	import SnowCap from '$lib/components/SnowCap.svelte';
- 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
- 	import { createDateTimeFormatter, getResolvedDateTimeDisplaySettings } from '$lib/utils/dateTimeContext';
- 	import {
- 		computeMoonPhase,
- 		getMoonIconPath,
- 		getMoonIlluminationPct,
- 		getMoonPhaseName
- 	} from '$lib/utils/moon';
- 	import { onMount } from 'svelte';
- 	import LastUpdated from './LastUpdated.svelte';
- 	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
+	import SnowCap from '$lib/components/SnowCap.svelte';
+	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
+	import {
+		createDateTimeFormatter,
+		getResolvedDateTimeDisplaySettings
+	} from '$lib/utils/dateTimeContext';
+	import {
+		computeMoonPhase,
+		getMoonIconPath,
+		getMoonIlluminationPct,
+		getMoonPhaseAbbreviation,
+		getMoonPhaseName
+	} from '$lib/utils/moon';
+	import { onMount } from 'svelte';
+	import LastUpdated from './LastUpdated.svelte';
+	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
 
 	type Condition = { icon?: string; main?: string; desc?: string };
 	type Day = {
@@ -102,7 +106,9 @@
 	let interval: number | undefined;
 	let clockTick: number | undefined;
 	let updatedAt = $state<string | null>(null);
-	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings({ dateTimeDisplay }));
+	const dateTime = createDateTimeFormatter(() =>
+		getResolvedDateTimeDisplaySettings({ dateTimeDisplay })
+	);
 
 	$effect(() => {
 		wx = initialWeather;
@@ -195,7 +201,8 @@
 		return parsed ? dateTime.formatTime(parsed, { preset: 'astroTime', timeZone: null }) : '—';
 	};
 
-	const getCurrentWeather = (root: WeatherRoot): WeatherNow => (root.current || root.now || root) as WeatherNow;
+	const getCurrentWeather = (root: WeatherRoot): WeatherNow =>
+		(root.current || root.now || root) as WeatherNow;
 	const getForecastDays = (root: WeatherRoot | null | undefined): Day[] => {
 		if (!root) return [];
 		if (Array.isArray(root.daily)) return root.daily;
@@ -221,11 +228,7 @@
 			moonPhase
 		};
 	};
-	const getMoonPhaseValue = (
-		root: WeatherRoot,
-		astro: WeatherAstro,
-		now: Date
-	): number => {
+	const getMoonPhaseValue = (root: WeatherRoot, astro: WeatherAstro, now: Date): number => {
 		if (typeof astro.moonPhase === 'number') return astro.moonPhase;
 		const days = getForecastDays(root);
 		const today = days[0] as Day | undefined;
@@ -267,7 +270,9 @@
 	const formatPressureInHg = (pressureHpa: number): string => (pressureHpa * 0.02953).toFixed(2);
 	const getDayDateValue = (day: Day): string | number => {
 		const anyDay = day as Record<string, unknown>;
-		return (anyDay.date as string | number | undefined) ?? day.day ?? day.time ?? day.ts ?? Date.now();
+		return (
+			(anyDay.date as string | number | undefined) ?? day.day ?? day.time ?? day.ts ?? Date.now()
+		);
 	};
 	const getDayName = (day: Day): string => {
 		const value = (day as Record<string, unknown>).name;
@@ -276,7 +281,8 @@
 	const getDayPop = (day: Day): number | undefined => {
 		const anyDay = day as Record<string, unknown>;
 		if (anyDay.pop === null) return 0;
-		if (typeof anyDay.pop === 'number') return Math.round(anyDay.pop <= 1 ? anyDay.pop * 100 : anyDay.pop);
+		if (typeof anyDay.pop === 'number')
+			return Math.round(anyDay.pop <= 1 ? anyDay.pop * 100 : anyDay.pop);
 		if (typeof anyDay.precipPct === 'number') return Math.round(anyDay.precipPct);
 		return undefined;
 	};
@@ -320,7 +326,11 @@
 		if (!root || typeof root !== 'object') return [];
 		const anyRoot = root as Record<string, unknown>;
 		const raw = anyRoot.alerts ?? anyRoot.alert ?? anyRoot.warnings ?? [];
-		const arr: Array<WxAlert | null | undefined> = Array.isArray(raw) ? raw : raw ? [raw as WxAlert] : [];
+		const arr: Array<WxAlert | null | undefined> = Array.isArray(raw)
+			? raw
+			: raw
+				? [raw as WxAlert]
+				: [];
 		return arr.reduce<NormalizedAlert[]>((items, a, idx) => {
 			if (!a) return items;
 			const titleSource = a.event ?? a.headline ?? a.title ?? a.name ?? a.description ?? a.desc;
@@ -476,6 +486,7 @@
 			{@const moonriseFirst = !moonsetDate || (moonriseDate && +moonriseDate <= +moonsetDate)}
 			{@const moonPhaseValue = getMoonPhaseValue(root, astro, nowClock)}
 			{@const moonPhaseName = getMoonPhaseName(moonPhaseValue)}
+			{@const moonPhaseAbbreviation = getMoonPhaseAbbreviation(moonPhaseValue)}
 			{@const moonIllumPct = getMoonIlluminationPct(moonPhaseValue)}
 			{@const moonIconPath = getMoonIconPath({ moonPhase: moonPhaseValue })}
 
@@ -636,10 +647,10 @@
 							loading="lazy"
 							src={moonIconPath}
 						/>
-						<!-- <div class="moon-phase-info">
-							<span class="moon-phase-name">{moonPhaseName}</span>
-							<span class="moon-phase-illum">{moonIllumPct}%</span>
-						</div> -->
+						<div class="moon-phase-info">
+							<span class="moon-phase-name">{moonPhaseAbbreviation}</span>
+							<!-- <span class="moon-phase-illum">{moonIllumPct}%</span> -->
+						</div>
 					</div>
 				</div>
 			</div>
@@ -990,14 +1001,13 @@
 				align-items: center;
 				display: flex;
 				flex-direction: column;
-				gap: 0.5rem;
+				gap: 0;
 				text-align: center;
 
 				& .moon-phase-img {
 					display: block;
-					height: 40px;
+					height: 38px;
 					width: auto;
-					/* filter: brightness(0.8); */
 				}
 
 				& .moon-phase-info {

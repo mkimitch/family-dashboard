@@ -1,16 +1,17 @@
 <script lang="ts">
+	import type { CountdownItem } from '$lib/config/countdowns';
 	import type { ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
 	import type { SchoolMenu as SchoolMenuType } from '../../routes/+layout.server';
 	import Clock from './Clock.svelte';
+	import CountdownList from './CountdownList.svelte';
 	import SchoolMenu from './SchoolMenu.svelte';
 	import WeatherCard from './WeatherCard.svelte';
 
-	type Countdown = { label: string; value: string | number };
 	type HeroProps = {
 		alerts?: string[];
 		messageTitle?: string;
 		messageSubtitle?: string;
-		countdowns?: Countdown[];
+		countdowns?: CountdownItem[];
 		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
 		weather?: any;
 		schoolMenu?: SchoolMenuType | null;
@@ -19,7 +20,7 @@
 		alerts = [] as string[],
 		messageTitle = '',
 		messageSubtitle = '',
-		countdowns = [] as Countdown[],
+		countdowns = [] as CountdownItem[],
 		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null,
 		weather = null,
 		schoolMenu = null as SchoolMenuType | null
@@ -36,15 +37,7 @@
 		</section>
 	{/if}
 
-	{#if countdowns?.length}
-		<aside class="hero-center hero-card" role="group" aria-label="Countdowns">
-			<ol class="countdown-list">
-				{#each countdowns as c}
-					<li>{c.value} - {c.label}</li>
-				{/each}
-			</ol>
-		</aside>
-	{/if}
+	<CountdownList className="hero-center hero-card" items={countdowns} {dateTimeDisplay} />
 
 	<div class="hero-lunch hero-card">
 		<SchoolMenu {dateTimeDisplay} {schoolMenu} />
@@ -94,7 +87,7 @@
 			font-size: clamp(0.95rem, 1.6vw, 1.125rem);
 		}
 
-		& .hero-card {
+		& :global(.hero-card) {
 			backdrop-filter: blur(0.3rem);
 			background: color-mix(in oklch, var(--card), transparent 40%);
 			background-image: linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent);
@@ -104,19 +97,10 @@
 			padding: 0.5rem;
 		}
 
-		& .hero-center {
+		& :global(.hero-center) {
 			align-self: end;
 			grid-area: center;
 			justify-self: center;
-		}
-
-		& .countdown-list {
-			display: grid;
-			font-weight: 600;
-			gap: 0.25rem;
-			list-style: none;
-			margin: 0;
-			padding: 0.375rem 0.5rem;
 		}
 
 		& .hero-clock {
