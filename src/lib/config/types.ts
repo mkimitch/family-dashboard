@@ -35,6 +35,41 @@ export type CalEvent = {
 	rawEndYMD?: string | null;
 };
 
+export type OmniCalTask = {
+	id: string;
+	taskListId: string;
+	taskId: string;
+	title: string;
+	notes: string | null;
+	status: 'needsAction' | 'completed' | string;
+	dueIso: string | null;
+	completedIso: string | null;
+	deleted: boolean;
+	hidden: boolean;
+	position: string;
+	parent: string | null;
+	updatedAt: number;
+};
+
+export type DashboardTask = {
+	id: string;
+	taskListId: string;
+	taskId: string;
+	title: string;
+	notes: string | null;
+	status: string;
+	dueIso: string | null;
+	dateKey: string | null;
+	isAllDay: boolean;
+	isCompleted: boolean;
+	isDeleted: boolean;
+	isHidden: boolean;
+	isOverdue: boolean;
+	position: string;
+	parent: string | null;
+	updatedAt: number;
+};
+
 export type MergedEvent = CalEvent & {
 	merged: true;
 	sourceEvents: CalEvent[];

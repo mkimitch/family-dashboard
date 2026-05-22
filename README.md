@@ -114,6 +114,7 @@ Create a `.env` file alongside the project root with the variables consumed by t
 | Variable                      | Purpose                                                   |
 | ----------------------------- | --------------------------------------------------------- |
 | `CAL_URL`                     | Base URL for the calendar events feed                     |
+| `TASKS_URL`                   | Optional override URL for the OmniCal tasks feed          |
 | `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints        |
 | `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service         |
 | `DISPLAY_LOCALE`              | Optional locale for absolute date/time display formatting |
@@ -127,6 +128,8 @@ Create a `.env` file alongside the project root with the variables consumed by t
 
 If `PHOTO_DIR` is not set, the app serves photos from `static/photos`.
 
+If `TASKS_URL` is not set, `/api/tasks` derives the OmniCal tasks endpoint from `CAL_URL`.
+
 `DISPLAY_HOUR12` accepts common boolean forms such as `true`/`false`, `1`/`0`, `yes`/`no`, and `on`/`off`.
 
 `DISPLAY_*` settings affect display formatting only. They do not change operational scheduling or query logic such as school-menu polling, calendar bucketing/query behavior, all-day boundaries, or similar domain-time calculations.
@@ -137,6 +140,7 @@ Example:
 
 ```env
 CAL_URL="https://example.com/api/calendar"
+TASKS_URL="https://example.com/api/tasks"
 CAL_API_KEY="your-api-key-here"
 CAL_CLIENT_ZONE="America/Chicago"
 DISPLAY_LOCALE="en-US"

@@ -58,12 +58,12 @@
 		grid-area: hero;
 		grid-template-areas:
 			'lunch banner weather'
-			'.     .      weather'
+			'lunch banner weather'
 			'clock center weather';
 		grid-template-columns:
 			max-content
-			minmax(0, 1fr)
-			clamp(22rem, 28vw, 30rem);
+			minmax(0, 100%)
+			max-content;
 		grid-template-rows:
 			auto
 			minmax(0, 1fr)
