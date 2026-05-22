@@ -80,7 +80,7 @@
 
 <style>
 	.countdowns {
-		max-width: min(100%, 23rem);
+		max-width: 100%;
 		min-width: min(100%, 18rem);
 
 		& .countdowns__list {

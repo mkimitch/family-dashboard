@@ -6,6 +6,7 @@
 		CalendarOverlayEvent,
 		CalEvent,
 		CalInfo,
+		DashboardTask,
 		MergedEvent
 	} from '$lib/config/types';
 	import { isMerged } from '$lib/config/types';
@@ -13,6 +14,7 @@
 		createDateTimeFormatter,
 		getResolvedDateTimeDisplaySettings
 	} from '$lib/utils/dateTimeContext';
+	import { normalizeOmniCalTasks } from '$lib/utils/tasks';
 	import { onMount } from 'svelte';
 	import LastUpdated from './LastUpdated.svelte';
 
@@ -35,18 +37,30 @@
 		badge: string | null;
 		tiles: MergedIconTile[];
 	};
+	type AllDayEventItem = {
+		kind: 'event';
+		e: CalEvent;
+		isStart: boolean;
+		isEnd: boolean;
+		sortStart: number;
+		sortEnd: number;
+		sourceIndex: number;
+	};
+	type AllDayTaskItem = {
+		kind: 'task';
+		task: DashboardTask;
+		sourceIndex: number;
+	};
+	type AllDayItem = AllDayEventItem | AllDayTaskItem;
 
 	let calendars = $state(new Map<string, CalInfo>());
 	let rawEvents = $state<CalEvent[]>([]);
+	let tasks = $state<DashboardTask[]>([]);
 	let displayEvents = $derived<CalEvent[]>(
 		MERGE_ALLDAY_DUPLICATES ? mergeAllDayDuplicates(rawEvents, calendars) : [...rawEvents]
 	);
 	let visibleDays = $state<Date[]>([]);
-	let allDayMinHeights = $state<Record<string, string>>({});
-	let allDayRowsByDay = $state<
-		Record<string, Array<{ e: CalEvent; isStart: boolean; isEnd: boolean }>>
-	>({});
-	let allDayTrackCountByDay = $state<Record<string, number>>({});
+	let allDayItemsByDay = $state<Record<string, AllDayItem[]>>({});
 	let now = $state(new Date());
 	let timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	let tick: number | undefined;
@@ -127,11 +141,6 @@
 		return { ymd: null, dt: null };
 	};
 	const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-	const daysBetween = (a: Date, b: Date): number => {
-		const A = startOfDay(a).getTime();
-		const B = startOfDay(b).getTime();
-		return Math.round((B - A) / 86400000);
-	};
 	const isMidnightInZone = (d: Date, zone: string | undefined): boolean => {
 		const parts = new Intl.DateTimeFormat('en-US', {
 			timeZone: zone,
@@ -515,12 +524,38 @@
 		} catch {}
 	};
 
+	const loadTasks = async (): Promise<DashboardTask[]> => {
+		try {
+			const response = await fetch('/api/tasks', {
+				cache: 'no-store',
+				headers: { accept: 'application/json' }
+			});
+			if (!response.ok) {
+				console.error(`Tasks API fetch failed with status ${response.status}`);
+				tasks = [];
+				return [];
+			}
+			const raw: unknown = await response.json();
+			const nextTasks = normalizeOmniCalTasks(raw, {
+				todayKey: keyOf(new Date()),
+				visibleDateKeys: getVisibleDateKeys()
+			});
+			tasks = nextTasks;
+			return nextTasks;
+		} catch (error) {
+			console.error('Tasks API fetch failed:', error);
+			tasks = [];
+			return [];
+		}
+	};
+
 	const buildVisibleDays = () => {
 		const ymd = keyFormatter.format(new Date());
 		const parts = ymd.split('-').map(Number);
 		const start = new Date(parts[0], parts[1] - 1, parts[2]);
 		visibleDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
 	};
+	const getVisibleDateKeys = (): string[] => visibleDays.map((d) => keyOf(d));
 
 	const isCurrent = (e: CalEvent) => {
 		const s = e.start as Date;
@@ -532,94 +567,93 @@
 		return +now > +end;
 	};
 
-	const computeAllDayLayout = () => {
-		// Track allocation ensures overlapping all-day events render in consistent rows without collisions.
-		const countsByDay: Record<string, number> = {};
-		const rowsByDay: Record<string, Array<{ e: CalEvent; isStart: boolean; isEnd: boolean }>> = {};
-		if (!visibleDays.length) return { countsByDay, rowsByDay };
-		const weeks = Math.ceil(visibleDays.length / 7) || 1;
-		for (let wi = 0; wi < weeks; wi++) {
-			const weekStart = visibleDays[wi * 7];
-			if (!weekStart) continue;
-			const weekEnd = addDays(weekStart, 6);
-			const visKeys = Array.from({ length: 7 }, (_, di) => keyOf(addDays(weekStart, di)));
-			const multi = displayEvents.filter((e) => e.allDay);
-			const trackEnds: number[] = [];
-			const allocations: Array<{ ti: number; si: number; ei: number; e: CalEvent }> = [];
-			for (const e of multi) {
-				const s0 = e.start as Date;
-				const e0 = (e.end as Date) || s0;
-
-				let effectiveEnd = e0;
-				if (e.rawEndYMD && (e.allDay || e.rawStartYMD)) {
-					if (!e.rawStartYMD || e.rawEndYMD !== e.rawStartYMD) {
-						const [yy, mm, dd] = e.rawEndYMD.split('-').map(Number);
-						const tmp = new Date(yy, mm - 1, dd);
-						tmp.setDate(tmp.getDate() - 1);
-						effectiveEnd = tmp;
-					}
-				} else if (
-					e.allDay &&
-					isMidnightInZone(s0, timeZone) &&
-					isMidnightInZone(e0, timeZone) &&
-					!sameDay(s0, e0)
-				) {
-					const tmp = new Date(e0);
-					tmp.setDate(tmp.getDate() - 1);
-					effectiveEnd = tmp;
-				}
-				let s = s0 < weekStart ? weekStart : s0;
-				let eEnd = effectiveEnd > weekEnd ? weekEnd : effectiveEnd;
-				if (eEnd < weekStart || s > weekEnd) continue;
-				const startKey = e.rawStartYMD || keyOf(s);
-				const endKeyIncl = keyOf(eEnd);
-				let si = visKeys.indexOf(startKey);
-				if (si === -1)
-					si =
-						s <= weekStart
-							? 0
-							: s >= weekEnd
-								? 6
-								: Math.max(0, Math.min(6, daysBetween(weekStart, s)));
-				let ei = visKeys.indexOf(endKeyIncl);
-				if (ei === -1)
-					ei =
-						eEnd <= weekStart
-							? 0
-							: eEnd >= weekEnd
-								? 6
-								: Math.max(si, Math.min(6, daysBetween(weekStart, eEnd)));
-				let ti = 0;
-				let placed = false;
-				for (; ti < trackEnds.length; ti++) {
-					if (trackEnds[ti] < si) {
-						trackEnds[ti] = ei;
-						placed = true;
-						break;
-					}
-				}
-				if (!placed) {
-					ti = trackEnds.length;
-					trackEnds.push(ei);
-				}
-				allocations.push({ ti, si, ei, e });
+	const getAllDayRange = (e: CalEvent): { start: Date; end: Date } => {
+		const rawStart = e.start as Date;
+		const start = startOfDay(rawStart);
+		const rawEnd = (e.end as Date | undefined) || start;
+		let end = startOfDay(rawEnd);
+		if (e.rawEndYMD && (e.allDay || e.rawStartYMD)) {
+			if (!e.rawStartYMD || e.rawEndYMD !== e.rawStartYMD) {
+				const [yy, mm, dd] = e.rawEndYMD.split('-').map(Number);
+				end = new Date(yy, mm - 1, dd);
+				end.setDate(end.getDate() - 1);
 			}
-
-			for (let di = 0; di < 7; di++) {
-				const day = addDays(weekStart, di);
-				const key = keyOf(day);
-				countsByDay[key] = trackEnds.length;
-				const rows: Array<{ e: CalEvent; isStart: boolean; isEnd: boolean }> = [];
-				for (const a of allocations) {
-					if (di >= a.si && di <= a.ei) {
-						rows[a.ti] = { e: a.e, isStart: di === a.si, isEnd: di === a.ei };
-					}
-				}
-				rowsByDay[key] = rows;
-			}
+		} else if (
+			e.allDay &&
+			isMidnightInZone(rawStart, timeZone) &&
+			isMidnightInZone(rawEnd, timeZone) &&
+			!sameDay(rawStart, rawEnd)
+		) {
+			end = new Date(rawEnd);
+			end.setDate(end.getDate() - 1);
+			end = startOfDay(end);
 		}
-		return { countsByDay, rowsByDay };
+		if (end < start) end = start;
+		return { start, end };
 	};
+
+	const sortAllDayItems = (left: AllDayItem, right: AllDayItem): number => {
+		if (left.kind !== right.kind) return left.kind === 'event' ? -1 : 1;
+		if (left.kind === 'event' && right.kind === 'event') {
+			if (left.sortStart !== right.sortStart) return left.sortStart - right.sortStart;
+			if (left.sortEnd !== right.sortEnd) return right.sortEnd - left.sortEnd;
+			const titleCompare = left.e.title.localeCompare(right.e.title, undefined, {
+				sensitivity: 'base'
+			});
+			if (titleCompare !== 0) return titleCompare;
+		}
+		if (left.kind === 'task' && right.kind === 'task') {
+			const positionCompare = left.task.position.localeCompare(right.task.position, undefined, {
+				numeric: true,
+				sensitivity: 'base'
+			});
+			if (positionCompare !== 0) return positionCompare;
+			const titleCompare = left.task.title.localeCompare(right.task.title, undefined, {
+				sensitivity: 'base'
+			});
+			if (titleCompare !== 0) return titleCompare;
+		}
+		return left.sourceIndex - right.sourceIndex;
+	};
+
+	const computeAllDayLayout = (): Record<string, AllDayItem[]> => {
+		const itemsByDay: Record<string, AllDayItem[]> = {};
+		for (const day of visibleDays) itemsByDay[keyOf(day)] = [];
+
+		displayEvents.forEach((e, sourceIndex) => {
+			if (!e.allDay) return;
+			const { start, end } = getAllDayRange(e);
+			for (const day of visibleDays) {
+				const dayStart = startOfDay(day);
+				if (dayStart < start || dayStart > end) continue;
+				const dayKey = keyOf(day);
+				itemsByDay[dayKey]?.push({
+					kind: 'event',
+					e,
+					isStart: sameDay(start, day),
+					isEnd: sameDay(end, day),
+					sortStart: start.getTime(),
+					sortEnd: end.getTime(),
+					sourceIndex
+				});
+			}
+		});
+
+		tasks.forEach((task, sourceIndex) => {
+			if (!task.dateKey || !itemsByDay[task.dateKey]) return;
+			itemsByDay[task.dateKey].push({ kind: 'task', task, sourceIndex });
+		});
+
+		for (const dayKey in itemsByDay) {
+			itemsByDay[dayKey] = itemsByDay[dayKey].sort(sortAllDayItems);
+		}
+		return itemsByDay;
+	};
+
+	const allDayItemKey = (item: AllDayItem, dayKey: string, index: number): string =>
+		item.kind === 'task'
+			? `task:${item.task.id}`
+			: `event:${item.e.id ?? `${item.e.calendarId || ''}:${item.e.title}:${String(item.e.start)}`}:${dayKey}:${index}`;
 
 	const groupTimedForDay = (d: Date): Array<{ mins: number; items: CalEvent[] }> => {
 		const list = displayEvents.filter((e) => !e.allDay && sameDay(e.start as Date, d));
@@ -635,20 +669,17 @@
 			.map(([mins, items]) => ({ mins, items }));
 	};
 
-	onMount(() => {
+	const refreshCalendarData = async (includeCalendars = false) => {
 		buildVisibleDays();
+		if (includeCalendars) await loadCalendars();
+		await loadEvents();
+		await loadTasks();
+		lastEventsReloadAt = Date.now();
+	};
+
+	onMount(() => {
 		(async () => {
-			await Promise.all([loadCalendars(), loadEvents()]);
-			lastEventsReloadAt = Date.now();
-			const layout = computeAllDayLayout();
-			allDayTrackCountByDay = layout.countsByDay;
-			allDayRowsByDay = layout.rowsByDay;
-			allDayMinHeights = Object.fromEntries(
-				Object.entries(layout.countsByDay).map(([k, n]) => [
-					k,
-					n ? `${0.5 + n * 1.5}rem` : '0.5rem'
-				])
-			);
+			await refreshCalendarData(true);
 		})();
 		// Advance `now` on a fixed cadence so time-based classes (is-current, is-past) stay in sync.
 		tick = window.setInterval(() => {
@@ -663,8 +694,7 @@
 					lastDayKey = currentDayKey;
 				}
 				(async () => {
-					await loadEvents();
-					lastEventsReloadAt = Date.now();
+					await refreshCalendarData();
 				})();
 			}
 		}, 60 * 1000);
@@ -674,12 +704,7 @@
 	});
 
 	$effect(() => {
-		const layout = computeAllDayLayout();
-		allDayTrackCountByDay = layout.countsByDay;
-		allDayRowsByDay = layout.rowsByDay;
-		allDayMinHeights = Object.fromEntries(
-			Object.entries(layout.countsByDay).map(([k, n]) => [k, n ? `${0.5 + n * 1.5}rem` : '0.5rem'])
-		);
+		allDayItemsByDay = computeAllDayLayout();
 	});
 </script>
 
@@ -724,8 +749,7 @@
 		{/each}
 		{#each visibleDays as d, i}
 			{@const dayKey = keyOf(d)}
-			{@const trackCount = allDayTrackCountByDay[dayKey] || 0}
-			{@const rows = allDayRowsByDay[dayKey] || []}
+			{@const allDayItems = allDayItemsByDay[dayKey] || []}
 			<div
 				class="day-cell {d.getDay() === 0 || d.getDay() === 6 ? 'is-weekend' : ''} {sameDay(
 					d,
@@ -734,7 +758,6 @@
 					? 'is-today'
 					: ''}"
 				data-date={dayKey}
-				style={`--allday-min-h: ${allDayMinHeights[dayKey] || '0.5rem'}`}
 			>
 				<div class="day-head">
 					<span class="dom"
@@ -742,18 +765,17 @@
 					>
 				</div>
 				<div class="day-events-allday">
-					{#each Array.from({ length: trackCount }) as _, ti}
-						{@const row = rows[ti]}
-						{#if row}
-							{@const cal = calendars.get(row.e.calendarId || '')}
-							{@const merged = isMerged(row.e) ? row.e : null}
+					{#each allDayItems as item, itemIndex (allDayItemKey(item, dayKey, itemIndex))}
+						{#if item.kind === 'event'}
+							{@const cal = calendars.get(item.e.calendarId || '')}
+							{@const merged = isMerged(item.e) ? item.e : null}
 							{@const mergedIconModel = merged ? getMergedIconModel(merged) : null}
 							<div
-								class={`event-chip all-day-chip ${row.isStart ? 'is-start' : ''} ${row.isEnd ? 'is-end' : ''}`}
-								class:is-current={isCurrent(row.e)}
-								class:is-past={isPast(row.e)}
+								class={`event-chip all-day-chip ${item.isStart ? 'is-start' : ''} ${item.isEnd ? 'is-end' : ''}`}
+								class:is-current={isCurrent(item.e)}
+								class:is-past={isPast(item.e)}
 								style={`--cal-color: ${cal?.color || '#888'}`}
-								title={merged ? mergedChipTitle(row.e.title, merged) : row.e.title}
+								title={merged ? mergedChipTitle(item.e.title, merged) : item.e.title}
 							>
 								{#if merged}
 									<span
@@ -794,13 +816,21 @@
 								{:else if cal?.icon}
 									<span class="event-icon" aria-hidden="true">{cal?.icon}</span>
 								{/if}
-								<span class="event-title">{row.e.title}</span>
+								<span class="event-title">{item.e.title}</span>
 								{#if merged}
 									<span class="event-sr-only">. {mergedContextText(merged)}</span>
 								{/if}
 							</div>
 						{:else}
-							<div class="event-chip placeholder" aria-hidden="true"></div>
+							<div
+								class="event-chip all-day-chip task-chip is-start is-end"
+								class:is-overdue={item.task.isOverdue}
+								title={item.task.title}
+							>
+								<span class="task-indicator" aria-hidden="true"></span>
+								<span class="event-title">{item.task.title}</span>
+								<span class="event-sr-only">. Task{item.task.isOverdue ? ', overdue' : ''}</span>
+							</div>
 						{/if}
 					{/each}
 				</div>
@@ -972,7 +1002,7 @@
 		border-right: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 90%);
 		display: flex;
 		flex-direction: column;
-		gap: 0;
+		gap: 0.25rem;
 		min-height: 8rem;
 		padding: 0.175rem;
 		position: relative;
@@ -1003,7 +1033,8 @@
 			gap: 0.4rem;
 
 			& .dom {
-				font-size: 1.05rem;
+				font-size: 1.15rem;
+				line-height: 1;
 			}
 		}
 	}
@@ -1049,14 +1080,6 @@
 		font-weight: 400;
 		gap: 0.35em;
 		padding: 0.1rem 0.2rem;
-
-		&.placeholder {
-			background: transparent;
-			border-color: transparent;
-			border-left-color: transparent;
-			visibility: hidden;
-		}
-
 		&.is-current {
 			box-shadow: 0 0.375rem 1rem color-mix(in oklch, var(--bg), transparent 55%);
 			filter: brightness(1.05) saturate(1.05);
@@ -1064,6 +1087,48 @@
 
 		&.is-past {
 			opacity: 0.65;
+		}
+
+		&.task-chip {
+			background:
+				linear-gradient(
+					to bottom right,
+					color-mix(in oklch, var(--fg), transparent 95%),
+					color-mix(in oklch, var(--accent), transparent 91%)
+				),
+				color-mix(in oklch, var(--card), transparent 4%);
+			border-color: color-mix(in oklch, var(--fg), transparent 76%);
+			color: var(--fg);
+
+			&.is-overdue {
+				background:
+					linear-gradient(
+						to bottom right,
+						color-mix(in oklch, var(--accent), transparent 88%),
+						color-mix(in oklch, var(--accent), transparent 82%)
+					),
+					color-mix(in oklch, var(--card), transparent 4%);
+				border-color: color-mix(in oklch, var(--accent), transparent 62%);
+			}
+
+			& .event-title {
+				font-weight: 400;
+			}
+
+			& .task-indicator {
+				border: 0.09375rem solid color-mix(in oklch, currentcolor, transparent 25%);
+				border-radius: 0.2rem;
+				display: inline-flex;
+				flex: 0 0 0.78rem;
+				height: 0.78rem;
+				margin-left: 0.05rem;
+				width: 0.78rem;
+			}
+
+			&.is-overdue .task-indicator {
+				background: color-mix(in oklch, var(--accent), transparent 62%);
+				border-color: color-mix(in oklch, var(--accent), var(--fg) 25%);
+			}
 		}
 
 		& .merged-icon-badge {
@@ -1164,7 +1229,6 @@
 		flex-shrink: 0;
 		gap: 0.25rem;
 		grid-auto-rows: 1.7rem;
-		min-height: var(--allday-min-h, 0.5rem);
 		min-width: 0;
 
 		& .event-chip {
