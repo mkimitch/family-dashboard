@@ -845,16 +845,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sveltejs/kit@npm:^2.49.5":
-  version: 2.56.1
-  resolution: "@sveltejs/kit@npm:2.56.1"
+"@sveltejs/kit@npm:^2.60.1":
+  version: 2.60.1
+  resolution: "@sveltejs/kit@npm:2.60.1"
   dependencies:
     "@standard-schema/spec": "npm:^1.0.0"
     "@sveltejs/acorn-typescript": "npm:^1.0.5"
     "@types/cookie": "npm:^0.6.0"
     acorn: "npm:^8.14.1"
     cookie: "npm:^0.6.0"
-    devalue: "npm:^5.6.4"
+    devalue: "npm:^5.8.1"
     esm-env: "npm:^1.2.2"
     kleur: "npm:^4.1.5"
     magic-string: "npm:^0.30.5"
@@ -874,7 +874,7 @@ __metadata:
       optional: true
   bin:
     svelte-kit: svelte-kit.js
-  checksum: 10c0/236887ad49d3a68c114d3684d3babe6785fea8366434f8bf5a9a647f91f531fea606b66e30e5bb8d2621172730151f4d835fd8be5b90cd31f982ad622a59edfc
+  checksum: 10c0/6aef97d92ac28f2697870f3458781eacb107e553b519d4f30b72fea7102109e6c41e3f292a8485b3f96e2648417f05158d5b6ab7835a6d12c14bfac1f939956f
   languageName: node
   linkType: hard
 
@@ -1444,6 +1444,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"devalue@npm:^5.8.1":
+  version: 5.8.1
+  resolution: "devalue@npm:5.8.1"
+  checksum: 10c0/fad0c5aeb615e0ddea3385923389991652b285cd2adcd84e10f07a930f735127d94621751f7ef5249a7fe2c7c666ec7c02bb95c3901da337c91f45ef4da18dea
+  languageName: node
+  linkType: hard
+
 "dir-glob@npm:^3.0.1":
   version: 3.0.1
   resolution: "dir-glob@npm:3.0.1"
@@ -1815,7 +1822,7 @@ __metadata:
     "@lxg/weather-icons": "npm:^3.0.1"
     "@sveltejs/adapter-auto": "npm:^7.0.0"
     "@sveltejs/adapter-node": "npm:^5.4.0"
-    "@sveltejs/kit": "npm:^2.49.5"
+    "@sveltejs/kit": "npm:^2.60.1"
     "@sveltejs/vite-plugin-svelte": "npm:^6.2.1"
     "@types/node": "npm:^22"
     eslint: "npm:^9.38.0"
