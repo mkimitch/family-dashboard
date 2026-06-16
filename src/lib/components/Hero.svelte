@@ -39,9 +39,7 @@
 
 	<CountdownList className="hero-center hero-card" items={countdowns} {dateTimeDisplay} />
 
-	<div class="hero-lunch hero-card">
-		<SchoolMenu {dateTimeDisplay} {schoolMenu} />
-	</div>
+	<SchoolMenu className="hero-lunch hero-card" {dateTimeDisplay} {schoolMenu} />
 	<section class="hero-clock hero-card" aria-label="Current time">
 		<Clock {dateTimeDisplay} />
 	</section>
@@ -108,7 +106,7 @@
 			grid-area: clock;
 		}
 
-		& .hero-lunch {
+		& :global(.hero-lunch) {
 			display: grid;
 			grid-area: lunch;
 			grid-template-columns: 1fr;
