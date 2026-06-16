@@ -12,24 +12,29 @@
 	const DAILY_POLL_MINUTE = 5;
 	const TIMEZONE = 'America/Chicago';
 
+	type SchoolMenuProps = {
+		className?: string;
+		schoolMenu?: SchoolMenu | null;
+		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+	};
+
 	let {
-		schoolMenu: initialMenu = null as SchoolMenu | null,
-		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null
-	} = $props();
-	let menu = $state<SchoolMenu | null>(null);
+		className = '',
+		schoolMenu: initialMenu = null,
+		dateTimeDisplay = null
+	}: SchoolMenuProps = $props();
+	let fetchedMenu = $state<SchoolMenu | null | undefined>(undefined);
+	const menu = $derived(fetchedMenu === undefined ? initialMenu : fetchedMenu);
+	const hasMenuItems = $derived(Boolean(menu?.vegetarian?.length || menu?.ambiguous?.length));
 	const dateTime = createDateTimeFormatter(() =>
 		getResolvedDateTimeDisplaySettings({ dateTimeDisplay })
 	);
-
-	$effect(() => {
-		menu = initialMenu;
-	});
 
 	const fetchMenu = async () => {
 		try {
 			const res = await fetch('/api/school-menu', { cache: 'no-store' });
 			if (res.ok) {
-				menu = await res.json();
+				fetchedMenu = (await res.json()) as SchoolMenu;
 			}
 		} catch (e) {
 			console.error('SchoolMenu fetch failed:', e);
@@ -89,22 +94,26 @@
 	});
 </script>
 
-{#if menu?.vegetarian?.length || menu?.ambiguous?.length}
-	<div class="lunch-header">
-		<img src="/svg/static/school-lunch-tray-2.svg" alt="" class="lunch-icon" />
-		<div class="lunch-header-text">
-			<span class="lunch-title">School Lunch Options</span>
-			<span class="lunch-date">{formatMenuDate(menu.date)}</span>
+{#if hasMenuItems && menu}
+	<section class={`school-menu ${className}`.trim()} aria-label="School lunch options">
+		<div class="lunch-header">
+			<img src="/svg/static/school-lunch-tray-2.svg" alt="" class="lunch-icon" />
+			<div class="lunch-header-text">
+				<span class="lunch-title">School Lunch Options</span>
+				<span class="lunch-date">{formatMenuDate(menu.date)}</span>
+			</div>
 		</div>
-	</div>
-	<ul class="lunch-items">
-		{#each menu.vegetarian as item}
-			<li class="lunch-chip">{item.name}</li>
-		{/each}
-		{#each menu.ambiguous as item}
-			<li class="lunch-chip lunch-chip--maybe" title="May or may not be vegetarian">{item.name}</li>
-		{/each}
-	</ul>
+		<ul class="lunch-items">
+			{#each menu.vegetarian as item}
+				<li class="lunch-chip">{item.name}</li>
+			{/each}
+			{#each menu.ambiguous as item}
+				<li class="lunch-chip lunch-chip--maybe" title="May or may not be vegetarian">
+					{item.name}
+				</li>
+			{/each}
+		</ul>
+	</section>
 {/if}
 
 <style>

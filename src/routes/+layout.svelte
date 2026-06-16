@@ -4,12 +4,22 @@
 	import SnowOverlay from '$lib/components/SnowOverlay.svelte';
 	import Wallpaper from '$lib/components/Wallpaper.svelte';
 	import { onMount } from 'svelte';
+	import { updated } from '$app/stores';
 
 	onMount(() => {
 		const params = new URLSearchParams(window.location.search);
 		if (params.has('kiosk')) {
 			document.documentElement.dataset.kiosk = 'true';
 		}
+
+		// Check for updates every minute and reload if a new version is found
+		const interval = setInterval(async () => {
+			if (await updated.check()) {
+				window.location.reload();
+			}
+		}, 60000);
+
+		return () => clearInterval(interval);
 	});
 
 	let { children, data } = $props();
