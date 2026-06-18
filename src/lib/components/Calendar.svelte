@@ -926,7 +926,7 @@
 			font-size: 0.85rem;
 			gap: 0.375rem;
 			max-width: 12rem;
-			padding: 0.25rem 0.5rem;
+			padding: 0.15rem 0.5rem;
 
 			& .swatch {
 				border-radius: 62.4375rem;
@@ -936,11 +936,9 @@
 			}
 
 			& .icon {
-				display: inline-block;
-				height: 1.2em;
-				margin-left: 0.125rem;
-				margin-right: 0.125rem;
-				width: 1.2em;
+				align-items: center;
+				display: inline-flex;
+				flex: 0 0 1.5em;
 			}
 
 			& .name {

@@ -30,7 +30,7 @@ const isValidLocale = (value: string): boolean => {
 	}
 };
 
-const isValidTimeZone = (value: string): boolean => {
+export const isValidTimeZone = (value: string): boolean => {
 	try {
 		new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date());
 		return true;

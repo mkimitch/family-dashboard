@@ -2,7 +2,6 @@
 	import Calendar from '$lib/components/Calendar.svelte';
 	import Hero from '$lib/components/Hero.svelte';
 	import SystemStatusStub from '$lib/components/SystemStatusStub.svelte';
-	import countdowns from '$lib/config/countdowns';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
@@ -67,7 +66,7 @@
 <main class="board">
 	<Hero
 		{alerts}
-		{countdowns}
+		countdowns={data.countdowns}
 		dateTimeDisplay={data.dateTimeDisplay}
 		{messageSubtitle}
 		{messageTitle}

@@ -79,13 +79,16 @@ body {
 
 /* App root layering */
 .app-root {
+	display: grid;
+  grid-template-columns: 1fr;
 	isolation: isolate;
 	min-height: 100vh;
 	position: relative;
 }
 
 .app-content {
-	position: relative;
+	grid-column: 1;
+	grid-row: 1;
 	z-index: 2;
 }
 
@@ -93,12 +96,6 @@ body {
 .cal-legend {
 	& .cal-legend-item {
 		.icon {
-			svg {
-				display: block;
-				height: 1.2em;
-				width: 1.2em;
-			}
-
 			img {
 				display: block;
 				height: 1.2em;
