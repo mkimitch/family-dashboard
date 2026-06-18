@@ -192,22 +192,18 @@
 
 <style>
 	.wallpaper {
+		grid-column: 1;
+		grid-row: 1;
 		height: var(--wp-height, 60vh);
-		left: 0;
-		overflow: hidden;
-		position: fixed;
-		right: 0;
-		top: 0;
+		position: relative;
 		z-index: 0;
 
 		& .wp {
 			filter: saturate(1.05) brightness(0.85);
 			height: 100%;
-			inset: 0;
 			object-fit: cover;
-			object-position: var(--wp-x, 50%) var(--wp-y, 20%);
+			object-position: var(--wp-x, 50%) var(--wp-y, 45%);
 			opacity: 0;
-			position: absolute;
 			transition: opacity 1.2s ease;
 			width: 100%;
 

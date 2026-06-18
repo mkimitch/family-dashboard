@@ -7,6 +7,9 @@
 		"build": "yarn optimize:photos && vite build",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:seed": "node scripts/seed-countdowns.mjs",
 		"dev:lan": "vite dev --host 0.0.0.0 --port 5173",
 		"dev": "vite dev",
 		"format": "prettier --write .",
@@ -16,7 +19,8 @@
 		"optimize:photos": "bash scripts/optimize-photos.sh",
 		"prepare": "svelte-kit sync || echo ''",
 		"preview": "vite preview",
-		"start": "node build"
+		"start": "node build",
+		"test": "vitest run"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -26,6 +30,7 @@
 		"@sveltejs/kit": "^2.60.1",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@types/node": "^22",
+		"drizzle-kit": "^0.31.10",
 		"eslint": "^9.38.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.4",
@@ -40,11 +45,14 @@
 		"svelte-check": "^4.3.3",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.1",
-		"vite": "^7.1.10"
+		"vite": "^7.1.10",
+		"vitest": "^4.1.9"
 	},
 	"packageManager": "yarn@4.13.0",
 	"dependencies": {
+		"@libsql/client": "^0.17.4",
 		"@lxg/weather-icons": "^3.0.1",
+		"drizzle-orm": "^0.45.2",
 		"lottie-web": "^5.13.0"
 	}
 }

@@ -8,3 +8,7 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Generated migrations & local data
+/drizzle/
+/data/

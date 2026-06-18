@@ -97,6 +97,10 @@ See `docs/css-architecture.md` for the current rules and stylelint rollout guida
 yarn check
 yarn lint
 yarn lint:css
+yarn test
+yarn db:generate
+yarn db:migrate
+yarn db:seed
 yarn fix:css
 yarn format
 ```
@@ -105,26 +109,31 @@ Notes:
 
 - `yarn lint` runs Prettier in check mode, ESLint, and the scoped CSS lint script.
 - `yarn lint:css` / `yarn fix:css` currently follow the scoped rollout documented in `docs/css-architecture.md`.
+- `yarn db:migrate` applies local Drizzle/libsql migrations for countdown events. Run it before restarting the deployed service.
+- `yarn db:seed` inserts the sample countdowns from `src/lib/config/countdowns.ts` without overwriting existing rows.
+- Countdown `target_date` is stored verbatim and may be either a date-only `YYYY-MM-DD` value (all-day, interpreted in the viewer's display timezone) or a full ISO 8601 datetime with an explicit offset (e.g. `2026-07-06T15:00:00-05:00`).
 - `src/app.css` is still excluded from the package CSS lint script to avoid forcing broad global rewrites during the incremental ownership migration.
 
 ## Environment configuration
 
 Create a `.env` file alongside the project root with the variables consumed by the server routes:
 
-| Variable                      | Purpose                                                   |
-| ----------------------------- | --------------------------------------------------------- |
-| `CAL_URL`                     | Base URL for the calendar events feed                     |
-| `TASKS_URL`                   | Optional override URL for the OmniCal tasks feed          |
-| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints        |
-| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service         |
-| `DISPLAY_LOCALE`              | Optional locale for absolute date/time display formatting |
-| `DISPLAY_TIMEZONE`            | Optional timezone for date/time display format            |
-| `DISPLAY_HOUR12`              | Optional 12-hour/24-hour display override                 |
-| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend   |
-| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`          |
-| `SCHOOL_MENU_URL`             | Optional override for the school-menu upstream            |
-| `PHOTO_DIR`                   | Optional absolute/relative directory for wallpaper JPGs   |
-| `GPU_TEMP_FILE`               | Optional server-side GPU temperature file path            |
+| Variable                      | Purpose                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `CAL_URL`                     | Base URL for the calendar events feed                                                    |
+| `TASKS_URL`                   | Optional override URL for the OmniCal tasks feed                                         |
+| `CAL_API_KEY`                 | Optional API key header sent to calendar endpoints                                       |
+| `CAL_CLIENT_ZONE`             | Default timezone supplied to the calendar service                                        |
+| `DISPLAY_LOCALE`              | Optional locale for absolute date/time display formatting                                |
+| `DISPLAY_TIMEZONE`            | Optional timezone for date/time display format                                           |
+| `DISPLAY_HOUR12`              | Optional 12-hour/24-hour display override                                                |
+| `COUNTDOWN_DB_URL`            | Optional libsql URL for countdown storage; defaults to `file:./data/family-dashboard.db` |
+| `COUNTDOWN_ADMIN_TOKEN`       | Required token for countdown admin reads and mutations via `x-admin-token`               |
+| `CAL_CALENDARS_URL`           | Optional separate endpoint for calendar metadata/legend                                  |
+| `WX_URL` or `AGG_WEATHER_URL` | Weather data endpoint consumed by `/api/weather`                                         |
+| `SCHOOL_MENU_URL`             | Optional override for the school-menu upstream                                           |
+| `PHOTO_DIR`                   | Optional absolute/relative directory for wallpaper JPGs                                  |
+| `GPU_TEMP_FILE`               | Optional server-side GPU temperature file path                                           |
 
 If `PHOTO_DIR` is not set, the app serves photos from `static/photos`.
 
@@ -146,12 +155,35 @@ CAL_CLIENT_ZONE="America/Chicago"
 DISPLAY_LOCALE="en-US"
 DISPLAY_TIMEZONE="America/Chicago"
 DISPLAY_HOUR12="true"
+COUNTDOWN_DB_URL="file:./data/family-dashboard.db"
+COUNTDOWN_ADMIN_TOKEN="change-me"
 CAL_CALENDARS_URL="https://example.com/api/calendars"
 WX_URL="https://example.com/api/weather"
 SCHOOL_MENU_URL="https://example.com/api/school-menu/next"
 PHOTO_DIR="/mnt/photos/dashboard"
 GPU_TEMP_FILE="/sys/class/hwmon/hwmon2/temp1_input"
 ```
+
+## Production deployment (server host)
+
+The dashboard is served by `@sveltejs/adapter-node`. The production unit (systemd) runs `node build` from the project root with `EnvironmentFile=.env`.
+
+Because the adapter-node bundle externalizes the native `@libsql/client` dependency, the server process **must** run with the Yarn Plug'n'Play runtime active, or it fails on first request with `ERR_MODULE_NOT_FOUND: Cannot find package '@libsql/client'`. Use **one** of the following:
+
+- Set `NODE_OPTIONS` in the service environment (this repo loads it via `EnvironmentFile=.env`):
+
+  ```sh
+  NODE_OPTIONS="--require /srv/apps/family-dashboard/.pnp.cjs --loader /srv/apps/family-dashboard/.pnp.loader.mjs"
+  ```
+
+- Or start the service under Yarn so PnP is set up automatically: change `ExecStart` to `yarn node build`.
+
+Deploy order:
+
+1. `yarn install`
+2. `yarn build`
+3. `yarn db:migrate` (and `yarn db:seed` on first deploy). These use the same `COUNTDOWN_DB_URL` as the server (default `file:./data/family-dashboard.db`, resolved from the working directory).
+4. Restart the service: `sudo systemctl restart family-dashboard`.
 
 ## Raspberry Pi system monitor setup
 

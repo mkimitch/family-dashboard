@@ -3,6 +3,12 @@ export type CountdownVariant = 'default' | 'subtle' | 'accent';
 export type CountdownItem = {
 	id: string;
 	label: string;
+	/**
+	 * Canonical target instant, stored verbatim in `countdowns.target_date` and
+	 * parsed by `resolveCountdownItems()`. May be either a date-only `YYYY-MM-DD`
+	 * string (treated as all-day in the viewer's display timezone) or a full ISO
+	 * 8601 datetime with an explicit offset (e.g. `2026-07-06T15:00:00-05:00`).
+	 */
 	targetDate: string;
 	enabled?: boolean;
 	sortOrder?: number;
