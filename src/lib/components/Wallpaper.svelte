@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	type PhotoList = { files: string[] };
 
@@ -13,10 +14,17 @@
 	let timer: number | undefined;
 	let refreshTimer: number | undefined;
 
+	// For production (5-10 minute intervals)
 	const MIN_INTERVAL_MS = 5 * 60 * 1000;
 	const MAX_INTERVAL_MS = 10 * 60 * 1000;
+
+	// For debugging (quick changes)
+	// const MIN_INTERVAL_MS = 5 * 1000;
+	// const MAX_INTERVAL_MS = 10 * 1000;
+
 	const FADE_MS = 1200;
 	let reduceMotion = $state(false);
+	const fadeOptions = $derived({ duration: reduceMotion ? 0 : FADE_MS });
 
 	const SIZES = '100vw';
 
@@ -65,13 +73,16 @@
 
 			files = shuffle(list);
 			index = 0;
+			showA = true;
 
 			aFile = files[index % files.length] ?? '';
 			bFile = ''; // avoid loading a second image immediately unless you want to
 
 			const nextPrefetch = files[(index + 1) % files.length];
 			if (nextPrefetch) prefetch(nextPrefetch);
-		} catch {}
+		} catch {
+			// Keep the current wallpaper if a background photo refresh fails.
+		}
 	};
 
 	const prefetch = (file: string) => {
@@ -162,54 +173,60 @@
 </script>
 
 <div class="wallpaper" aria-hidden="true">
-	<img
-		alt=""
-		aria-hidden="true"
-		class="wp wp-a"
-		decoding="async"
-		fetchpriority="high"
-		loading="eager"
-		on:error={handleError}
-		sizes={SIZES}
-		src={aFile ? makeSrc(aFile) : ''}
-		srcset={aFile ? makeSrcSet(aFile) : ''}
-		style:opacity={showA ? 1 : 0}
-	/>
-	<img
-		alt=""
-		aria-hidden="true"
-		class="wp wp-b"
-		decoding="async"
-		fetchpriority="low"
-		loading="lazy"
-		on:error={handleError}
-		sizes={SIZES}
-		src={bFile ? makeSrc(bFile) : ''}
-		srcset={bFile ? makeSrcSet(bFile) : ''}
-		style:opacity={showA ? 0 : 1}
-	/>
+	{#if showA && aFile}
+		<img
+			alt=""
+			aria-hidden="true"
+			class="wp wp-a"
+			decoding="async"
+			fetchpriority="high"
+			loading="eager"
+			onerror={handleError}
+			sizes={SIZES}
+			src={makeSrc(aFile)}
+			srcset={makeSrcSet(aFile)}
+			transition:fade={fadeOptions}
+		/>
+	{/if}
+
+	{#if !showA && bFile}
+		<img
+			alt=""
+			aria-hidden="true"
+			class="wp wp-b"
+			decoding="async"
+			fetchpriority="low"
+			loading="lazy"
+			onerror={handleError}
+			sizes={SIZES}
+			src={makeSrc(bFile)}
+			srcset={makeSrcSet(bFile)}
+			transition:fade={fadeOptions}
+		/>
+	{/if}
 </div>
 
 <style>
 	.wallpaper {
+		display: grid;
+		grid-template-columns: 1fr;
 		grid-column: 1;
 		grid-row: 1;
 		height: var(--wp-height, 60vh);
+		overflow: hidden;
 		position: relative;
 		z-index: 0;
 
 		& .wp {
+			grid-column: 1;
+			grid-row: 1;
 			filter: saturate(1.05) brightness(0.85);
-			height: 100%;
+			height: var(--wp-height, 60vh);
+			inset: 0;
 			object-fit: cover;
-			object-position: var(--wp-x, 50%) var(--wp-y, 45%);
-			opacity: 0;
-			transition: opacity 1.2s ease;
+			object-position: var(--wp-x, 50%) var(--wp-y, 50%);
+			position: relative;
 			width: 100%;
-
-			&.wp-a {
-				opacity: 1;
-			}
 		}
 
 		&::after {
