@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { MERGE_ALLDAY_DUPLICATES, mergeAllDayDuplicates } from '$lib/calendarMerge';
+	import {
+		filterSuppressedEvents,
+		getCalendarSuppressionStatus,
+		getSuppressedCalendarAriaLabel
+	} from '$lib/calendarSuppressions';
 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
 	import type {
 		CalendarConfig,
 		CalendarOverlayEvent,
+		CalendarSuppression,
 		CalEvent,
 		CalInfo,
 		DashboardTask,
@@ -52,17 +58,26 @@
 		sourceIndex: number;
 	};
 	type AllDayItem = AllDayEventItem | AllDayTaskItem;
+	type CalendarConfigObjectPayload = {
+		calendars?: CalendarConfig[];
+		calendarSuppressions?: CalendarSuppression[];
+		suppressions?: CalendarSuppression[];
+	};
 
 	let calendars = $state(new Map<string, CalInfo>());
+	let calendarSuppressions = $state<CalendarSuppression[]>([]);
 	let rawEvents = $state<CalEvent[]>([]);
 	let tasks = $state<DashboardTask[]>([]);
+	let now = $state(new Date());
+	let timeZone = $state<string>(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	let renderEvents = $derived<CalEvent[]>(
+		filterSuppressedEvents(rawEvents, calendars, calendarSuppressions, now, timeZone)
+	);
 	let displayEvents = $derived<CalEvent[]>(
-		MERGE_ALLDAY_DUPLICATES ? mergeAllDayDuplicates(rawEvents, calendars) : [...rawEvents]
+		MERGE_ALLDAY_DUPLICATES ? mergeAllDayDuplicates(renderEvents, calendars) : [...renderEvents]
 	);
 	let visibleDays = $state<Date[]>([]);
 	let allDayItemsByDay = $state<Record<string, AllDayItem[]>>({});
-	let now = $state(new Date());
-	let timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	let tick: number | undefined;
 	let updatedAt = $state<string | null>(null);
 	const EVENTS_POLL_MINUTES = 5;
@@ -81,10 +96,9 @@
 			day: '2-digit'
 		});
 
-	let keyFormatter = createKeyFormatter(timeZone);
+	let keyFormatter = $derived(createKeyFormatter(timeZone));
 	let lastDayKey = '';
 	$effect(() => {
-		keyFormatter = createKeyFormatter(timeZone);
 		lastDayKey = keyFormatter.format(now);
 	});
 
@@ -235,6 +249,25 @@
 		if (looksLikeEmail(raw)) return raw.split('@')[0];
 		return raw;
 	};
+	const parseCalendarConfigPayload = (
+		data: unknown
+	): { overrides: CalendarConfig[]; suppressions: CalendarSuppression[] } => {
+		if (Array.isArray(data)) {
+			return { overrides: data as CalendarConfig[], suppressions: [] };
+		}
+		if (!data || typeof data !== 'object') {
+			return { overrides: [], suppressions: [] };
+		}
+		const payload = data as CalendarConfigObjectPayload;
+		return {
+			overrides: Array.isArray(payload.calendars) ? payload.calendars : [],
+			suppressions: Array.isArray(payload.calendarSuppressions)
+				? payload.calendarSuppressions
+				: Array.isArray(payload.suppressions)
+					? payload.suppressions
+					: []
+		};
+	};
 	const MERGED_TILE_LAYOUTS: Record<
 		2 | 3 | 4,
 		Array<{ left: number; top: number; width: number; height: number }>
@@ -326,17 +359,22 @@
 				fetch('/api/calendars'),
 				fetch('/api/calendar-config', { cache: 'no-store' })
 			]);
-			if (!remoteRes.ok) return;
-			const list = await remoteRes.json();
 			let overrides: CalendarConfig[] = [];
+			let suppressions: CalendarSuppression[] = [];
 			if (cfgRes.ok) {
 				try {
 					const data = await cfgRes.json();
-					if (Array.isArray(data)) overrides = data as CalendarConfig[];
+					const parsed = parseCalendarConfigPayload(data);
+					overrides = parsed.overrides;
+					suppressions = parsed.suppressions;
 				} catch {
 					overrides = [];
+					suppressions = [];
 				}
 			}
+			calendarSuppressions = suppressions;
+			if (!remoteRes.ok) return;
+			const list = await remoteRes.json();
 			const overrideMap = new Map<string, CalendarConfig>();
 			for (const cfg of overrides) {
 				if (!cfg?.id) continue;
@@ -452,6 +490,7 @@
 					start,
 					end,
 					calendarId: e.calendarId ?? e.calendar ?? e.cal ?? '',
+					calendarName: e.calendarName ?? e.source,
 					allDay,
 					rawStartYMD,
 					rawEndYMD
@@ -717,11 +756,15 @@
 				if (aa !== bb) return aa - bb;
 				return (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' });
 			}) as c}
+				{@const legendName = displayCalName(c) || c.id}
+				{@const suppression = getCalendarSuppressionStatus(c, calendarSuppressions, now, timeZone)}
 				<div
 					class="cal-legend-item"
+					class:is-suppressed={Boolean(suppression)}
 					role="listitem"
 					style={`--cal-color: ${c.color || '#888'}`}
-					title={displayCalName(c) || c.id}
+					aria-label={suppression ? getSuppressedCalendarAriaLabel(c, suppression) : undefined}
+					title={suppression ? `${legendName}. ${suppression.titleLabel}` : legendName}
 				>
 					<span class="swatch" aria-hidden="true"></span>
 					{#if iconIsSvg(c.icon)}
@@ -733,7 +776,11 @@
 					{:else if c.icon}
 						<span class="icon" aria-hidden="true">{c.icon}</span>
 					{/if}
-					<span class="name">{displayCalName(c) || c.id}</span>
+					<span class="name">{legendName}</span>
+					{#if suppression}
+						<span class="pause-mark" aria-hidden="true">||</span>
+						<span class="suppression-label">{suppression.legendLabel}</span>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -926,7 +973,27 @@
 			font-size: 0.85rem;
 			gap: 0.375rem;
 			max-width: 12rem;
+			min-width: 0;
 			padding: 0.15rem 0.5rem;
+			position: relative;
+
+			&.is-suppressed {
+				background:
+					repeating-linear-gradient(
+						135deg,
+						color-mix(in oklch, var(--fg), transparent 84%) 0 0.16rem,
+						transparent 0.16rem 0.42rem
+					),
+					linear-gradient(
+						to bottom right,
+						color-mix(in oklch, var(--cal-color, var(--accent)), transparent 92%),
+						color-mix(in oklch, var(--cal-color, var(--accent)), transparent 86%)
+					),
+					color-mix(in oklch, var(--card), transparent 4%);
+				border-style: dashed;
+				color: color-mix(in oklch, var(--fg), var(--muted) 28%);
+				max-width: 16rem;
+			}
 
 			& .swatch {
 				border-radius: 62.4375rem;
@@ -941,9 +1008,41 @@
 				flex: 0 0 1.5em;
 			}
 
+			&.is-suppressed .icon,
+			&.is-suppressed .swatch {
+				filter: grayscale(1);
+				opacity: 0.7;
+			}
+
 			& .name {
 				font-weight: 400;
+				min-width: 0;
 				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			& .pause-mark {
+				border-left: 0.0625rem solid color-mix(in oklch, currentcolor, transparent 70%);
+				flex: 0 0 auto;
+				font-size: 0.72rem;
+				font-weight: 800;
+				letter-spacing: 0;
+				line-height: 1;
+				padding-left: 0.05rem;
+			}
+
+			& .suppression-label {
+				background: color-mix(in oklch, var(--fg), transparent 92%);
+				border: 0.0625rem solid color-mix(in oklch, currentcolor, transparent 55%);
+				border-radius: 62.4375rem;
+				flex: 0 0 auto;
+				font-size: 0.65rem;
+				font-weight: 700;
+				line-height: 1;
+				max-width: 8.5rem;
+				overflow: hidden;
+				padding: 0.08rem 0.32rem;
 				text-overflow: ellipsis;
 				white-space: nowrap;
 			}
