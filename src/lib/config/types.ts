@@ -7,6 +7,15 @@ export type CalendarConfig = {
 	sortOrder?: number;
 };
 
+export type CalendarSuppression = {
+	calendarId?: string;
+	calendarName?: string;
+	disabledFrom?: string;
+	disabledUntil?: string;
+	reason?: string;
+	label?: string;
+};
+
 export type CalendarOverlayEvent = {
 	id?: string;
 	title: string;
@@ -30,6 +39,7 @@ export type CalEvent = {
 	start: string | number | Date;
 	end?: string | number | Date;
 	calendarId?: string;
+	calendarName?: string;
 	allDay?: boolean;
 	rawStartYMD?: string | null;
 	rawEndYMD?: string | null;

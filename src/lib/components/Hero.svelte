@@ -2,11 +2,14 @@
 	import type { CountdownItem } from '$lib/config/countdowns';
 	import type { ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
 	import type { SchoolMenu as SchoolMenuType } from '../../routes/+layout.server';
+	import { onMount } from 'svelte';
 	import Clock from './Clock.svelte';
 	import CountdownList from './CountdownList.svelte';
 	import SchoolMenu from './SchoolMenu.svelte';
 	import WeatherCard from './WeatherCard.svelte';
 
+	type HeroDensity = 'spacious' | 'compact';
+	
 	type HeroProps = {
 		alerts?: string[];
 		messageTitle?: string;
@@ -16,6 +19,9 @@
 		weather?: any;
 		schoolMenu?: SchoolMenuType | null;
 	};
+
+	const COMPACT_HERO_MAX_HEIGHT = 385;
+
 	let {
 		alerts = [] as string[],
 		messageTitle = '',
@@ -25,9 +31,47 @@
 		weather = null,
 		schoolMenu = null as SchoolMenuType | null
 	}: HeroProps = $props();
+
+	let heroEl = $state<HTMLElement | null>(null);
+	let heroDensity = $state<HeroDensity>('spacious');
+	let densityFrame = 0;
+
+	const isCompact = $derived(heroDensity === 'compact');
+	const heroClass = $derived(`hero hero--${heroDensity}`);
+	const statusRailClass = $derived(`hero-status-rail ${isCompact ? 'hero-card' : ''}`.trim());
+	const countdownClass = $derived(`hero-center ${isCompact ? '' : 'hero-card'}`.trim());
+	const clockClass = $derived(`hero-clock ${isCompact ? '' : 'hero-card'}`.trim());
+	const weatherClass = $derived(`hero-weather ${isCompact ? '' : 'hero-card'}`.trim());
+
+	const updateHeroDensity = () => {
+		cancelAnimationFrame(densityFrame);
+		densityFrame = requestAnimationFrame(() => {
+			if (!heroEl) return;
+			const nextDensity =
+				heroEl.getBoundingClientRect().height <= COMPACT_HERO_MAX_HEIGHT ? 'compact' : 'spacious';
+			if (nextDensity !== heroDensity) {
+				heroDensity = nextDensity;
+			}
+		});
+	};
+
+	onMount(() => {
+		const ro = new ResizeObserver(updateHeroDensity);
+		if (heroEl) {
+			ro.observe(heroEl);
+		}
+		window.addEventListener('resize', updateHeroDensity);
+		updateHeroDensity();
+
+		return () => {
+			cancelAnimationFrame(densityFrame);
+			ro.disconnect();
+			window.removeEventListener('resize', updateHeroDensity);
+		};
+	});
 </script>
 
-<header class="hero">
+<header bind:this={heroEl} class={heroClass}>
 	{#if messageTitle}
 		<section class="hero-banner hero-card" aria-label="Message">
 			<div class="hero-message-title">{messageTitle}</div>
@@ -37,20 +81,27 @@
 		</section>
 	{/if}
 
-	<CountdownList className="hero-center hero-card" items={countdowns} {dateTimeDisplay} />
-
+	<section class={statusRailClass} aria-label="Current status">
+		<section class={clockClass} aria-label="Current time">
+			<Clock {dateTimeDisplay} density={heroDensity} />
+		</section>
+		<CountdownList
+			className={countdownClass}
+			density={heroDensity}
+			items={countdowns}
+			{dateTimeDisplay}
+		/>
+		<section class={weatherClass} aria-label="Weather">
+			<WeatherCard {dateTimeDisplay} density={heroDensity} initialWeather={weather} />
+		</section>
+	</section>
 	<SchoolMenu className="hero-lunch hero-card" {dateTimeDisplay} {schoolMenu} />
-	<section class="hero-clock hero-card" aria-label="Current time">
-		<Clock {dateTimeDisplay} />
-	</section>
-	<section class="hero-weather hero-card" aria-labelledby="wx-h">
-		<WeatherCard {dateTimeDisplay} initialWeather={weather} />
-	</section>
 </header>
 
 <style>
 	.hero {
 		align-items: start;
+		container: hero / size;
 		display: grid;
 		gap: 1rem;
 		grid-area: hero;
@@ -68,6 +119,31 @@
 			auto;
 		min-height: 0;
 		padding: 0.25rem 0.25rem 0;
+
+		&.hero--compact {
+			align-items: stretch;
+			gap: 0.5rem;
+			grid-template-areas:
+				'status status status'
+				'lunch banner banner';
+			grid-template-rows:
+				auto
+				minmax(0, 1fr);
+		}
+
+		& .hero-status-rail {
+			display: contents;
+		}
+
+		&.hero--compact .hero-status-rail {
+			align-items: center;
+			display: grid;
+			gap: 0.75rem;
+			grid-area: status;
+			grid-template-columns: max-content minmax(0, 1fr) max-content;
+			min-width: 0;
+			width: 100%;
+		}
 
 		& .hero-banner {
 			align-self: start;
@@ -101,9 +177,23 @@
 			justify-self: center;
 		}
 
+		&.hero--compact :global(.hero-center) {
+			align-self: center;
+			grid-area: auto;
+			justify-self: stretch;
+			min-width: 0;
+		}
+
 		& .hero-clock {
 			align-self: end;
 			grid-area: clock;
+		}
+
+		&.hero--compact .hero-clock {
+			align-self: center;
+			grid-area: auto;
+			justify-self: start;
+			min-width: 0;
 		}
 
 		& :global(.hero-lunch) {
@@ -113,10 +203,22 @@
 			width: 15rem;
 		}
 
+		&.hero--compact :global(.hero-lunch) {
+			align-self: start;
+			width: min(15rem, 100%);
+		}
+
 		& .hero-weather {
 			align-self: end;
 			grid-area: weather;
 			justify-self: end;
+		}
+
+		&.hero--compact .hero-weather {
+			align-self: center;
+			grid-area: auto;
+			justify-self: end;
+			min-width: 0;
 		}
 	}
 </style>

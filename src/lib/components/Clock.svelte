@@ -11,8 +11,11 @@
 	const props = $props<{
 		className?: string;
 		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+		density?: 'spacious' | 'compact';
 	}>();
 	const className = $derived(props.className ?? '');
+	const density = $derived(props.density ?? 'spacious');
+	const clockClass = $derived(`clock clock--${density} ${className}`.trim());
 	const dateTime = createDateTimeFormatter(() => getResolvedDateTimeDisplaySettings(props));
 
 	const updateNow = () => {
@@ -45,7 +48,7 @@
 	const ampm = $derived(clockParts.dayPeriod);
 </script>
 
-<time class={`clock ${className}`.trim()} aria-live="polite">
+<time class={clockClass} aria-live="polite">
 	<span class="time">
 		<span class="hours">{hour}</span><span class="colon">:</span><span class="minutes"
 			>{minute}</span
@@ -154,6 +157,52 @@
 				font-weight: 700;
 				letter-spacing: 0.015em;
 				opacity: 0.9;
+			}
+		}
+
+		&.clock--compact {
+			align-items: center;
+			flex-direction: row;
+			font-size: 1rem;
+			gap: 0.65rem;
+			line-height: 1;
+			white-space: nowrap;
+
+			& .time {
+				font-size: 1.9rem;
+				gap: 0.05em;
+				letter-spacing: 0.01em;
+			}
+
+			& .secamp {
+				display: none;
+			}
+
+			& .date {
+				align-items: center;
+				font-size: 0.86rem;
+				gap: 0.35rem;
+				justify-content: start;
+
+				& .date-main {
+					font-size: 1rem;
+					letter-spacing: 0;
+				}
+
+				& .date-meta {
+					align-items: start;
+					gap: 0.15rem;
+					text-align: left;
+				}
+
+				& .dow {
+					font-size: 0.78rem;
+					letter-spacing: 0;
+				}
+
+				& .year {
+					display: none;
+				}
 			}
 		}
 	}

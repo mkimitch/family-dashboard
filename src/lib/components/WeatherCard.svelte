@@ -95,17 +95,20 @@
 	type WeatherCardProps = {
 		initialWeather?: WeatherRoot | null;
 		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+		density?: 'spacious' | 'compact';
 	};
 
 	let {
 		initialWeather = null,
-		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null
+		dateTimeDisplay = null as ResolvedDateTimeDisplaySettings | null,
+		density = 'spacious'
 	}: WeatherCardProps = $props();
 	let wx = $state<WeatherRoot | null>(null);
 	let nowClock = $state(new Date());
 	let interval: number | undefined;
 	let clockTick: number | undefined;
 	let updatedAt = $state<string | null>(null);
+	const weatherClass = $derived(`wx-now wx-now--${density}`);
 	const dateTime = createDateTimeFormatter(() =>
 		getResolvedDateTimeDisplaySettings({ dateTimeDisplay })
 	);
@@ -398,7 +401,7 @@
 {#if wx}
 	{@const alerts = normalizeAlerts(wx)}
 	<!-- Now block -->
-	<div class="wx-now">
+	<div class={weatherClass}>
 		<div class="wx-topline">
 			<LastUpdated {dateTimeDisplay} timestamp={updatedAt} className="wx-last-updated" />
 			{#if alerts.length}
@@ -412,7 +415,7 @@
 							<span class="wx-alert-text">
 								<span class="wx-alert-label">{a.title}</span>
 								{#if a.description}
-									<span class="wx-alert-desc">{a.description}</span>
+									<pre class="wx-alert-desc">{a.description}</pre>
 								{/if}
 							</span>
 						</div>
@@ -490,213 +493,252 @@
 			{@const moonIllumPct = getMoonIlluminationPct(moonPhaseValue)}
 			{@const moonIconPath = getMoonIconPath({ moonPhase: moonPhaseValue })}
 
-			<div class="wx-current-main">
-				<div class="wx-current">
-					<div class="wx-current-temp">
-						<span class="temp">{tempF}</span>
-						<span class="unit"
-							>{#if typeof tempF === 'number'}°F{/if}</span
-						>
-					</div>
-					<div class="wx-feels-row">
-						{#if typeof feelsF === 'number'}
-							<div class="wx-feels">
-								Feels like {feelsF}°F
-							</div>
-						{/if}
-						{#if todayHiF !== undefined || todayLoF !== undefined}
-							<span class="wx-hilow-now">
-								<span class="hi">{todayHiF === undefined ? '—' : `${todayHiF}°F`}</span>
-								<span style="font-weight: 300;"> / </span>
-								<span class="lo">{todayLoF === undefined ? '—' : `${todayLoF}°F`}</span>
-							</span>
-						{/if}
-						{#if summary}
-							<div class="wx-summary">{summary}</div>
-						{/if}
-					</div>
-					<div class="wx-icon">
-						<LottieWeatherIcon src={lottieSrc} className="wi wi-now" ariaLabel={summary} />
-					</div>
-				</div>
-			</div>
-
-			<div class="wx-stats">
-				<div class="wx-info">
-					<div class="col metrics-extra">
-						{#if typeof uvIdx === 'number'}
-							<span class="item uv" aria-label={`UV index ${Math.round(uvIdx)}, ${uvCategory}`}
-								><span class="ico"
-									><LottieWeatherIcon
-										src={uvIconPath}
-										className="wi wi-stat"
-										ariaLabel="UV index"
-									/></span
-								>UV {Math.round(uvIdx)}</span
-							>
-						{/if}
-						{#if pressureInHg}
-							<span class="item pressure" aria-label={`Pressure ${pressureInHg} inches of mercury`}
-								><span class="ico"
-									><LottieWeatherIcon
-										src="/lottie/weather/barometer.json"
-										className="wi wi-stat"
-										ariaLabel="Pressure"
-									/></span
-								>{pressureInHg} inHg</span
-							>
-						{/if}
-					</div>
-					<div class="col metrics">
-						{#if typeof windMphVal === 'number'}
-							<span class="item wind"
-								><span
-									class="ico"
-									style={now?.windDeg !== undefined ? `transform: rotate(${now.windDeg}deg);` : ''}
-									><LottieWeatherIcon
-										src="/lottie/weather/wind.json"
-										className="wi wi-stat"
-										ariaLabel={now?.windDeg !== undefined ? `Wind ${windDir(now.windDeg)}` : 'Wind'}
-									/></span
-								>{windMphVal} mph</span
-							>
-						{/if}
-						{#if humidity !== undefined}
-							<span class="item humidity"
-								><span class="ico"
-									><LottieWeatherIcon
-										src="/lottie/weather/humidity.json"
-										className="wi wi-stat"
-										ariaLabel="Humidity"
-									/></span
-								>{humidity}%</span
-							>
-						{/if}
-					</div>
-				</div>
-				<div class="wx-astro">
-					<div class="col sun">
-						{#if sunrise}<span class="item sunrise" class:is-past={sunriseIsPast}
-								><span class="ico"
-									><LottieWeatherIcon
-										src="/lottie/weather/sunrise.json"
-										className="wi wi-astro"
-										ariaLabel="Sunrise"
-									/></span
-								>{hm(sunrise)}</span
-							>{/if}
-						{#if sunset}<span class="item sunset" class:is-past={sunsetIsPast}
-								><span class="ico"
-									><LottieWeatherIcon
-										src="/lottie/weather/sunset.json"
-										className="wi wi-astro"
-										ariaLabel="Sunset"
-									/></span
-								>{hm(sunset)}</span
-							>{/if}
-					</div>
-					<div class="col moon">
-						{#if moonriseFirst}
-							{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
-									><span class="ico"
-										><LottieWeatherIcon
-											src="/lottie/weather/moonrise.json"
-											className="wi wi-astro"
-											ariaLabel="Moonrise"
-										/></span
-									>{hm(moonrise)}</span
-								>{/if}
-							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
-									><span class="ico"
-										><LottieWeatherIcon
-											ariaLabel="Moonset"
-											className="wi wi-astro"
-											src="/lottie/weather/moonset.json"
-										/></span
-									>{hm(moonset)}</span
-								>{/if}
+			{#if density === 'compact'}
+				<div class="wx-compact" aria-label="Current weather">
+					<div class="wx-compact-temp">
+						{#if typeof tempF === 'number'}
+							<span class="wx-compact-temp-value">{tempF}</span>
+							<span class="wx-compact-unit">°F</span>
 						{:else}
-							{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
-									><span class="ico"
-										><LottieWeatherIcon
-											ariaLabel="Moonset"
-											className="wi wi-astro"
-											src="/lottie/weather/moonset.json"
-										/></span
-									>{hm(moonset)}</span
-								>{/if}
-							{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
-									><span class="ico"
-										><LottieWeatherIcon
-											ariaLabel="Moonrise"
-											className="wi wi-astro"
-											src="/lottie/weather/moonrise.json"
-										/></span
-									>{hm(moonrise)}</span
-								>{/if}
+							<span class="wx-compact-temp-missing">Weather</span>
 						{/if}
 					</div>
-					<div
-						aria-label={`Moon phase: ${moonPhaseName}, ${moonIllumPct}% illuminated`}
-						class="col moon-phase"
-					>
-						<img
-							alt={moonPhaseName}
-							class="moon-phase-img"
-							decoding="async"
-							loading="lazy"
-							src={moonIconPath}
-						/>
-						<div class="moon-phase-info">
-							<span class="moon-phase-name">{moonPhaseAbbreviation}</span>
-							<!-- <span class="moon-phase-illum">{moonIllumPct}%</span> -->
+					<div class="wx-compact-icon">
+						<LottieWeatherIcon src={lottieSrc} className="wi wi-compact" ariaLabel={summary} />
+					</div>
+					<div class="wx-compact-details">
+						{#if summary}
+							<span class="wx-compact-summary">{summary}</span>
+						{/if}
+						{#if typeof feelsF === 'number'}
+							<span class="wx-compact-feels">Feels {feelsF}°F</span>
+						{/if}
+					</div>
+					{#if alerts[0]}
+						{@const compactAlert = alerts[0]}
+						{@const compactAlertLottie = alertLottieFor(compactAlert.severity)}
+						<span
+							class={'wx-compact-alert wx-compact-alert--' + compactAlert.severity}
+							aria-label={`${alerts.length} weather alert${alerts.length === 1 ? '' : 's'}: ${compactAlert.title}`}
+							title={compactAlert.title}
+						>
+							<LottieWeatherIcon
+								src={compactAlertLottie}
+								className="wx-compact-alert-icon"
+								ariaLabel=""
+							/>
+						</span>
+					{/if}
+				</div>
+			{:else}
+				<div class="wx-current-main">
+					<div class="wx-current">
+						<div class="wx-current-temp">
+							<span class="temp">{tempF}</span>
+							<span class="unit"
+								>{#if typeof tempF === 'number'}°F{/if}</span
+							>
+						</div>
+						<div class="wx-feels-row">
+							{#if typeof feelsF === 'number'}
+								<div class="wx-feels">
+									Feels like {feelsF}°F
+								</div>
+							{/if}
+							{#if todayHiF !== undefined || todayLoF !== undefined}
+								<span class="wx-hilow-now">
+									<span class="hi">{todayHiF === undefined ? '—' : `${todayHiF}°F`}</span>
+									<span style="font-weight: 300;"> / </span>
+									<span class="lo">{todayLoF === undefined ? '—' : `${todayLoF}°F`}</span>
+								</span>
+							{/if}
+							{#if summary}
+								<div class="wx-summary">{summary}</div>
+							{/if}
+						</div>
+						<div class="wx-icon">
+							<LottieWeatherIcon src={lottieSrc} className="wi wi-now" ariaLabel={summary} />
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- Forecast shows the next seven days after today for a full week at a glance. -->
-			{@const forecast = getForecastDays(wx)}
-			{#if forecast.length}
-				<ol class="wx-forecast" aria-label="Forecast">
-					{#each forecast.slice(1, 8) as d}
-						{@const dateStr = getDayDateValue(d)}
-						{@const dDate = parseYmdLocal(dateStr)}
-						{@const label = Number.isNaN(+dDate)
-							? getDayName(d)
-							: dateTime.formatForecastWeekday(dDate)}
-						{@const hiF =
-							typeof d?.tempF?.max === 'number'
-								? Math.round(d.tempF.max)
-								: typeof d?.tempC?.max === 'number'
-									? c2f(d.tempC.max)
-									: pick(d, ['high', 'max', 'maxTemp', 'hi'])}
-						{@const loF =
-							typeof d?.tempF?.min === 'number'
-								? Math.round(d.tempF.min)
-								: typeof d?.tempC?.min === 'number'
-									? c2f(d.tempC.min)
-									: pick(d, ['low', 'min', 'minTemp', 'lo'])}
-						{@const pop = getDayPop(d)}
-						{@const slug = iconSlugOf(d?.condition?.icon, d?.condition?.main || d?.condition?.desc)}
-						{@const forecastLottie = `/lottie/weather/${slug}.json`}
-						<li>
-							<div class="day">{label}</div>
-							<div class="wxi">
-								<LottieWeatherIcon
-									ariaLabel={d?.condition?.main || d?.condition?.desc || ''}
-									className="wi wi-forecast"
-									src={forecastLottie}
-								/>
+				<div class="wx-stats">
+					<div class="wx-info">
+						<div class="col metrics-extra">
+							{#if typeof uvIdx === 'number'}
+								<span class="item uv" aria-label={`UV index ${Math.round(uvIdx)}, ${uvCategory}`}
+									><span class="ico"
+										><LottieWeatherIcon
+											src={uvIconPath}
+											className="wi wi-stat"
+											ariaLabel="UV index"
+										/></span
+									>UV {Math.round(uvIdx)}</span
+								>
+							{/if}
+							{#if pressureInHg}
+								<span class="item pressure" aria-label={`Pressure ${pressureInHg} inches of mercury`}
+									><span class="ico"
+										><LottieWeatherIcon
+											src="/lottie/weather/barometer.json"
+											className="wi wi-stat"
+											ariaLabel="Pressure"
+										/></span
+									>{pressureInHg} inHg</span
+								>
+							{/if}
+						</div>
+						<div class="col metrics">
+							{#if typeof windMphVal === 'number'}
+								<span class="item wind"
+									><span
+										class="ico"
+										style={now?.windDeg !== undefined ? `transform: rotate(${now.windDeg}deg);` : ''}
+										><LottieWeatherIcon
+											src="/lottie/weather/wind.json"
+											className="wi wi-stat"
+											ariaLabel={now?.windDeg !== undefined ? `Wind ${windDir(now.windDeg)}` : 'Wind'}
+										/></span
+									>{windMphVal} mph</span
+								>
+							{/if}
+							{#if humidity !== undefined}
+								<span class="item humidity"
+									><span class="ico"
+										><LottieWeatherIcon
+											src="/lottie/weather/humidity.json"
+											className="wi wi-stat"
+											ariaLabel="Humidity"
+										/></span
+									>{humidity}%</span
+								>
+							{/if}
+						</div>
+					</div>
+					<div class="wx-astro">
+						<div class="col sun">
+							{#if sunrise}<span class="item sunrise" class:is-past={sunriseIsPast}
+									><span class="ico"
+										><LottieWeatherIcon
+											src="/lottie/weather/sunrise.json"
+											className="wi wi-astro"
+											ariaLabel="Sunrise"
+										/></span
+									>{hm(sunrise)}</span
+								>{/if}
+							{#if sunset}<span class="item sunset" class:is-past={sunsetIsPast}
+									><span class="ico"
+										><LottieWeatherIcon
+											src="/lottie/weather/sunset.json"
+											className="wi wi-astro"
+											ariaLabel="Sunset"
+										/></span
+									>{hm(sunset)}</span
+								>{/if}
+						</div>
+						<div class="col moon">
+							{#if moonriseFirst}
+								{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
+										><span class="ico"
+											><LottieWeatherIcon
+												src="/lottie/weather/moonrise.json"
+												className="wi wi-astro"
+												ariaLabel="Moonrise"
+											/></span
+										>{hm(moonrise)}</span
+									>{/if}
+								{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
+										><span class="ico"
+											><LottieWeatherIcon
+												ariaLabel="Moonset"
+												className="wi wi-astro"
+												src="/lottie/weather/moonset.json"
+											/></span
+										>{hm(moonset)}</span
+									>{/if}
+							{:else}
+								{#if moonset}<span class="item moonset" class:is-past={moonsetIsPast}
+										><span class="ico"
+											><LottieWeatherIcon
+												ariaLabel="Moonset"
+												className="wi wi-astro"
+												src="/lottie/weather/moonset.json"
+											/></span
+										>{hm(moonset)}</span
+									>{/if}
+								{#if moonrise}<span class="item moonrise" class:is-past={moonriseIsPast}
+										><span class="ico"
+											><LottieWeatherIcon
+												ariaLabel="Moonrise"
+												className="wi wi-astro"
+												src="/lottie/weather/moonrise.json"
+											/></span
+										>{hm(moonrise)}</span
+									>{/if}
+							{/if}
+						</div>
+						<div
+							aria-label={`Moon phase: ${moonPhaseName}, ${moonIllumPct}% illuminated`}
+							class="col moon-phase"
+						>
+							<img
+								alt={moonPhaseName}
+								class="moon-phase-img"
+								decoding="async"
+								loading="lazy"
+								src={moonIconPath}
+							/>
+							<div class="moon-phase-info">
+								<span class="moon-phase-name">{moonPhaseAbbreviation}</span>
+								<!-- <span class="moon-phase-illum">{moonIllumPct}%</span> -->
 							</div>
-							<div class="pop">{pop === undefined ? '' : `${pop}%`}</div>
-							<div class="hilow">
-								<span class="hi">{hiF === undefined ? '—' : `${hiF}°F`}</span>
-								<span class="lo">{loF === undefined ? '—' : `${loF}°F`}</span>
-							</div>
-						</li>
-					{/each}
-				</ol>
+						</div>
+					</div>
+				</div>
+
+				<!-- Forecast shows the next seven days after today for a full week at a glance. -->
+				{@const forecast = getForecastDays(wx)}
+				{#if forecast.length}
+					<ol class="wx-forecast" aria-label="Forecast">
+						{#each forecast.slice(1, 8) as d}
+							{@const dateStr = getDayDateValue(d)}
+							{@const dDate = parseYmdLocal(dateStr)}
+							{@const label = Number.isNaN(+dDate)
+								? getDayName(d)
+								: dateTime.formatForecastWeekday(dDate)}
+							{@const hiF =
+								typeof d?.tempF?.max === 'number'
+									? Math.round(d.tempF.max)
+									: typeof d?.tempC?.max === 'number'
+										? c2f(d.tempC.max)
+										: pick(d, ['high', 'max', 'maxTemp', 'hi'])}
+							{@const loF =
+								typeof d?.tempF?.min === 'number'
+									? Math.round(d.tempF.min)
+									: typeof d?.tempC?.min === 'number'
+										? c2f(d.tempC.min)
+										: pick(d, ['low', 'min', 'minTemp', 'lo'])}
+							{@const pop = getDayPop(d)}
+							{@const slug = iconSlugOf(d?.condition?.icon, d?.condition?.main || d?.condition?.desc)}
+							{@const forecastLottie = `/lottie/weather/${slug}.json`}
+							<li>
+								<div class="day">{label}</div>
+								<div class="wxi">
+									<LottieWeatherIcon
+										ariaLabel={d?.condition?.main || d?.condition?.desc || ''}
+										className="wi wi-forecast"
+										src={forecastLottie}
+									/>
+								</div>
+								<div class="pop">{pop === undefined ? '' : `${pop}%`}</div>
+								<div class="hilow">
+									<span class="hi">{hiF === undefined ? '—' : `${hiF}°F`}</span>
+									<span class="lo">{loF === undefined ? '—' : `${loF}°F`}</span>
+								</div>
+							</li>
+						{/each}
+					</ol>
+				{/if}
 			{/if}
 		{/key}
 	</div>
@@ -704,7 +746,7 @@
 
 <style>
 	.wx-now {
-		--wx-alert-desc-line-clamp: 4;
+		--wx-alert-desc-line-clamp: 10;
 
 		align-items: center;
 		display: grid;
@@ -807,10 +849,105 @@
 			font-weight: 400;
 			-webkit-line-clamp: var(--wx-alert-desc-line-clamp, 2);
 			line-clamp: var(--wx-alert-desc-line-clamp, 2);
+			margin: 0;
 			max-width: 26rem;
 			overflow: hidden;
-			/* text-overflow: ellipsis; */
-			/* white-space: nowrap; */
+			white-space: pre-wrap;
+		}
+
+		&.wx-now--compact {
+			gap: 0;
+			justify-items: end;
+		}
+
+		&.wx-now--compact .wx-topline {
+			display: none;
+		}
+
+		& .wx-compact {
+			align-items: center;
+			display: flex;
+			gap: 0.5rem;
+			min-width: 0;
+			white-space: nowrap;
+		}
+
+		& .wx-compact-temp {
+			align-items: baseline;
+			color: var(--fg);
+			display: inline-flex;
+			font-size: 1.7rem;
+			font-variant-numeric: tabular-nums;
+			font-weight: 800;
+			line-height: 1;
+		}
+
+		& .wx-compact-unit {
+			font-size: 0.62em;
+			font-weight: 700;
+			margin-left: 0.05rem;
+		}
+
+		& .wx-compact-temp-missing {
+			color: var(--muted);
+			font-size: 0.95rem;
+			font-weight: 700;
+		}
+
+		& .wx-compact-icon :global(.wi-compact) {
+			display: block;
+			height: 2.35rem;
+			width: 2.35rem;
+		}
+
+		& .wx-compact-details {
+			display: flex;
+			flex-direction: column;
+			gap: 0.05rem;
+			line-height: 1;
+			min-width: 0;
+		}
+
+		& .wx-compact-summary {
+			font-size: 0.9rem;
+			font-weight: 700;
+			max-width: 9rem;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		& .wx-compact-feels {
+			color: var(--muted);
+			font-size: 0.75rem;
+			font-weight: 700;
+		}
+
+		& .wx-compact-alert {
+			align-items: center;
+			background: color-mix(in oklch, var(--card), transparent 28%);
+			border: 0.0625rem solid color-mix(in oklch, var(--accent), transparent 42%);
+			border-radius: 999rem;
+			display: inline-flex;
+			flex-shrink: 0;
+			height: 1.8rem;
+			justify-content: center;
+			width: 1.8rem;
+		}
+
+		& .wx-compact-alert--warning {
+			background: color-mix(in oklch, var(--accent), transparent 62%);
+			border-color: color-mix(in oklch, var(--accent), transparent 18%);
+		}
+
+		& .wx-compact-alert--watch {
+			background: color-mix(in oklch, var(--accent), transparent 76%);
+		}
+
+		& .wx-compact-alert :global(.wx-compact-alert-icon) {
+			display: block;
+			height: 1.2rem;
+			width: 1.2rem;
 		}
 	}
 
@@ -1059,11 +1196,66 @@
 	}
 
 	.wx-now,
+	.wx-compact,
 	.wx-current-main,
 	.wx-stats,
 	.wx-forecast {
 		& :global(path[stroke='rgb(55,65,81)']) {
 			stroke: oklch(1 0 0);
+		}
+	}
+
+	@container hero (block-size <= 525px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 9;
+		}
+	}
+
+	@container hero (block-size <= 510px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 8;
+		}
+	}
+
+	@container hero (block-size <= 495px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 7;
+		}
+	}
+
+	@container hero (block-size <= 480px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 6;
+		}
+	}
+
+	@container hero (block-size <= 465px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 5;
+		}
+	}
+
+	@container hero (block-size <= 450px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 4;
+		}
+	}
+
+	@container hero (block-size <= 435px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 3;
+		}
+	}
+
+	@container hero (block-size <= 420px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 2;
+		}
+	}
+
+	@container hero (block-size <= 405px) {
+		.wx-now {
+			--wx-alert-desc-line-clamp: 1;
 		}
 	}
 

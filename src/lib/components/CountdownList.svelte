@@ -12,8 +12,11 @@
 		className?: string;
 		items?: CountdownItem[];
 		dateTimeDisplay?: ResolvedDateTimeDisplaySettings | null;
+		density?: 'spacious' | 'compact';
 	}>();
 	const className = $derived(props.className ?? '');
+	const density = $derived(props.density ?? 'spacious');
+	const countdownClass = $derived(`countdowns countdowns--${density} ${className}`.trim());
 	const resolvedItems = $derived(
 		resolveCountdownItems(props.items, {
 			now,
@@ -61,7 +64,7 @@
 </script>
 
 {#if resolvedItems.length}
-	<aside class={`countdowns ${className}`.trim()} role="group" aria-label="Countdowns">
+	<aside class={countdownClass} role="group" aria-label="Countdowns">
 		<ol class="countdowns__list">
 			{#each resolvedItems as item (item.id)}
 				<li
@@ -131,6 +134,38 @@
 			text-align: right;
 			text-shadow: 0 0.125rem 0.75rem color-mix(in oklch, var(--bg), transparent 55%);
 			white-space: nowrap;
+		}
+
+		&.countdowns--compact {
+			min-width: 0;
+			width: 100%;
+
+			& .countdowns__list {
+				display: flex;
+				gap: 0.4rem;
+				overflow: hidden;
+				padding: 0;
+			}
+
+			& .countdowns__item {
+				align-items: center;
+				display: inline-flex;
+				flex: 1 1 0;
+				gap: 0.45rem;
+				min-width: 0;
+				padding: 0.3rem 0.45rem;
+			}
+
+			& .countdowns__label {
+				font-size: 0.74rem;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			& .countdowns__value {
+				font-size: 0.86rem;
+			}
 		}
 	}
 </style>
