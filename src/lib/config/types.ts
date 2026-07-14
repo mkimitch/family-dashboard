@@ -7,6 +7,13 @@ export type CalendarConfig = {
 	sortOrder?: number;
 };
 
+export type CalendarWeekCount = 1 | 2;
+
+export type CalendarDisplayConfig = {
+	weeks: CalendarWeekCount;
+	anchor: 'rolling';
+};
+
 export type CalendarSuppression = {
 	calendarId?: string;
 	calendarName?: string;
