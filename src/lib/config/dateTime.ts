@@ -2,6 +2,7 @@ export type DatePresetKey =
 	| 'clockDate'
 	| 'calendarWeekday'
 	| 'calendarDayNumber'
+	| 'calendarMonth'
 	| 'menuDate'
 	| 'forecastWeekday'
 	| 'statusDate';
@@ -65,6 +66,9 @@ const DATE_PRESET_DEFAULTS = {
 	},
 	calendarDayNumber: {
 		day: 'numeric'
+	},
+	calendarMonth: {
+		month: 'short'
 	},
 	menuDate: {
 		weekday: 'long',

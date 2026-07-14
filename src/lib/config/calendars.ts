@@ -1,6 +1,11 @@
-import type { CalendarConfig, CalendarSuppression } from './types';
+import type { CalendarConfig, CalendarDisplayConfig, CalendarSuppression } from './types';
 
 export const calendarConfig: CalendarConfig[] = [];
+
+export const calendarDisplay = {
+	weeks: 2,
+	anchor: 'rolling'
+} satisfies CalendarDisplayConfig;
 
 export const calendarSuppressions: CalendarSuppression[] = [
 	{

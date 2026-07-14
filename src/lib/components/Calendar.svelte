@@ -1,5 +1,11 @@
 <script lang="ts">
 	import { MERGE_ALLDAY_DUPLICATES, mergeAllDayDuplicates } from '$lib/calendarMerge';
+	import { parseCalendarConfigPayload } from '$lib/calendarConfigPayload';
+	import {
+		DEFAULT_CALENDAR_DISPLAY_CONFIG,
+		resolveCalendarDisplayRange,
+		type CalendarDisplayRange
+	} from '$lib/calendarDisplay';
 	import {
 		filterSuppressedEvents,
 		getCalendarSuppressionStatus,
@@ -8,6 +14,7 @@
 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
 	import type {
 		CalendarConfig,
+		CalendarDisplayConfig,
 		CalendarOverlayEvent,
 		CalendarSuppression,
 		CalEvent,
@@ -58,13 +65,8 @@
 		sourceIndex: number;
 	};
 	type AllDayItem = AllDayEventItem | AllDayTaskItem;
-	type CalendarConfigObjectPayload = {
-		calendars?: CalendarConfig[];
-		calendarSuppressions?: CalendarSuppression[];
-		suppressions?: CalendarSuppression[];
-	};
-
 	let calendars = $state(new Map<string, CalInfo>());
+	let calendarDisplay = $state<CalendarDisplayConfig>({ ...DEFAULT_CALENDAR_DISPLAY_CONFIG });
 	let calendarSuppressions = $state<CalendarSuppression[]>([]);
 	let rawEvents = $state<CalEvent[]>([]);
 	let tasks = $state<DashboardTask[]>([]);
@@ -77,6 +79,7 @@
 		MERGE_ALLDAY_DUPLICATES ? mergeAllDayDuplicates(renderEvents, calendars) : [...renderEvents]
 	);
 	let visibleDays = $state<Date[]>([]);
+	let visibleWeeks = $state<Date[][]>([]);
 	let allDayItemsByDay = $state<Record<string, AllDayItem[]>>({});
 	let tick: number | undefined;
 	let updatedAt = $state<string | null>(null);
@@ -249,25 +252,6 @@
 		if (looksLikeEmail(raw)) return raw.split('@')[0];
 		return raw;
 	};
-	const parseCalendarConfigPayload = (
-		data: unknown
-	): { overrides: CalendarConfig[]; suppressions: CalendarSuppression[] } => {
-		if (Array.isArray(data)) {
-			return { overrides: data as CalendarConfig[], suppressions: [] };
-		}
-		if (!data || typeof data !== 'object') {
-			return { overrides: [], suppressions: [] };
-		}
-		const payload = data as CalendarConfigObjectPayload;
-		return {
-			overrides: Array.isArray(payload.calendars) ? payload.calendars : [],
-			suppressions: Array.isArray(payload.calendarSuppressions)
-				? payload.calendarSuppressions
-				: Array.isArray(payload.suppressions)
-					? payload.suppressions
-					: []
-		};
-	};
 	const MERGED_TILE_LAYOUTS: Record<
 		2 | 3 | 4,
 		Array<{ left: number; top: number; width: number; height: number }>
@@ -360,18 +344,21 @@
 				fetch('/api/calendar-config', { cache: 'no-store' })
 			]);
 			let overrides: CalendarConfig[] = [];
+			let display = { ...DEFAULT_CALENDAR_DISPLAY_CONFIG };
 			let suppressions: CalendarSuppression[] = [];
 			if (cfgRes.ok) {
 				try {
 					const data = await cfgRes.json();
 					const parsed = parseCalendarConfigPayload(data);
 					overrides = parsed.overrides;
+					display = parsed.display;
 					suppressions = parsed.suppressions;
 				} catch {
 					overrides = [];
 					suppressions = [];
 				}
 			}
+			calendarDisplay = display;
 			calendarSuppressions = suppressions;
 			if (!remoteRes.ok) return;
 			const list = await remoteRes.json();
@@ -411,31 +398,10 @@
 		} catch {}
 	};
 
-	const loadEvents = async () => {
+	const loadEvents = async (range: CalendarDisplayRange) => {
 		try {
-			const start = new Date();
-			start.setHours(0, 0, 0, 0);
-			const end = addDays(start, 6);
-			const startLocal = new Date(
-				start.getFullYear(),
-				start.getMonth(),
-				start.getDate(),
-				0,
-				0,
-				0,
-				0
-			);
-			const endLocalExclusive = new Date(
-				end.getFullYear(),
-				end.getMonth(),
-				end.getDate() + 1,
-				0,
-				0,
-				0,
-				0
-			);
-			const startIso = startLocal.toISOString();
-			const endIso = endLocalExclusive.toISOString();
+			const startIso = range.start.toISOString();
+			const endIso = range.endExclusive.toISOString();
 			const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 			const qs = `/api/calendar?start=${encodeURIComponent(startIso)}&end=${encodeURIComponent(endIso)}&clientZone=${encodeURIComponent(tz)}&includeCancelled=true`;
 			const [r, overlayRes] = await Promise.all([
@@ -459,7 +425,6 @@
 			if (!ts) ts = new Date().toISOString();
 			updatedAt = ts;
 			timeZone = (data && typeof data.zone === 'string' && data.zone) || timeZone;
-			buildVisibleDays();
 			const arr: ApiEvent[] = Array.isArray(data?.events)
 				? data.events
 				: Array.isArray(data)
@@ -588,11 +553,16 @@
 		}
 	};
 
-	const buildVisibleDays = () => {
-		const ymd = keyFormatter.format(new Date());
+	const buildVisibleDays = (): CalendarDisplayRange => {
+		const ymd = keyFormatter.format(now);
 		const parts = ymd.split('-').map(Number);
-		const start = new Date(parts[0], parts[1] - 1, parts[2]);
-		visibleDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+		const range = resolveCalendarDisplayRange(
+			new Date(parts[0], parts[1] - 1, parts[2]),
+			calendarDisplay
+		);
+		visibleDays = range.days;
+		visibleWeeks = range.weekRows;
+		return range;
 	};
 	const getVisibleDateKeys = (): string[] => visibleDays.map((d) => keyOf(d));
 
@@ -709,9 +679,9 @@
 	};
 
 	const refreshCalendarData = async (includeCalendars = false) => {
-		buildVisibleDays();
 		if (includeCalendars) await loadCalendars();
-		await loadEvents();
+		const range = buildVisibleDays();
+		await loadEvents(range);
 		await loadTasks();
 		lastEventsReloadAt = Date.now();
 	};
@@ -787,147 +757,168 @@
 		<LastUpdated {dateTimeDisplay} timestamp={updatedAt} className="cal-last-updated" />
 	</div>
 	<div class="cal-grid">
-		{#each visibleDays as d}
-			{@const isWeekend = d.getDay() === 0 || d.getDay() === 6}
-			{@const isToday = visibleDays.length === 7 && sameDay(d, new Date())}
-			<div class="dow {isWeekend ? 'is-weekend' : ''} {isToday ? 'is-today' : ''}">
-				{dateTime.formatDate(d, { preset: 'calendarWeekday', timeZone: null })}
-			</div>
-		{/each}
-		{#each visibleDays as d, i}
-			{@const dayKey = keyOf(d)}
-			{@const allDayItems = allDayItemsByDay[dayKey] || []}
-			<div
-				class="day-cell {d.getDay() === 0 || d.getDay() === 6 ? 'is-weekend' : ''} {sameDay(
-					d,
-					new Date()
-				)
-					? 'is-today'
-					: ''}"
-				data-date={dayKey}
-			>
-				<div class="day-head">
-					<span class="dom"
-						>{dateTime.formatDate(d, { preset: 'calendarDayNumber', timeZone: null })}</span
-					>
+		<div class="weekday-row">
+			{#each visibleWeeks[0] || [] as d}
+				{@const isWeekend = d.getDay() === 0 || d.getDay() === 6}
+				{@const isToday = sameDay(d, now)}
+				<div class="dow {isWeekend ? 'is-weekend' : ''} {isToday ? 'is-today' : ''}">
+					{dateTime.formatDate(d, { preset: 'calendarWeekday', timeZone: null })}
 				</div>
-				<div class="day-events-allday">
-					{#each allDayItems as item, itemIndex (allDayItemKey(item, dayKey, itemIndex))}
-						{#if item.kind === 'event'}
-							{@const cal = calendars.get(item.e.calendarId || '')}
-							{@const merged = isMerged(item.e) ? item.e : null}
-							{@const mergedIconModel = merged ? getMergedIconModel(merged) : null}
-							<div
-								class={`event-chip all-day-chip ${item.isStart ? 'is-start' : ''} ${item.isEnd ? 'is-end' : ''}`}
-								class:is-current={isCurrent(item.e)}
-								class:is-past={isPast(item.e)}
-								style={`--cal-color: ${cal?.color || '#888'}`}
-								title={merged ? mergedChipTitle(item.e.title, merged) : item.e.title}
-							>
-								{#if merged}
-									<span
-										class={`event-icon merged-icon ${mergedIconModel?.className || ''}`}
-										aria-hidden="true"
+			{/each}
+		</div>
+		<div class="week-rows">
+			{#each visibleWeeks as week, weekIndex}
+				<div class="week-row">
+					{#each week as d, dayIndex}
+						{@const visibleIndex = weekIndex * 7 + dayIndex}
+						{@const dayKey = keyOf(d)}
+						{@const allDayItems = allDayItemsByDay[dayKey] || []}
+						<div
+							class="day-cell {d.getDay() === 0 || d.getDay() === 6 ? 'is-weekend' : ''} {sameDay(
+								d,
+								now
+							)
+								? 'is-today'
+								: ''}"
+							data-date={dayKey}
+						>
+							<div class="day-head">
+								{#if visibleIndex === 0 || d.getDate() === 1}
+									<span class="month-label"
+										>{dateTime.formatDate(d, { preset: 'calendarMonth', timeZone: null })}</span
 									>
-										{#if mergedIconModel?.badge}
-											<span class="merged-icon-badge">{mergedIconModel.badge}</span>
-										{:else}
-											{#each mergedIconModel?.tiles || [] as tile (tile.key)}
+								{/if}
+								<time class="dom" datetime={dayKey}>
+									<span aria-hidden="true"
+										>{dateTime.formatDate(d, { preset: 'calendarDayNumber', timeZone: null })}</span
+									>
+									<span class="event-sr-only"
+										>{dateTime.formatDate(d, { preset: 'menuDate', timeZone: null })}</span
+									>
+								</time>
+							</div>
+							<div class="day-events-allday">
+								{#each allDayItems as item, itemIndex (allDayItemKey(item, dayKey, itemIndex))}
+									{#if item.kind === 'event'}
+										{@const cal = calendars.get(item.e.calendarId || '')}
+										{@const merged = isMerged(item.e) ? item.e : null}
+										{@const mergedIconModel = merged ? getMergedIconModel(merged) : null}
+										<div
+											class={`event-chip all-day-chip ${item.isStart ? 'is-start' : ''} ${item.isEnd ? 'is-end' : ''}`}
+											class:is-current={isCurrent(item.e)}
+											class:is-past={isPast(item.e)}
+											style={`--cal-color: ${cal?.color || '#888'}`}
+											title={merged ? mergedChipTitle(item.e.title, merged) : item.e.title}
+										>
+											{#if merged}
 												<span
-													class="merged-icon-tile"
-													style={`--tile-color: ${tile.color}; ${tile.style}`}
+													class={`event-icon merged-icon ${mergedIconModel?.className || ''}`}
+													aria-hidden="true"
 												>
-													{#if tile.mode === 'svg'}
-														<span class="merged-icon-glyph" style={`color: ${tile.color}`}>
-															{@html tile.html || ''}
-														</span>
-													{:else if tile.mode === 'url'}
-														<img class="merged-icon-glyph" src={tile.src || ''} alt="" />
-													{:else if tile.mode === 'text'}
-														<span class="merged-icon-text" style={`color: ${tile.color}`}
-															>{tile.text || ''}</span
-														>
+													{#if mergedIconModel?.badge}
+														<span class="merged-icon-badge">{mergedIconModel.badge}</span>
+													{:else}
+														{#each mergedIconModel?.tiles || [] as tile (tile.key)}
+															<span
+																class="merged-icon-tile"
+																style={`--tile-color: ${tile.color}; ${tile.style}`}
+															>
+																{#if tile.mode === 'svg'}
+																	<span class="merged-icon-glyph" style={`color: ${tile.color}`}>
+																		{@html tile.html || ''}
+																	</span>
+																{:else if tile.mode === 'url'}
+																	<img class="merged-icon-glyph" src={tile.src || ''} alt="" />
+																{:else if tile.mode === 'text'}
+																	<span class="merged-icon-text" style={`color: ${tile.color}`}
+																		>{tile.text || ''}</span
+																	>
+																{/if}
+															</span>
+														{/each}
 													{/if}
 												</span>
+											{:else if iconIsSvg(cal?.icon)}
+												<span class="event-icon" aria-hidden="true" style="color: var(--cal-color)"
+													>{@html iconHtml(cal?.icon || undefined)}</span
+												>
+											{:else if iconIsUrl(cal?.icon)}
+												<span class="event-icon" aria-hidden="true"
+													><img src={iconSrc(cal?.icon)} alt="" /></span
+												>
+											{:else if cal?.icon}
+												<span class="event-icon" aria-hidden="true">{cal?.icon}</span>
+											{/if}
+											<span class="event-title">{item.e.title}</span>
+											{#if merged}
+												<span class="event-sr-only">. {mergedContextText(merged)}</span>
+											{/if}
+										</div>
+									{:else}
+										<div
+											class="event-chip all-day-chip task-chip is-start is-end"
+											class:is-overdue={item.task.isOverdue}
+											title={item.task.title}
+										>
+											<span class="task-indicator" aria-hidden="true"></span>
+											<span class="event-title">{item.task.title}</span>
+											<span class="event-sr-only"
+												>. Task{item.task.isOverdue ? ', overdue' : ''}</span
+											>
+										</div>
+									{/if}
+								{/each}
+							</div>
+							<div class="day-events-timed">
+								{#each groupTimedForDay(d) as grp (String(grp.mins) + keyOf(d))}
+									{@const grpIsCurrent = grp.items.some((x) => isCurrent(x))}
+									{@const grpIsPast = grp.items.every((x) => isPast(x))}
+									<div class="time-group">
+										<span
+											class="event-time time-label"
+											class:is-current={grpIsCurrent}
+											class:is-past={grpIsPast}
+											>{dateTime.formatTime(
+												new Date(2000, 0, 1, Math.floor(grp.mins / 60), grp.mins % 60),
+												{ preset: 'eventTime', timeZone: null }
+											)}</span
+										>
+										<div class="time-events">
+											{#each grp.items as e, j (e.id ?? `${e.calendarId || ''}:${e.title}:${String(e.start)}:${j}`)}
+												{@const cal = calendars.get(e.calendarId || '')}
+												<div
+													class="time-event"
+													class:is-current={isCurrent(e)}
+													class:is-past={isPast(e)}
+													style={`--cal-color: ${cal?.color || '#888'}`}
+													title={`${e.title}${cal?.name ? ` (${cal.name})` : ''}`}
+												>
+													{#if iconIsSvg(cal?.icon)}
+														<span
+															class="event-icon"
+															aria-hidden="true"
+															style="color: var(--cal-color)"
+															>{@html iconHtml(cal?.icon || undefined)}</span
+														>
+													{:else if iconIsUrl(cal?.icon)}
+														<span class="event-icon" aria-hidden="true"
+															><img src={iconSrc(cal?.icon)} alt="" /></span
+														>
+													{:else if cal?.icon}
+														<span class="event-icon" aria-hidden="true">{cal?.icon}</span>
+													{/if}
+													<span class="event-title">{e.title}</span>
+												</div>
 											{/each}
-										{/if}
-									</span>
-								{:else if iconIsSvg(cal?.icon)}
-									<span class="event-icon" aria-hidden="true" style="color: var(--cal-color)"
-										>{@html iconHtml(cal?.icon || undefined)}</span
-									>
-								{:else if iconIsUrl(cal?.icon)}
-									<span class="event-icon" aria-hidden="true"
-										><img src={iconSrc(cal?.icon)} alt="" /></span
-									>
-								{:else if cal?.icon}
-									<span class="event-icon" aria-hidden="true">{cal?.icon}</span>
-								{/if}
-								<span class="event-title">{item.e.title}</span>
-								{#if merged}
-									<span class="event-sr-only">. {mergedContextText(merged)}</span>
-								{/if}
-							</div>
-						{:else}
-							<div
-								class="event-chip all-day-chip task-chip is-start is-end"
-								class:is-overdue={item.task.isOverdue}
-								title={item.task.title}
-							>
-								<span class="task-indicator" aria-hidden="true"></span>
-								<span class="event-title">{item.task.title}</span>
-								<span class="event-sr-only">. Task{item.task.isOverdue ? ', overdue' : ''}</span>
-							</div>
-						{/if}
-					{/each}
-				</div>
-				<div class="day-events-timed">
-					{#each groupTimedForDay(d) as grp (String(grp.mins) + keyOf(d))}
-						{@const grpIsCurrent = grp.items.some((x) => isCurrent(x))}
-						{@const grpIsPast = grp.items.every((x) => isPast(x))}
-						<div class="time-group">
-							<span
-								class="event-time time-label"
-								class:is-current={grpIsCurrent}
-								class:is-past={grpIsPast}
-								>{dateTime.formatTime(
-									new Date(2000, 0, 1, Math.floor(grp.mins / 60), grp.mins % 60),
-									{ preset: 'eventTime', timeZone: null }
-								)}</span
-							>
-							<div class="time-events">
-								{#each grp.items as e, j (e.id ?? `${e.calendarId || ''}:${e.title}:${String(e.start)}:${j}`)}
-									{@const cal = calendars.get(e.calendarId || '')}
-									<div
-										class="time-event"
-										class:is-current={isCurrent(e)}
-										class:is-past={isPast(e)}
-										style={`--cal-color: ${cal?.color || '#888'}`}
-										title={`${e.title}${cal?.name ? ` (${cal.name})` : ''}`}
-									>
-										{#if iconIsSvg(cal?.icon)}
-											<span class="event-icon" aria-hidden="true" style="color: var(--cal-color)"
-												>{@html iconHtml(cal?.icon || undefined)}</span
-											>
-										{:else if iconIsUrl(cal?.icon)}
-											<span class="event-icon" aria-hidden="true"
-												><img src={iconSrc(cal?.icon)} alt="" /></span
-											>
-										{:else if cal?.icon}
-											<span class="event-icon" aria-hidden="true">{cal?.icon}</span>
-										{/if}
-										<span class="event-title">{e.title}</span>
+										</div>
 									</div>
 								{/each}
 							</div>
 						</div>
 					{/each}
 				</div>
-			</div>
-			{#if visibleDays.length > 7 && (i + 1) % 7 === 0}
-				<div class="week-sep" aria-hidden="true"></div>
-			{/if}
-		{/each}
+			{/each}
+		</div>
 	</div>
 </section>
 
@@ -1056,10 +1047,24 @@
 		border: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 85%);
 		border-radius: var(--radius);
 		box-shadow: 0 0.5rem 1.5rem color-mix(in oklch, var(--bg), transparent 60%);
-		display: grid;
-		grid-template-columns: repeat(7, 1fr);
+		display: flex;
+		flex-direction: column;
 		min-height: 0;
 		overflow: hidden;
+
+		& .weekday-row,
+		& .week-row {
+			display: grid;
+			grid-template-columns: repeat(7, minmax(0, 1fr));
+			min-width: 0;
+		}
+
+		& .week-rows {
+			display: grid;
+			gap: 0.25rem;
+			min-height: 0;
+			min-width: 0;
+		}
 
 		& .dow {
 			border-bottom: 0.0625rem solid color-mix(in oklch, var(--fg), transparent 85%);
@@ -1070,9 +1075,7 @@
 
 			&.is-today {
 				backdrop-filter: saturate(3.5);
-				border-left: 0.25rem solid var(--accent);
-				border-radius: var(--radius) 0 0 0;
-				padding-left: calc(0.5rem - 0.25rem);
+				box-shadow: inset 0.25rem 0 var(--accent);
 			}
 
 			&.is-weekend {
@@ -1086,11 +1089,6 @@
 					);
 				color: color-mix(in oklch, var(--accent), var(--muted) 70%);
 			}
-		}
-
-		& .week-sep {
-			grid-column: 1 / -1;
-			height: 0.25rem;
 		}
 	}
 
@@ -1117,9 +1115,7 @@
 
 		&.is-today {
 			backdrop-filter: saturate(3.5);
-			border-left: 0.25rem solid var(--accent);
-			border-radius: 0 0 0 var(--radius);
-			padding-left: calc(0.5rem - 0.25rem);
+			box-shadow: inset 0.25rem 0 var(--accent);
 		}
 
 		& .day-head {
@@ -1128,6 +1124,14 @@
 			flex-shrink: 0;
 			font-weight: 800;
 			gap: 0.4rem;
+
+			& .month-label {
+				color: var(--muted);
+				font-size: 0.65rem;
+				font-weight: 700;
+				line-height: 1;
+				text-transform: uppercase;
+			}
 
 			& .dom {
 				font-size: 1.15rem;
@@ -1473,12 +1477,32 @@
 	}
 
 	@media (orientation: landscape) and (width >= 1100px) {
+		.cal-header {
+			display: grid;
+			gap: 0.1rem;
+			grid-template-columns: minmax(0, 1fr);
+
+			& .cal-legend {
+				grid-row: 2;
+			}
+
+			& :global(.cal-last-updated) {
+				grid-row: 1;
+				justify-self: end;
+				margin-left: 0;
+			}
+
+			& :global(.cal-last-updated .last-updated-text) {
+				white-space: nowrap;
+			}
+		}
+
 		.cal-grid {
 			background: color-mix(in oklch, var(--card), transparent 20%);
 			flex: 1;
-			grid-template-rows: auto 1fr;
 		}
 
+		.week-row,
 		.day-cell {
 			min-height: 0;
 		}
