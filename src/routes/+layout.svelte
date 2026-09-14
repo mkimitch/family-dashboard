@@ -26,6 +26,12 @@
 </script>
 
 <svelte:head>
+	<title>Daymark</title>
+	<meta
+		name="description"
+		content="A glanceable family information board for calendars, weather, school menus, countdowns, and home-system status."
+	/>
+	<meta name="application-name" content="Daymark" />
 	<meta name="color-scheme" content="light dark" />
 	<link rel="manifest" href="/manifest.webmanifest" />
 	<link rel="icon" href={favicon} />
