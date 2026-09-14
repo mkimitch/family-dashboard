@@ -12,7 +12,7 @@
 }
 
 @font-face {
-	font-family: 'FD Sans';
+	font-family: 'Daymark Sans';
 	font-style: normal;
 	font-weight: 400;
 	src: local('Noto Sans Kannada UI'), local('Noto Sans Kannada');
@@ -20,7 +20,7 @@
 }
 
 @font-face {
-	font-family: 'FD Sans';
+	font-family: 'Daymark Sans';
 	font-style: normal;
 	font-weight: 700;
 	src:
@@ -52,7 +52,7 @@ body {
 	background: var(--bg);
 	color: var(--fg);
 	font-family:
-		'FD Sans',
+		'Daymark Sans',
 		'Noto Sans',
 		ui-sans-serif,
 		system-ui,
