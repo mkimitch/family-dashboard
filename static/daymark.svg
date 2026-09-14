@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="daymark-title">
+	<title id="daymark-title">Daymark</title>
+	<defs>
+		<linearGradient id="daymark-sky" x1="12" y1="10" x2="52" y2="54" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#29254a" />
+			<stop offset="1" stop-color="#11111d" />
+		</linearGradient>
+	</defs>
+	<rect width="64" height="64" rx="14" fill="url(#daymark-sky)" />
+	<path d="M13 43h38" fill="none" stroke="#aab5ff" stroke-linecap="round" stroke-width="4" />
+	<path d="M20 43a12 12 0 0 1 24 0" fill="#f6c76d" />
+	<path d="M32 13v11" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="4" />
+	<circle cx="32" cy="13" r="3" fill="#fff" />
+</svg>
