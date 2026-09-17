@@ -6,13 +6,6 @@
 	aria-labelledby="daymark-title"
 >
 	<title id="daymark-title">Daymark</title>
-	<style>
-		@media (prefers-color-scheme: dark) {
-			svg {
-				fill: #fff;
-			}
-		}
-	</style>
 	<rect x="8" y="8" width="12" height="48" rx="3" />
 	<path
 		d="M31 8h1a24 24 0 0 1 0 48h-1a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3h1a12 12 0 0 0 0-24h-1a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3Z"

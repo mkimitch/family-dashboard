@@ -1,6 +1,10 @@
-# Family Dashboard (SvelteKit)
+# Daymark
 
-A family-room information board built with SvelteKit. The UI is tuned for a 1920×1200 portrait display and combines shared household information, ambient visuals, and host health metrics in a single kiosk-friendly screen.
+Daymark is a family-room information board built with SvelteKit. The UI is tuned for a 1920×1200 portrait display and combines shared household information, ambient visuals, and host health metrics in a single kiosk-friendly screen.
+
+## Rebrand status
+
+The product-facing rebrand from "Family Dashboard" to "Daymark" is complete. The repository name and existing production identifiers still use `family-dashboard` until the operational migration is performed; retaining them temporarily keeps the deployed service and countdown database compatible. See [`docs/daymark-rebrand.md`](docs/daymark-rebrand.md) for the remaining migration checklist.
 
 ## Feature overview
 
