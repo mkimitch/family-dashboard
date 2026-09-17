@@ -34,7 +34,7 @@
 	<meta name="application-name" content="Daymark" />
 	<meta name="color-scheme" content="light dark" />
 	<link rel="manifest" href="/manifest.webmanifest" />
-	<link rel="icon" href={favicon} />
+	<link rel="icon" type="image/svg+xml" href={favicon} />
 </svelte:head>
 
 <div class="app-root">

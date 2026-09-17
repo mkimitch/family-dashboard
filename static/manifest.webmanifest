@@ -9,7 +9,7 @@
 	"theme_color": "#111111",
 	"icons": [
 		{
-			"src": "/daymark.svg",
+			"src": "/daymark-app.svg",
 			"sizes": "any",
 			"type": "image/svg+xml",
 			"purpose": "any"

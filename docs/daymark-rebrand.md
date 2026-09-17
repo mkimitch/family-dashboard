@@ -35,8 +35,21 @@ Perform these as a coordinated deployment change, not as part of the product-fac
 
 ## Phase 4: Visual and portfolio polish
 
-- [ ] Decide whether the initial sunrise/day-marker icon is the permanent mark.
+- [x] Select Open D as the permanent mark and replace the provisional sunrise icon.
+- [x] Add a monochrome SVG, an adaptive light/dark favicon, and a periwinkle SVG app icon.
+- [ ] Check the final assets at actual favicon sizes and on the deployed kiosk.
 - [ ] Create production PNG icons for common PWA sizes and Apple touch icons.
 - [ ] Capture current portrait and landscape screenshots with private family data removed.
 - [ ] Add a concise architecture diagram and a resume-friendly project summary.
 - [ ] Add a public demo or sanitized preview if practical.
+
+## Open D assets
+
+Selected September 17, 2026. The mark uses a straight rounded stem and a separate curved bowl, with a clear gap between them.
+
+- `static/daymark.svg`: charcoal mark on a transparent background, for general brand use.
+- `src/lib/assets/favicon.svg`: the same geometry, charcoal by default and white in dark mode.
+- `static/daymark-app.svg`: padded charcoal mark on a solid periwinkle background, referenced by the manifest.
+- Palette: charcoal `#272b30`, periwinkle `#a3aff4`, white `#ffffff`.
+
+The SVG app icon is currently declared for `any` purpose. PNG exports, Apple touch icons, and device/browser verification remain pending. The generated concept sheets are visual references, not production assets. Keep the stem and bowl geometry consistent if adding further exports.
