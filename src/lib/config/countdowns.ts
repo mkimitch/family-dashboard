@@ -21,6 +21,16 @@ export type CountdownItem = {
 export const MAX_VISIBLE_COUNTDOWNS = 3;
 
 const countdowns: CountdownItem[] = [
+	{
+		id: 'samana-camping-with-aunts-2026',
+		label: '🏕️ Samana Goes Camping with Her Aunts',
+		targetDate: '2026-08-13'
+	},
+	{
+		id: 'first-day-of-school-2026',
+		label: '🏫 First Day of School',
+		targetDate: '2026-08-31'
+	},
 	// {
 	// 	id: 'last-day-of-school',
 	// 	label: 'Last day of school',

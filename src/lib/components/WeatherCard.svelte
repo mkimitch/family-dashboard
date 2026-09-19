@@ -12,11 +12,19 @@
 		getMoonPhaseAbbreviation,
 		getMoonPhaseName
 	} from '$lib/utils/moon';
+	import {
+		alertIconPath,
+		pressureIconPath,
+		uvIconPath,
+		weatherConditionIconPath,
+		windIconPath,
+		type WeatherCondition
+	} from '$lib/weatherIcons';
 	import { onMount } from 'svelte';
 	import LastUpdated from './LastUpdated.svelte';
 	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
 
-	type Condition = { icon?: string; main?: string; desc?: string };
+	type Condition = WeatherCondition;
 	type Day = {
 		condition?: Condition;
 		date?: string | number;
@@ -125,26 +133,6 @@
 		}
 		return undefined;
 	};
-	const iconSlugOf = (code?: string, main?: string) => {
-		const m = String(main || '').toLowerCase();
-		const night = typeof code === 'string' && /n$/.test(code);
-		const c = typeof code === 'string' ? code : '';
-		if (/^01/.test(c) || /\bclear\b/.test(m)) return night ? 'clear-night' : 'clear-day';
-		if (/^02/.test(c)) return night ? 'partly-cloudy-night' : 'partly-cloudy-day';
-		if (/^03/.test(c)) return 'cloudy';
-		if (/^04/.test(c)) return 'overcast';
-		if (/^09/.test(c)) return 'rain';
-		if (/^10/.test(c)) return 'rain';
-		if (/^11/.test(c) || /storm|thunder/.test(m)) return 'thunderstorms';
-		if (/^13/.test(c) || /snow/.test(m)) return 'snow';
-		if (/^50/.test(c) || /(mist|fog|haze|smoke)/.test(m)) return 'mist';
-		if (/drizzle/.test(m)) return 'rain';
-		if (/rain/.test(m)) return 'rain';
-		if (/cloud/.test(m)) return 'cloudy';
-		return night ? 'clear-night' : 'clear-day';
-	};
-	const lottiePathOf = (code?: string, main?: string) =>
-		`/lottie/weather/${iconSlugOf(code, main)}.json`;
 	const windDir = (deg?: number) => {
 		if (typeof deg !== 'number') return '';
 		const dirs = [
@@ -263,11 +251,6 @@
 		if (uv < 11) return 'Very High';
 		return 'Extreme';
 	};
-	const uvLottiePath = (uv: number | undefined): string => {
-		if (typeof uv !== 'number' || uv < 1) return '/lottie/weather/uv-index.json';
-		const level = Math.min(11, Math.max(1, Math.round(uv)));
-		return `/lottie/weather/uv-index-${level}.json`;
-	};
 	const getPressureHpa = (now: WeatherNow): number | undefined =>
 		typeof now.pressureHpa === 'number' ? now.pressureHpa : undefined;
 	const formatPressureInHg = (pressureHpa: number): string => (pressureHpa * 0.02953).toFixed(2);
@@ -355,14 +338,6 @@
 		}, []);
 	};
 
-	const alertLottieFor = (severity: string): string => {
-		const s = severity.toLowerCase();
-		if (s === 'warning') return '/lottie/weather/code-red.json';
-		if (s === 'watch') return '/lottie/weather/code-orange.json';
-		if (s === 'advisory') return '/lottie/weather/code-yellow.json';
-		return '/lottie/weather/code-green.json';
-	};
-
 	const loadWeather = async () => {
 		try {
 			const r = await fetch('/api/weather', { cache: 'no-store' });
@@ -407,7 +382,7 @@
 			{#if alerts.length}
 				<div class="wx-alerts" aria-live="polite" aria-label="Weather alerts">
 					{#each alerts.slice(0, 3) as a (a.id)}
-						{@const alertLottie = alertLottieFor(a.severity)}
+						{@const alertLottie = alertIconPath(a.severity, a.title)}
 						<div class={'wx-alert-pill wx-alert-pill--' + a.severity}>
 							<span class="wx-alert-icon">
 								<LottieWeatherIcon src={alertLottie} className="wx-alert-icon-img" />
@@ -463,16 +438,17 @@
 			{@const windMphVal = getWindMph(now)}
 			{@const humidity = getHumidity(now)}
 			{@const uvIdx = getUVIndex(now)}
-			{@const uvIconPath = uvLottiePath(uvIdx)}
+			{@const uvLottie = uvIconPath(uvIdx)}
 			{@const uvCategory = uvIdx !== undefined ? getUVCategory(uvIdx) : ''}
 			{@const pressureHpa = getPressureHpa(now)}
 			{@const pressureInHg = pressureHpa !== undefined ? formatPressureInHg(pressureHpa) : ''}
+			{@const pressureLottie = pressureIconPath(pressureHpa)}
+			{@const windLottie = windIconPath(windMphVal)}
 			{@const summary =
-				(now?.condition && (now.condition.desc || now.condition.main)) ||
+				(now?.condition &&
+					(now.condition.desc || now.condition.description || now.condition.main)) ||
 				(pick(now, ['summary', 'desc', 'text']) ?? '')}
-			{@const iconCode = now?.condition?.icon}
-			{@const iconMain = now?.condition?.main || now?.condition?.desc}
-			{@const lottieSrc = lottiePathOf(iconCode, iconMain)}
+			{@const lottieSrc = weatherConditionIconPath(now?.condition)}
 			{@const astro = getAstro(root)}
 			{@const sunrise = astro.sunrise}
 			{@const sunset = astro.sunset}
@@ -516,7 +492,7 @@
 					</div>
 					{#if alerts[0]}
 						{@const compactAlert = alerts[0]}
-						{@const compactAlertLottie = alertLottieFor(compactAlert.severity)}
+						{@const compactAlertLottie = alertIconPath(compactAlert.severity, compactAlert.title)}
 						<span
 							class={'wx-compact-alert wx-compact-alert--' + compactAlert.severity}
 							aria-label={`${alerts.length} weather alert${alerts.length === 1 ? '' : 's'}: ${compactAlert.title}`}
@@ -569,7 +545,7 @@
 								<span class="item uv" aria-label={`UV index ${Math.round(uvIdx)}, ${uvCategory}`}
 									><span class="ico"
 										><LottieWeatherIcon
-											src={uvIconPath}
+											src={uvLottie}
 											className="wi wi-stat"
 											ariaLabel="UV index"
 										/></span
@@ -577,10 +553,12 @@
 								>
 							{/if}
 							{#if pressureInHg}
-								<span class="item pressure" aria-label={`Pressure ${pressureInHg} inches of mercury`}
+								<span
+									class="item pressure"
+									aria-label={`Pressure ${pressureInHg} inches of mercury`}
 									><span class="ico"
 										><LottieWeatherIcon
-											src="/lottie/weather/barometer.json"
+											src={pressureLottie}
 											className="wi wi-stat"
 											ariaLabel="Pressure"
 										/></span
@@ -593,11 +571,15 @@
 								<span class="item wind"
 									><span
 										class="ico"
-										style={now?.windDeg !== undefined ? `transform: rotate(${now.windDeg}deg);` : ''}
+										style={now?.windDeg !== undefined
+											? `transform: rotate(${now.windDeg}deg);`
+											: ''}
 										><LottieWeatherIcon
-											src="/lottie/weather/wind.json"
+											src={windLottie}
 											className="wi wi-stat"
-											ariaLabel={now?.windDeg !== undefined ? `Wind ${windDir(now.windDeg)}` : 'Wind'}
+											ariaLabel={now?.windDeg !== undefined
+												? `Wind ${windDir(now.windDeg)}`
+												: 'Wind'}
 										/></span
 									>{windMphVal} mph</span
 								>
@@ -719,13 +701,15 @@
 										? c2f(d.tempC.min)
 										: pick(d, ['low', 'min', 'minTemp', 'lo'])}
 							{@const pop = getDayPop(d)}
-							{@const slug = iconSlugOf(d?.condition?.icon, d?.condition?.main || d?.condition?.desc)}
-							{@const forecastLottie = `/lottie/weather/${slug}.json`}
+							{@const forecastLottie = weatherConditionIconPath(d?.condition)}
 							<li>
 								<div class="day">{label}</div>
 								<div class="wxi">
 									<LottieWeatherIcon
-										ariaLabel={d?.condition?.main || d?.condition?.desc || ''}
+										ariaLabel={d?.condition?.main ||
+											d?.condition?.desc ||
+											d?.condition?.description ||
+											''}
 										className="wi wi-forecast"
 										src={forecastLottie}
 									/>
@@ -1156,11 +1140,6 @@
 						font-size: 0.75rem;
 						font-weight: 400;
 						line-height: 1.1;
-					}
-
-					& .moon-phase-illum {
-						font-size: 0.75rem;
-						opacity: 0.7;
 					}
 				}
 			}

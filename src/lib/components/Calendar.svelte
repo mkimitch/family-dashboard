@@ -1123,12 +1123,14 @@
 			display: inline-flex;
 			flex-shrink: 0;
 			font-weight: 800;
-			gap: 0.4rem;
+			gap: 0.5rem;
+			padding: 0.15rem 0.35rem 0;
 
 			& .month-label {
 				color: var(--muted);
 				font-size: 0.65rem;
 				font-weight: 700;
+				letter-spacing: 0.06em;
 				line-height: 1;
 				text-transform: uppercase;
 			}

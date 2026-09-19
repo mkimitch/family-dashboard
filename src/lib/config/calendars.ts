@@ -3,7 +3,7 @@ import type { CalendarConfig, CalendarDisplayConfig, CalendarSuppression } from 
 export const calendarConfig: CalendarConfig[] = [];
 
 export const calendarDisplay = {
-	weeks: 2,
+	weeks: 1,
 	anchor: 'rolling'
 } satisfies CalendarDisplayConfig;
 
