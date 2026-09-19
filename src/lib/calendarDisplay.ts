@@ -22,7 +22,10 @@ export const resolveCalendarDisplayConfig = (value: unknown): CalendarDisplayCon
 	if (!value || typeof value !== 'object') return { ...DEFAULT_CALENDAR_DISPLAY_CONFIG };
 
 	const candidate = value as Record<string, unknown>;
-	if ((candidate.weeks !== 1 && candidate.weeks !== 2) || candidate.anchor !== 'rolling') {
+	if (
+		(candidate.weeks !== 1 && candidate.weeks !== 2 && candidate.weeks !== 3) ||
+		candidate.anchor !== 'rolling'
+	) {
 		return { ...DEFAULT_CALENDAR_DISPLAY_CONFIG };
 	}
 

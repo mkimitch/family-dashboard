@@ -7,7 +7,7 @@ export type CalendarConfig = {
 	sortOrder?: number;
 };
 
-export type CalendarWeekCount = 1 | 2;
+export type CalendarWeekCount = 1 | 2 | 3;
 
 export type CalendarDisplayConfig = {
 	weeks: CalendarWeekCount;

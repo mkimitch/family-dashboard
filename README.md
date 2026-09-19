@@ -356,7 +356,7 @@ Most upstream data flows through SvelteKit routes so credentials and upstream UR
 ## Assets and attribution
 
 - Wallpapers live under `static/photos/` by default and are typically ignored by git to keep personal photos private.
-- Weather animations live under `static/lottie/weather/` and are rendered with `lottie-web` via `src/lib/components/LottieWeatherIcon.svelte`.
+- Weather animations live under `static/lottie/weather/`, are selected through `src/lib/weatherIcons.ts`, and are rendered with `lottie-web` via `src/lib/components/LottieWeatherIcon.svelte`. See `docs/weather-icons.md` for the feed-to-icon map and data-gated families.
 - The repo also exposes installed weather icon packages through `src/routes/vendor/weather-icons/[...path]/+server.ts` for package-hosted SVG assets.
 - Static SVG assets live under `static/svg/static/`.
 - System status SVG assets (e.g., `rpi.svg`, `server.svg`, `cpu-filled.svg`, `gpu-filled.svg`, `uptime-1.svg`) are from the **Uicons by [Flaticon](https://www.flaticon.com/uicons)** set and require attribution when published.

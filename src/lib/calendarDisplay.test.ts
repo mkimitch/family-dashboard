@@ -10,13 +10,17 @@ const dateKey = (date: Date): string =>
 	`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 describe('calendar display configuration', () => {
-	it('accepts the supported one- and two-week rolling modes', () => {
+	it('accepts the supported one-, two-, and three-week rolling modes', () => {
 		expect(resolveCalendarDisplayConfig({ weeks: 1, anchor: 'rolling' })).toEqual({
 			weeks: 1,
 			anchor: 'rolling'
 		});
 		expect(resolveCalendarDisplayConfig({ weeks: 2, anchor: 'rolling' })).toEqual({
 			weeks: 2,
+			anchor: 'rolling'
+		});
+		expect(resolveCalendarDisplayConfig({ weeks: 3, anchor: 'rolling' })).toEqual({
+			weeks: 3,
 			anchor: 'rolling'
 		});
 	});
@@ -26,7 +30,7 @@ describe('calendar display configuration', () => {
 		null,
 		{},
 		{ weeks: 0, anchor: 'rolling' },
-		{ weeks: 3, anchor: 'rolling' },
+		{ weeks: 4, anchor: 'rolling' },
 		{ weeks: '2', anchor: 'rolling' },
 		{ weeks: 2, anchor: 'week-aligned' }
 	])('falls back safely for unsupported input %#', (value) => {
@@ -36,9 +40,10 @@ describe('calendar display configuration', () => {
 
 describe('rolling calendar display range', () => {
 	it.each([
-		{ weeks: 1 as const, dayCount: 7 },
-		{ weeks: 2 as const, dayCount: 14 }
-	])('builds $weeks complete week row(s)', ({ weeks, dayCount }) => {
+		{ weeks: 1 as const, dayCount: 7, expectedEnd: '2026-07-20' },
+		{ weeks: 2 as const, dayCount: 14, expectedEnd: '2026-07-27' },
+		{ weeks: 3 as const, dayCount: 21, expectedEnd: '2026-08-03' }
+	])('builds $weeks complete week row(s)', ({ weeks, dayCount, expectedEnd }) => {
 		const config: CalendarDisplayConfig = { weeks, anchor: 'rolling' };
 		const range = resolveCalendarDisplayRange(new Date(2026, 6, 13, 15, 45), config);
 
@@ -47,12 +52,12 @@ describe('rolling calendar display range', () => {
 		expect(range.days).toHaveLength(dayCount);
 		expect(range.weekRows).toHaveLength(weeks);
 		expect(range.weekRows.every((row) => row.length === 7)).toBe(true);
-		expect(dateKey(range.endExclusive)).toBe(weeks === 1 ? '2026-07-20' : '2026-07-27');
+		expect(dateKey(range.endExclusive)).toBe(expectedEnd);
 	});
 
 	it('stays consecutive across month and year boundaries', () => {
 		const range = resolveCalendarDisplayRange(new Date(2026, 11, 28, 8), {
-			weeks: 2,
+			weeks: 3,
 			anchor: 'rolling'
 		});
 
@@ -70,16 +75,23 @@ describe('rolling calendar display range', () => {
 			'2027-01-07',
 			'2027-01-08',
 			'2027-01-09',
-			'2027-01-10'
+			'2027-01-10',
+			'2027-01-11',
+			'2027-01-12',
+			'2027-01-13',
+			'2027-01-14',
+			'2027-01-15',
+			'2027-01-16',
+			'2027-01-17'
 		]);
-		expect(dateKey(range.endExclusive)).toBe('2027-01-11');
+		expect(dateKey(range.endExclusive)).toBe('2027-01-18');
 	});
 
 	it('does not mutate the supplied current time', () => {
 		const now = new Date(2026, 6, 13, 15, 45);
 		const before = now.getTime();
 
-		resolveCalendarDisplayRange(now, { weeks: 2, anchor: 'rolling' });
+		resolveCalendarDisplayRange(now, { weeks: 3, anchor: 'rolling' });
 
 		expect(now.getTime()).toBe(before);
 	});
