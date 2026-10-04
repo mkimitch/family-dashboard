@@ -2385,6 +2385,41 @@ __metadata:
   languageName: node
   linkType: hard
 
+"daymark@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "daymark@workspace:."
+  dependencies:
+    "@eslint/compat": "npm:^1.4.0"
+    "@eslint/js": "npm:^9.38.0"
+    "@libsql/client": "npm:^0.17.4"
+    "@lxg/weather-icons": "npm:^3.0.1"
+    "@sveltejs/adapter-auto": "npm:^7.0.0"
+    "@sveltejs/adapter-node": "npm:^5.4.0"
+    "@sveltejs/kit": "npm:^2.60.1"
+    "@sveltejs/vite-plugin-svelte": "npm:^6.2.1"
+    "@types/node": "npm:^26.1.1"
+    drizzle-kit: "npm:^0.31.10"
+    drizzle-orm: "npm:^0.45.2"
+    eslint: "npm:^9.38.0"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-plugin-svelte: "npm:^3.12.4"
+    globals: "npm:^16.4.0"
+    lottie-web: "npm:^5.13.0"
+    postcss-html: "npm:^1.7.0"
+    prettier: "npm:^3.6.2"
+    prettier-plugin-svelte: "npm:^3.4.0"
+    stylelint: "npm:^16.10.0"
+    stylelint-config-standard: "npm:^36.0.1"
+    stylelint-order: "npm:^6.0.4"
+    svelte: "npm:^5.55.7"
+    svelte-check: "npm:^4.3.3"
+    typescript: "npm:^5.9.3"
+    typescript-eslint: "npm:^8.46.1"
+    vite: "npm:^7.1.10"
+    vitest: "npm:^4.1.9"
+  languageName: unknown
+  linkType: soft
+
 "debug@npm:4, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4, debug@npm:^4.4.3":
   version: 4.4.3
   resolution: "debug@npm:4.4.3"
@@ -3180,41 +3215,6 @@ __metadata:
   checksum: 10c0/77e3ae682b7b1f4972f563c6dbcd2b0d54ac679e62d5d32f3e5085feba20483cf28bd505543f520e287a56d4d55a28d7874299941faf637e779a1aa5994d1267
   languageName: node
   linkType: hard
-
-"family-dashboard-svelte@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "family-dashboard-svelte@workspace:."
-  dependencies:
-    "@eslint/compat": "npm:^1.4.0"
-    "@eslint/js": "npm:^9.38.0"
-    "@libsql/client": "npm:^0.17.4"
-    "@lxg/weather-icons": "npm:^3.0.1"
-    "@sveltejs/adapter-auto": "npm:^7.0.0"
-    "@sveltejs/adapter-node": "npm:^5.4.0"
-    "@sveltejs/kit": "npm:^2.60.1"
-    "@sveltejs/vite-plugin-svelte": "npm:^6.2.1"
-    "@types/node": "npm:^26.1.1"
-    drizzle-kit: "npm:^0.31.10"
-    drizzle-orm: "npm:^0.45.2"
-    eslint: "npm:^9.38.0"
-    eslint-config-prettier: "npm:^10.1.8"
-    eslint-plugin-svelte: "npm:^3.12.4"
-    globals: "npm:^16.4.0"
-    lottie-web: "npm:^5.13.0"
-    postcss-html: "npm:^1.7.0"
-    prettier: "npm:^3.6.2"
-    prettier-plugin-svelte: "npm:^3.4.0"
-    stylelint: "npm:^16.10.0"
-    stylelint-config-standard: "npm:^36.0.1"
-    stylelint-order: "npm:^6.0.4"
-    svelte: "npm:^5.55.7"
-    svelte-check: "npm:^4.3.3"
-    typescript: "npm:^5.9.3"
-    typescript-eslint: "npm:^8.46.1"
-    vite: "npm:^7.1.10"
-    vitest: "npm:^4.1.9"
-  languageName: unknown
-  linkType: soft
 
 "fast-deep-equal@npm:^3.1.1, fast-deep-equal@npm:^3.1.3":
   version: 3.1.3

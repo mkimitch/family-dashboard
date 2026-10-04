@@ -56,8 +56,8 @@ export type ResolvedDateTimeDisplaySettings = {
 
 const DATE_PRESET_DEFAULTS = {
 	clockDate: {
-		weekday: 'long',
-		month: 'long',
+		weekday: 'short',
+		month: 'short',
 		day: 'numeric',
 		year: 'numeric'
 	},
