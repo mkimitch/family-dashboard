@@ -33,11 +33,6 @@
 	navigation: auto;
 }
 
-html[data-kiosk='true'],
-html[data-kiosk='true'] * {
-	cursor: none !important;
-}
-
 * {
 	box-sizing: border-box;
 	text-rendering: optimizelegibility;

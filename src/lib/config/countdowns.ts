@@ -22,6 +22,18 @@ export const MAX_VISIBLE_COUNTDOWNS = 3;
 
 const countdowns: CountdownItem[] = [
 	{
+		id: 'diwali-deepavali-2026',
+		label: '🪔 Diwali / Deepavali',
+		targetDate: '2026-11-08',
+		variant: 'accent'
+	},
+	{
+		id: 'halloween-2026',
+		label: '🎃 Halloween',
+		targetDate: '2026-10-31',
+		variant: 'accent'
+	},
+	{
 		id: 'samana-camping-with-aunts-2026',
 		label: '🏕️ Samana Goes Camping with Her Aunts',
 		targetDate: '2026-08-13'
