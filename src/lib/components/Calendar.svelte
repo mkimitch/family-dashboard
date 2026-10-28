@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { dev } from '$app/environment';
+	import { parseCalendarPreviewDate } from '$lib/calendarDecorations';
+	import CalendarDayDecoration from './CalendarDayDecoration.svelte';
 	import { MERGE_ALLDAY_DUPLICATES, mergeAllDayDuplicates } from '$lib/calendarMerge';
 	import { parseCalendarConfigPayload } from '$lib/calendarConfigPayload';
 	import {
@@ -71,6 +74,7 @@
 	let rawEvents = $state<CalEvent[]>([]);
 	let tasks = $state<DashboardTask[]>([]);
 	let now = $state(new Date());
+	let previewDate: Date | null = null;
 	let timeZone = $state<string>(Intl.DateTimeFormat().resolvedOptions().timeZone);
 	let renderEvents = $derived<CalEvent[]>(
 		filterSuppressedEvents(rawEvents, calendars, calendarSuppressions, now, timeZone)
@@ -557,7 +561,7 @@
 		const ymd = keyFormatter.format(now);
 		const parts = ymd.split('-').map(Number);
 		const range = resolveCalendarDisplayRange(
-			new Date(parts[0], parts[1] - 1, parts[2]),
+			previewDate ?? new Date(parts[0], parts[1] - 1, parts[2]),
 			calendarDisplay
 		);
 		visibleDays = range.days;
@@ -687,6 +691,11 @@
 	};
 
 	onMount(() => {
+		if (dev) {
+			previewDate = parseCalendarPreviewDate(
+				new URLSearchParams(window.location.search).get('calendarPreviewDate')
+			);
+		}
 		(async () => {
 			await refreshCalendarData(true);
 		})();
@@ -782,6 +791,7 @@
 								: ''}"
 							data-date={dayKey}
 						>
+							<CalendarDayDecoration date={d} />
 							<div class="day-head">
 								{#if visibleIndex === 0 || d.getDate() === 1}
 									<span class="month-label"
@@ -1098,9 +1108,17 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+		/* Keep the negative decoration layer above this cell’s background, below its content. */
+		isolation: isolate;
 		min-height: 8rem;
 		padding: 0.175rem;
 		position: relative;
+
+		/* Brighter holiday artwork must not show through transparent event titles. */
+		&:has(:global(.day-decoration)) .time-event .event-title {
+			/* background: var(--card); */
+			border-radius: 0.125rem;
+		}
 
 		&.is-weekend {
 			background:
@@ -1161,10 +1179,12 @@
 		font-weight: 300;
 		-webkit-line-clamp: 2;
 		line-clamp: 2;
-		line-height: 1;
+		line-height: 1.2;
 		overflow: hidden;
 		overflow-wrap: anywhere;
 		text-overflow: ellipsis;
+		/* text-box-trim: trim-both;
+		text-box-edge: cap text; */
 	}
 
 	.event-chip {
@@ -1331,8 +1351,9 @@
 		display: grid;
 		flex-shrink: 0;
 		gap: 0.25rem;
-		grid-auto-rows: 1.7rem;
+		/* grid-auto-rows: 1.7rem; */
 		min-width: 0;
+		
 
 		& .event-chip {
 			width: 100%;

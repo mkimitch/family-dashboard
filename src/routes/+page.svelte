@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { provideSolarLighting } from '$lib/solarLightingContext';
 	import Calendar from '$lib/components/Calendar.svelte';
 	import Hero from '$lib/components/Hero.svelte';
 	import SystemStatusStub from '$lib/components/SystemStatusStub.svelte';
@@ -7,6 +8,8 @@
 
 	type PageProps = { data: PageData };
 	let { data }: PageProps = $props();
+
+	provideSolarLighting();
 
 	const alerts: string[] = [];
 	const messageTitle = '';
