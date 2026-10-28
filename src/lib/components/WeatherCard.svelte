@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { useSolarLighting } from '$lib/solarLightingContext';
+	import { isWeatherNight } from '$lib/weatherLighting';
 	import SnowCap from '$lib/components/SnowCap.svelte';
 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
 	import {
@@ -113,6 +115,10 @@
 	}: WeatherCardProps = $props();
 	let wx = $state<WeatherRoot | null>(null);
 	let nowClock = $state(new Date());
+	const solarNight = useSolarLighting();
+	$effect(() => {
+		$solarNight = isWeatherNight(wx, nowClock);
+	});
 	let interval: number | undefined;
 	let clockTick: number | undefined;
 	let updatedAt = $state<string | null>(null);
