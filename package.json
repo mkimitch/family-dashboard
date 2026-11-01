@@ -21,7 +21,13 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"preview": "vite preview",
 		"start": "node build",
-		"test": "vitest run"
+		"test": "vitest run",
+		"demos:capture": "node scripts/demos/capture.mjs",
+		"demos:encode": "node scripts/demos/encode.mjs",
+		"demos:generate": "yarn demos:capture && yarn demos:encode",
+		"demos:halloween": "yarn demos:capture halloween && yarn demos:encode halloween",
+		"demos:diwali": "yarn demos:capture diwali && yarn demos:encode diwali",
+		"test:demos": "node --test scripts/demos/*.test.mjs"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -36,6 +42,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.4",
 		"globals": "^16.4.0",
+		"playwright-core": "1.57.0",
 		"postcss-html": "^1.7.0",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",

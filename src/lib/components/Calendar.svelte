@@ -782,6 +782,7 @@
 						{@const visibleIndex = weekIndex * 7 + dayIndex}
 						{@const dayKey = keyOf(d)}
 						{@const allDayItems = allDayItemsByDay[dayKey] || []}
+						{@const timedGroups = groupTimedForDay(d)}
 						<div
 							class="day-cell {d.getDay() === 0 || d.getDay() === 6 ? 'is-weekend' : ''} {sameDay(
 								d,
@@ -791,7 +792,12 @@
 								: ''}"
 							data-date={dayKey}
 						>
-							<CalendarDayDecoration date={d} />
+							<CalendarDayDecoration
+								date={d}
+								crowded={allDayItems.length +
+									timedGroups.reduce((count, group) => count + group.items.length, 0) >=
+									4}
+							/>
 							<div class="day-head">
 								{#if visibleIndex === 0 || d.getDate() === 1}
 									<span class="month-label"
@@ -880,7 +886,7 @@
 								{/each}
 							</div>
 							<div class="day-events-timed">
-								{#each groupTimedForDay(d) as grp (String(grp.mins) + keyOf(d))}
+								{#each timedGroups as grp (String(grp.mins) + keyOf(d))}
 									{@const grpIsCurrent = grp.items.some((x) => isCurrent(x))}
 									{@const grpIsPast = grp.items.every((x) => isPast(x))}
 									<div class="time-group">
@@ -1120,6 +1126,18 @@
 			border-radius: 0.125rem;
 		}
 
+		/* Keep text readable over Diwali lights without adding opaque backgrounds. */
+		&:has(:global([data-decoration='diwali'])) {
+			& .day-head > span,
+			& .dom,
+			& .time-label,
+			& .time-event .event-title {
+				text-shadow:
+					0 0 1px rgb(0 0 0 / 90%),
+					0 1px 3px rgb(0 0 0 / 85%);
+			}
+		}
+
 		&.is-weekend {
 			background:
 				linear-gradient(180deg, var(--weekend-wash), transparent 55%),
@@ -1353,7 +1371,6 @@
 		gap: 0.25rem;
 		/* grid-auto-rows: 1.7rem; */
 		min-width: 0;
-		
 
 		& .event-chip {
 			width: 100%;

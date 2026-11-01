@@ -1,0 +1,132 @@
+<svg id="diwali-reduced-motion" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" width="100%" height="100%" preserveAspectRatio="xMidYMin meet" aria-hidden="true" focusable="false" class="diwali-svg diwali-lantern">
+  <style>
+    /* Explicit static image target for browsers caching SVG motion preferences. */
+    :root:target { --diwali-motion: paused; }
+    * { animation-play-state: var(--diwali-motion, running) !important; }
+    .diwali-lantern {
+      --diwali-gold: #ffd166;
+      --diwali-magenta: #d92672;
+      --diwali-marigold: #ffbe0b;
+      --diwali-plum: #2d144b;
+      --diwali-saffron: #ff9f1c;
+      --diwali-vermilion: #e63946;
+      --lantern-glow-opacity: 0.65;
+    }
+    .lantern-pendulum {
+      animation: kandil-sway 6.4s ease-in-out infinite;
+      transform-origin: 60px 0px;
+    }
+    .tassel-left, .tassel-center, .tassel-right {
+      animation: tassel-sway 6.4s ease-in-out infinite;
+      transform-box: fill-box;
+      transform-origin: top center;
+    }
+    .tassel-left { animation-delay: -0.45s; }
+    .tassel-center { animation-delay: -0.25s; }
+    .tassel-right { animation-delay: -0.65s; }
+    .lantern-halo {
+      animation: halo-pulse 4.2s ease-in-out infinite;
+      opacity: var(--lantern-glow-opacity);
+    }
+    .lantern-core-light { animation: core-flicker 3.1s ease-in-out infinite; }
+    @keyframes kandil-sway {
+      0%, 100% { transform: rotate(-1.6deg); }
+      50% { transform: rotate(1.6deg); }
+    }
+    @keyframes tassel-sway {
+      0%, 100% { transform: rotate(-2.8deg); }
+      50% { transform: rotate(2.8deg); }
+    }
+    @keyframes halo-pulse {
+      0%, 100% { opacity: calc(var(--lantern-glow-opacity) * 0.78); }
+      50% { opacity: var(--lantern-glow-opacity); }
+    }
+    @keyframes core-flicker {
+      0%, 100% { opacity: 0.82; }
+      50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .lantern-pendulum, .tassel-left, .tassel-center, .tassel-right, .lantern-halo, .lantern-core-light {
+        animation: none !important;
+      }
+    }
+  </style>
+  <defs>
+    <radialGradient id="kandil-ambient-halo" cx="60" cy="78" r="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffbe0b" stop-opacity="0.45" />
+      <stop offset="50%" stop-color="#ff9f1c" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#d92672" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="panel-center-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff9f1c" />
+      <stop offset="50%" stop-color="#ffd166" />
+      <stop offset="100%" stop-color="#e63946" />
+    </linearGradient>
+    <linearGradient id="panel-side-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d92672" />
+      <stop offset="50%" stop-color="#e63946" />
+      <stop offset="100%" stop-color="#3b1d5e" />
+    </linearGradient>
+    <linearGradient id="gold-trim-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9f1c" />
+      <stop offset="50%" stop-color="#fff3b0" />
+      <stop offset="100%" stop-color="#ff9f1c" />
+    </linearGradient>
+    <linearGradient id="tassel-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffd166" />
+      <stop offset="45%" stop-color="#e63946" />
+      <stop offset="100%" stop-color="#d92672" stop-opacity="0.85" />
+    </linearGradient>
+  </defs>
+  <g id="lantern-pendulum-group" class="lantern-pendulum">
+    <circle class="lantern-halo" cx="60" cy="78" r="56" fill="url(#kandil-ambient-halo)" />
+    <g id="hanging-cord">
+      <line x1="60" y1="0" x2="60" y2="28" stroke="var(--diwali-gold)" stroke-width="1.6" />
+      <circle cx="60" cy="10" r="2.2" fill="var(--diwali-gold)" />
+      <circle cx="60" cy="18" r="1.8" fill="var(--diwali-saffron)" />
+      <path d="M 52,28 C 52,23 68,23 68,28 Z" fill="url(#gold-trim-grad)" />
+    </g>
+    <g id="lantern-body">
+      <polygon points="42,36 78,36 84,42 36,42" fill="var(--diwali-plum)" stroke="url(#gold-trim-grad)" stroke-width="1.2" />
+      <circle cx="48" cy="39" r="1.1" fill="var(--diwali-gold)" />
+      <circle cx="60" cy="39" r="1.3" fill="var(--diwali-gold)" />
+      <circle cx="72" cy="39" r="1.1" fill="var(--diwali-gold)" />
+      <polygon points="36,42 46,42 42,74 24,74" fill="url(#panel-side-grad)" stroke="var(--diwali-gold)" stroke-width="1.1" stroke-linejoin="round" />
+      <polygon points="24,74 42,74 46,104 36,104" fill="url(#panel-side-grad)" stroke="var(--diwali-gold)" stroke-width="1.1" stroke-linejoin="round" />
+      <polygon points="74,42 84,42 96,74 78,74" fill="url(#panel-side-grad)" stroke="var(--diwali-gold)" stroke-width="1.1" stroke-linejoin="round" />
+      <polygon points="78,74 96,74 84,104 74,104" fill="url(#panel-side-grad)" stroke="var(--diwali-gold)" stroke-width="1.1" stroke-linejoin="round" />
+      <polygon points="46,42 74,42 78,74 42,74" fill="url(#panel-center-grad)" stroke="var(--diwali-gold)" stroke-width="1.2" stroke-linejoin="round" />
+      <polygon points="42,74 78,74 74,104 46,104" fill="url(#panel-center-grad)" stroke="var(--diwali-gold)" stroke-width="1.2" stroke-linejoin="round" />
+      <g class="lantern-core-light">
+        <polygon points="60,49 71,74 60,97 49,74" fill="#fff3b0" fill-opacity="0.88" stroke="var(--diwali-saffron)" stroke-width="1" />
+        <polygon points="60,57 66,74 60,89 54,74" fill="none" stroke="var(--diwali-vermilion)" stroke-width="0.9" stroke-opacity="0.65" />
+        <circle cx="60" cy="74" r="3" fill="#ffffff" />
+      </g>
+      <line x1="24" y1="74" x2="96" y2="74" stroke="url(#gold-trim-grad)" stroke-width="2" />
+      <polygon points="34,66 37,74 34,82 31,74" fill="var(--diwali-gold)" opacity="0.85" />
+      <polygon points="86,66 89,74 86,82 83,74" fill="var(--diwali-gold)" opacity="0.85" />
+      <polygon points="36,104 84,104 76,110 44,110" fill="var(--diwali-plum)" stroke="url(#gold-trim-grad)" stroke-width="1.2" />
+      <path d="M 52,110 C 52,116 68,116 68,110 Z" fill="url(#gold-trim-grad)" />
+    </g>
+    <g id="lantern-tassels">
+      <g class="tassel-left">
+        <line x1="40" y1="108" x2="40" y2="116" stroke="var(--diwali-gold)" stroke-width="1" />
+        <circle cx="40" cy="117" r="2" fill="var(--diwali-gold)" />
+        <path d="M 40,119 C 36,129 36,142 39,152 C 41,142 43,129 40,119 Z" fill="url(#tassel-grad)" />
+        <circle cx="39" cy="154" r="1.4" fill="var(--diwali-gold)" />
+      </g>
+      <g class="tassel-center">
+        <line x1="60" y1="114" x2="60" y2="122" stroke="var(--diwali-gold)" stroke-width="1.3" />
+        <circle cx="60" cy="123" r="2.6" fill="var(--diwali-gold)" />
+        <path d="M 60,126 C 55,140 55,156 60,170 C 65,156 65,140 60,126 Z" fill="url(#tassel-grad)" stroke="var(--diwali-gold)" stroke-width="0.6" />
+        <circle cx="60" cy="172" r="1.8" fill="var(--diwali-gold)" />
+      </g>
+      <g class="tassel-right">
+        <line x1="80" y1="108" x2="80" y2="116" stroke="var(--diwali-gold)" stroke-width="1" />
+        <circle cx="80" cy="117" r="2" fill="var(--diwali-gold)" />
+        <path d="M 80,119 C 77,129 79,142 81,152 C 84,142 84,129 80,119 Z" fill="url(#tassel-grad)" />
+        <circle cx="81" cy="154" r="1.4" fill="var(--diwali-gold)" />
+      </g>
+    </g>
+  </g>
+</svg>

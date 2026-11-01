@@ -1,0 +1,148 @@
+<svg id="diwali-reduced-motion" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false" class="diwali-svg diwali-diyas-row">
+  <style>
+    /* Explicit static image target for browsers caching SVG motion preferences. */
+    :root:target { --diwali-motion: paused; }
+    * { animation-play-state: var(--diwali-motion, running) !important; }
+    .diwali-diyas-row {
+      --diwali-amber: #ff9f1c;
+      --diwali-gold: #ffd166;
+      --diwali-magenta: #d92672;
+      --diwali-marigold: #ffbe0b;
+      --diwali-plum: #3b1d5e;
+      --diwali-vermilion: #e63946;
+      --diya-glow-opacity: 0.85;
+    }
+    /* Fragment-selected, inherited strength also reaches SVG use instances. */
+    :root:has(#diwali-moderate:target) {
+      --diwali-strength: 0.45;
+      --diya-glow-opacity: 0.6;
+    }
+    .flame-1, .flame-2, .flame-3, .flame-4, .flame-5 {
+      transform-box: fill-box;
+      transform-origin: 50% 92%;
+    }
+    .flame-1 { animation: flame-dance-a 2.3s ease-in-out infinite; }
+    .flame-2 { animation: flame-dance-b 3.1s ease-in-out infinite -0.7s; }
+    .flame-3 { animation: flame-dance-hero 2.7s ease-in-out infinite -1.3s; }
+    .flame-4 { animation: flame-dance-a 1.9s ease-in-out infinite -0.4s; }
+    .flame-5 { animation: flame-dance-b 3.4s ease-in-out infinite -2.1s; }
+    .halo-1 { animation: halo-breathe 2.3s ease-in-out infinite; }
+    .halo-2 { animation: halo-breathe 3.1s ease-in-out infinite -0.7s; }
+    .halo-3 { animation: halo-breathe 2.7s ease-in-out infinite -1.3s; }
+    .halo-4 { animation: halo-breathe 1.9s ease-in-out infinite -0.4s; }
+    .halo-5 { animation: halo-breathe 3.4s ease-in-out infinite -2.1s; }
+    @keyframes flame-dance-a {
+      0%, 100% { transform: scale(1, 1) skewX(calc(0deg * var(--diwali-strength, 1))); }
+      25% { transform: scale(calc(1 + -0.05 * var(--diwali-strength, 1)), calc(1 + 0.06 * var(--diwali-strength, 1))) skewX(calc(-2.2deg * var(--diwali-strength, 1))); }
+      55% { transform: scale(calc(1 + 0.04 * var(--diwali-strength, 1)), calc(1 + -0.04 * var(--diwali-strength, 1))) skewX(calc(1.8deg * var(--diwali-strength, 1))); }
+      80% { transform: scale(calc(1 + -0.02 * var(--diwali-strength, 1)), calc(1 + 0.04 * var(--diwali-strength, 1))) skewX(calc(-1deg * var(--diwali-strength, 1))); }
+    }
+    @keyframes flame-dance-b {
+      0%, 100% { transform: scale(1, 1) skewX(calc(0deg * var(--diwali-strength, 1))); }
+      33% { transform: scale(calc(1 + 0.04 * var(--diwali-strength, 1)), calc(1 + -0.05 * var(--diwali-strength, 1))) skewX(calc(2.4deg * var(--diwali-strength, 1))); }
+      66% { transform: scale(calc(1 + -0.04 * var(--diwali-strength, 1)), calc(1 + 0.07 * var(--diwali-strength, 1))) skewX(calc(-1.8deg * var(--diwali-strength, 1))); }
+    }
+    @keyframes flame-dance-hero {
+      0%, 100% { transform: scale(1, 1) skewX(calc(0deg * var(--diwali-strength, 1))); }
+      30% { transform: scale(calc(1 + -0.04 * var(--diwali-strength, 1)), calc(1 + 0.08 * var(--diwali-strength, 1))) skewX(calc(1.6deg * var(--diwali-strength, 1))); }
+      60% { transform: scale(calc(1 + 0.03 * var(--diwali-strength, 1)), calc(1 + -0.04 * var(--diwali-strength, 1))) skewX(calc(-2deg * var(--diwali-strength, 1))); }
+      85% { transform: scale(calc(1 + -0.01 * var(--diwali-strength, 1)), calc(1 + 0.03 * var(--diwali-strength, 1))) skewX(calc(0.8deg * var(--diwali-strength, 1))); }
+    }
+    @keyframes halo-breathe {
+      0%, 100% { opacity: calc(var(--diya-glow-opacity) * (1 - 0.24 * var(--diwali-strength, 1))); }
+      50% { opacity: var(--diya-glow-opacity); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .flame-1, .flame-2, .flame-3, .flame-4, .flame-5, .halo-1, .halo-2, .halo-3, .halo-4, .halo-5 {
+        animation: none !important;
+      }
+    }
+  </style>
+  <view id="diwali-moderate" viewBox="0 0 320 96" />
+  <defs>
+    <linearGradient id="horizon-warm-wash" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ff9f1c" stop-opacity="0.24" />
+      <stop offset="55%" stop-color="#d92672" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#3b1d5e" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="diya-flame-halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd166" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#ff9f1c" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#e63946" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="surface-reflection" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd166" stop-opacity="0.5" />
+      <stop offset="55%" stop-color="#ff9f1c" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#3b1d5e" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="clay-bowl-main" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e63946" />
+      <stop offset="55%" stop-color="#b5173a" />
+      <stop offset="100%" stop-color="#4a153b" />
+    </linearGradient>
+    <linearGradient id="clay-bowl-side" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d92672" />
+      <stop offset="60%" stop-color="#8a1c5c" />
+      <stop offset="100%" stop-color="#3b1d5e" />
+    </linearGradient>
+    <linearGradient id="flame-outer-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#e63946" />
+      <stop offset="35%" stop-color="#ff9f1c" />
+      <stop offset="80%" stop-color="#ffd166" />
+      <stop offset="100%" stop-color="#fff8d6" />
+    </linearGradient>
+    <g id="diya-flame-unit">
+      <path d="M 0,2 C -9,-4 -10,-18 0,-30 C 10,-18 9,-4 0,2 Z" fill="url(#flame-outer-grad)" />
+      <path d="M 0,1 C -5,-3 -5,-14 0,-22 C 5,-14 5,-3 0,1 Z" fill="#ffd166" />
+      <path d="M 0,0 C -2.5,-2 -2.5,-9 0,-14 C 2.5,-9 2.5,-2 0,0 Z" fill="#ffffff" />
+    </g>
+    <g id="diya-bowl-standard">
+      <ellipse cx="0" cy="22" rx="28" ry="5.5" fill="url(#surface-reflection)" />
+      <ellipse cx="0" cy="18" rx="11" ry="3" fill="#ff9f1c" opacity="0.75" />
+      <path d="M -22,0 C -20,13 -11,18 0,18 C 11,18 20,13 22,0 Z" fill="url(#clay-bowl-side)" stroke="var(--diwali-gold)" stroke-width="1" />
+      <ellipse cx="0" cy="0" rx="22" ry="4.2" fill="#591636" stroke="var(--diwali-gold)" stroke-width="1.1" />
+      <ellipse cx="0" cy="0.5" rx="18" ry="2.8" fill="#ff9f1c" opacity="0.65" />
+      <path d="M -16,7 Q -8,13 0,7 Q 8,13 16,7" fill="none" stroke="var(--diwali-gold)" stroke-width="1" stroke-opacity="0.85" />
+      <circle cx="-8" cy="11" r="1.2" fill="var(--diwali-gold)" />
+      <circle cx="0" cy="12" r="1.4" fill="var(--diwali-gold)" />
+      <circle cx="8" cy="11" r="1.2" fill="var(--diwali-gold)" />
+    </g>
+  </defs>
+  <rect x="0" y="28" width="320" height="68" fill="url(#horizon-warm-wash)" />
+  <line x1="18" y1="88" x2="302" y2="88" stroke="var(--diwali-gold)" stroke-width="0.8" stroke-opacity="0.35" stroke-dasharray="4 6" />
+  <g id="diya-far-left" transform="translate(34, 68) scale(0.76)">
+    <circle class="halo-1" cx="0" cy="-14" r="32" fill="url(#diya-flame-halo)" />
+    <use href="#diya-bowl-standard" />
+    <g class="flame-1"><use href="#diya-flame-unit" /></g>
+  </g>
+  <g id="diya-mid-left" transform="translate(92, 66) scale(0.9)">
+    <circle class="halo-2" cx="0" cy="-14" r="36" fill="url(#diya-flame-halo)" />
+    <use href="#diya-bowl-standard" />
+    <g class="flame-2"><use href="#diya-flame-unit" /></g>
+  </g>
+  <g id="diya-mid-right" transform="translate(228, 66) scale(0.9)">
+    <circle class="halo-4" cx="0" cy="-14" r="36" fill="url(#diya-flame-halo)" />
+    <use href="#diya-bowl-standard" />
+    <g class="flame-4"><use href="#diya-flame-unit" /></g>
+  </g>
+  <g id="diya-far-right" transform="translate(286, 68) scale(0.76)">
+    <circle class="halo-5" cx="0" cy="-14" r="32" fill="url(#diya-flame-halo)" />
+    <use href="#diya-bowl-standard" />
+    <g class="flame-5"><use href="#diya-flame-unit" /></g>
+  </g>
+  <g id="diya-center-hero" transform="translate(160, 64)">
+    <circle class="halo-3" cx="0" cy="-16" r="46" fill="url(#diya-flame-halo)" />
+    <ellipse cx="0" cy="25" rx="38" ry="7" fill="url(#surface-reflection)" />
+    <ellipse cx="0" cy="20" rx="14" ry="3.5" fill="var(--diwali-gold)" opacity="0.85" />
+    <path d="M -28,0 C -26,15 -14,21 0,21 C 14,21 26,15 28,0 Z" fill="url(#clay-bowl-main)" stroke="var(--diwali-gold)" stroke-width="1.3" />
+    <ellipse cx="0" cy="0" rx="28" ry="5" fill="#4a153b" stroke="var(--diwali-gold)" stroke-width="1.3" />
+    <ellipse cx="0" cy="0.6" rx="23" ry="3.4" fill="#ff9f1c" opacity="0.75" />
+    <path d="M -21,7 Q -10,15 0,8 Q 10,15 21,7" fill="none" stroke="var(--diwali-gold)" stroke-width="1.2" />
+    <polygon points="0,3 3,9 0,15 -3,9" fill="var(--diwali-gold)" />
+    <circle cx="-11" cy="12" r="1.5" fill="var(--diwali-gold)" />
+    <circle cx="11" cy="12" r="1.5" fill="var(--diwali-gold)" />
+    <g class="flame-3" transform="scale(1.15)">
+      <use href="#diya-flame-unit" />
+    </g>
+  </g>
+</svg>

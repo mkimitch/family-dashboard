@@ -3,10 +3,12 @@
 	import { onMount } from 'svelte';
 	import { useSolarLighting } from '$lib/solarLightingContext';
 	import HalloweenPumpkins from './HalloweenPumpkins.svelte';
-	import { getCalendarDecoration } from '$lib/calendarDecorations';
+	import DiwaliDecoration from './DiwaliDecoration.svelte';
+	import { getCalendarDecoration, getDiwaliIntensity } from '$lib/calendarDecorations';
 
-	let { date }: { date: Date } = $props();
+	let { date, crowded = false }: { date: Date; crowded?: boolean } = $props();
 	const decoration = $derived(getCalendarDecoration(date));
+	const diwaliIntensity = $derived(decoration === 'diwali' ? getDiwaliIntensity(date) : null);
 	const solarNight = useSolarLighting();
 	let lightingPreview = $state<string | null>(null);
 	const isNight = $derived(lightingPreview ? lightingPreview === 'night' : $solarNight);
@@ -17,52 +19,58 @@
 	});
 </script>
 
-{#if decoration === 'halloween'}
+{#if decoration}
 	<div
 		class="day-decoration"
 		class:is-night={isNight}
+		class:is-diwali={decoration === 'diwali'}
 		data-lighting={isNight ? 'night' : 'day'}
 		data-decoration={decoration}
+		data-intensity={diwaliIntensity ?? undefined}
 		aria-hidden="true"
 	>
-		<svg class="web" viewBox="0 0 100 100" fill="none" focusable="false">
-			<g stroke="currentColor" stroke-width="0.8">
-				<path d="M0 0 98 0M0 0 92 38M0 0 70 70M0 0 38 92M0 0 0 98" />
+		{#if decoration === 'diwali' && diwaliIntensity}
+			<DiwaliDecoration {isNight} {crowded} intensity={diwaliIntensity} />
+		{:else}
+			<svg class="web" viewBox="0 0 100 100" fill="none" focusable="false">
+				<g stroke="currentColor" stroke-width="0.8">
+					<path d="M0 0 98 0M0 0 92 38M0 0 70 70M0 0 38 92M0 0 0 98" />
+					<path
+						d="M22 0Q18 4 20 8Q15 10 16 16Q10 15 8 20Q4 18 0 22M46 0Q37 9 42 17Q30 21 33 33Q21 30 17 42Q9 37 0 46M72 0Q59 13 66 27Q47 34 51 51Q34 47 27 66Q13 59 0 72M98 0Q80 18 90 37Q64 46 70 70Q46 64 37 90Q18 80 0 98"
+					/>
+				</g>
+			</svg>
+			<svg class="bats" viewBox="0 0 120 100" focusable="false">
+				<g fill="currentColor">
+					<path
+						class="bat bat--near"
+						d="M10 28Q22 26 29 14L32 22 36 21 39 13Q47 23 60 21L51 32Q44 29 40 37L35 34 30 40Q24 33 17 37Z"
+					/>
+					<path
+						class="bat bat--far"
+						d="M63 62Q72 60 78 52L80 58 84 58 86 51Q93 59 103 58L97 67Q91 65 87 71L83 69 79 74Q74 68 68 71Z"
+					/>
+				</g>
+			</svg>
+			<svg class="ghost" viewBox="0 0 64 80" focusable="false">
 				<path
-					d="M22 0Q18 4 20 8Q15 10 16 16Q10 15 8 20Q4 18 0 22M46 0Q37 9 42 17Q30 21 33 33Q21 30 17 42Q9 37 0 46M72 0Q59 13 66 27Q47 34 51 51Q34 47 27 66Q13 59 0 72M98 0Q80 18 90 37Q64 46 70 70Q46 64 37 90Q18 80 0 98"
+					d="M12 69V30C12 4 51 4 51 30V55Q51 66 59 69Q51 78 43 69Q35 79 27 70Q19 78 12 69Z"
+					fill="#e4def2"
 				/>
-			</g>
-		</svg>
-		<svg class="bats" viewBox="0 0 120 100" focusable="false">
-			<g fill="currentColor">
-				<path
-					class="bat bat--near"
-					d="M10 28Q22 26 29 14L32 22 36 21 39 13Q47 23 60 21L51 32Q44 29 40 37L35 34 30 40Q24 33 17 37Z"
-				/>
-				<path
-					class="bat bat--far"
-					d="M63 62Q72 60 78 52L80 58 84 58 86 51Q93 59 103 58L97 67Q91 65 87 71L83 69 79 74Q74 68 68 71Z"
-				/>
-			</g>
-		</svg>
-		<svg class="ghost" viewBox="0 0 64 80" focusable="false">
-			<path
-				d="M12 69V30C12 4 51 4 51 30V55Q51 66 59 69Q51 78 43 69Q35 79 27 70Q19 78 12 69Z"
-				fill="#e4def2"
-			/>
-			<g fill="#393049">
-				<ellipse cx="27" cy="34" rx="2.6" ry="4" />
-				<ellipse cx="41" cy="34" rx="2.6" ry="4" />
-				<path
-					d="M30 44Q34 50 38 44"
-					fill="none"
-					stroke="#393049"
-					stroke-linecap="round"
-					stroke-width="2"
-				/>
-			</g>
-		</svg>
-		<div class="pumpkins"><HalloweenPumpkins {isNight} /></div>
+				<g fill="#393049">
+					<ellipse cx="27" cy="34" rx="2.6" ry="4" />
+					<ellipse cx="41" cy="34" rx="2.6" ry="4" />
+					<path
+						d="M30 44Q34 50 38 44"
+						fill="none"
+						stroke="#393049"
+						stroke-linecap="round"
+						stroke-width="2"
+					/>
+				</g>
+			</svg>
+			<div class="pumpkins"><HalloweenPumpkins {isNight} /></div>
+		{/if}
 	</div>
 {/if}
 
@@ -81,13 +89,38 @@
 		--frame-night: 0.85;
 		--lighting-transition: 6s;
 
-		background: linear-gradient(165deg, oklch(0.6194 0.1387 300.46 / 29.35%), transparent 48%, oklch(0.7414 0.1405 56.84 / 7%));
+		background: linear-gradient(
+			165deg,
+			oklch(0.6194 0.1387 300.46 / 29.35%),
+			transparent 48%,
+			oklch(0.7414 0.1405 56.84 / 7%)
+		);
 		inset: 0;
 		overflow: clip;
 		pointer-events: none;
 		position: absolute;
 		user-select: none;
 		z-index: -1;
+
+		&.is-diwali {
+			--holiday-color: #ffd166;
+
+			background: linear-gradient(180deg, #3b1d5e30, transparent 55%, #ff9f1c12);
+		}
+
+		&[data-intensity='subtle'] {
+			--frame-day: 0.1;
+			--frame-night: 0.18;
+
+			background: linear-gradient(180deg, #3b1d5e10, transparent 55%, #ff9f1c05);
+		}
+
+		&[data-intensity='moderate'] {
+			--frame-day: 0.2;
+			--frame-night: 0.35;
+
+			background: linear-gradient(180deg, #3b1d5e20, transparent 55%, #ff9f1c09);
+		}
 
 		&::before,
 		&::after {
@@ -207,7 +240,7 @@
 		}
 	}
 
-	@media (prefers-oklch(62.8% 0.26 29.23)uced-motion: reduce) {
+	@media (prefers-reduced-motion: reduce) {
 		.day-decoration::after {
 			transition: none;
 		}
