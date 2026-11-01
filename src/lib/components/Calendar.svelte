@@ -1371,6 +1371,7 @@
 		gap: 0.25rem;
 		/* grid-auto-rows: 1.7rem; */
 		min-width: 0;
+		
 
 		& .event-chip {
 			width: 100%;
