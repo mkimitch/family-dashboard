@@ -18,6 +18,7 @@ build/
 .netlify
 .wrangler
 *.tsbuildinfo
+/artifacts/
 
 # Environment variables
 .env

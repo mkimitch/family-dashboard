@@ -28,6 +28,23 @@ The product-facing rebrand from "Family Dashboard" to "Daymark" is complete. The
 - Rotating wallpaper background with responsive photo sizes
 - Optional snow overlay component (present in the repo, currently disabled in `src/routes/+layout.svelte`)
 
+## Holiday Animations
+
+Daymark's calendar cells celebrate the season while keeping events readable.
+All events shown below are fictional demonstration data.
+
+### Halloween
+
+![Animated Halloween calendar decorations in Daymark](./docs/media/demos/halloween.webp)
+
+### Diwali / Deepavali
+
+![Animated Diwali calendar decorations in Daymark](./docs/media/demos/diwali.webp)
+
+Regenerate both with `yarn demos:generate`. See the
+[capture and export guide](docs/holiday-animation-demos.md) for setup, individual
+scenes and social media exports.
+
 ## Project architecture
 
 | Layer                | Responsibility                                                                 | Key files                                                             |

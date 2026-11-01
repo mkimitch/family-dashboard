@@ -1,18 +1,20 @@
 # Calendar day decorations
 
 `CalendarDayDecoration.svelte` is an optional, presentational layer inside each calendar
-cell. `calendarDecorations.ts` matches the column's local month/day against a small
-annual registry. Halloween matches October 31 every year, independently of events or
+cell. `calendarDecorations.ts` matches the column's local civil date against a small
+registry with optional year constraints. Halloween matches October 31 every year;
+Diwali / Deepavali covers November 6–10, 2026, with November 8 as its main day, independently of events or
 the current time. The matcher uses the same civil date as the visible day/month heading;
 it does not parse ISO timestamps or convert the column to UTC.
 
 The cell's isolated stacking context places the decoration above its existing background
 and below all content. The decoration is absolutely positioned, clips its own artwork,
 ignores pointer events, and is hidden from assistive technology. No event wrappers, rows, event
-spacing, or event colors change. Timed-event titles in decorated cells receive a small dark backing because their
-rows are otherwise transparent; bright lantern faces must not compete with text. Weekend striping and today indicators remain intact.
+spacing, or event colors change. Diwali date labels, timed-event titles, and time labels
+receive a subtle dark text shadow to stay readable over the lights, while retaining their
+usual backgrounds. Weekend striping and today indicators remain intact.
 
-All artwork is inline SVG. The ghost floats 18px with 3px drift and ±5° rocking on a
+Halloween artwork is inline SVG. The ghost floats 18px with 3px drift and ±5° rocking on a
 4.5-second cycle. Bats have staggered bursts of ±10° rocking, small vertical movement,
 and silhouette compression (their wings are not separate paths). `HalloweenPumpkins.svelte`
 contains the supplied enhanced SVG: both pumpkin silhouettes, the large carved tooth,
@@ -47,7 +49,9 @@ solar data defaults to daytime rather than indefinitely repeating yesterday's ti
 Run `yarn dev`, then open:
 
 - `http://localhost:5173/?calendarPreviewDate=2026-10-27` for a week containing Halloween.
-- `http://localhost:5173/?calendarPreviewDate=2027-10-27` for a future year.
+- `http://localhost:5173/?calendarPreviewDate=2027-10-27` for recurring Halloween in a future year.
+- `http://localhost:5173/?calendarPreviewDate=2026-11-06` for Diwali and its adjacent dates.
+- `http://localhost:5173/?calendarPreviewDate=2027-11-06` to check that Diwali does not recur automatically.
 - `http://localhost:5173/?calendarPreviewDate=2026-06-01` for an undecorated week.
 
 The development-only parameter accepts a valid `YYYY-MM-DD` local date and changes only
@@ -60,11 +64,80 @@ can emulate 1200 × 1920 and reduced motion without changing operating system se
 
 ## Extending
 
-Add a decoration identifier and annual month/day entry, then add its artwork to the
-decoration component (extract individual artwork components when useful). Core event
-rendering does not need to change. Holidays with variable dates, such as Diwali, should
-use explicit civil-date entries or a separately verified date provider when supported;
-they should not be treated as fixed annual Gregorian dates.
+Add a decoration identifier and registry entry, then add its artwork to the
+existing decoration component (extract individual artwork components when useful).
+Omit `year` only for fixed annual Gregorian holidays. For Diwali, add a verified entry to `diwaliFestivals` in
+`calendarDecorations.ts`, with zero-padded `YYYY-MM-DD` civil dates:
+
+```ts
+{ startDate: '2026-11-06', mainDate: '2026-11-08', endDate: '2026-11-10' }
+```
+
+The start and end are inclusive; the year is explicit in every date. Ranges may cross
+month boundaries, and the main day is configured rather than assumed to be the midpoint.
+Before the main day the intensity is `subtle`, on it `full`, and after it `moderate`.
+Future years need their own verified entries. The existing fixed-date registry retains
+precedence if another holiday falls inside a festival period.
+No calendar events, holiday labels, or countdowns are created by this registry.
+
+## Diwali festival source and progression
+
+The 2026 range was checked against the all-day **Deepavali** entry in the shared
+**Mark & Smruti** calendar on November 1, 2026. It starts November 6 and ends November 11
+exclusive, so the decorated period ends November 10. The **Diwali/Deepavali** entry in
+**Hindu Holidays** confirms November 8 as the main day. The separate Bhai Duj entry on
+November 11 does not extend the shared calendar's festival period.
+
+These are reviewed configuration dates, not a live event-title matcher. Calendar events,
+renames, unrelated Diwali parties, and temporary feed outages do not activate or extend
+the theme. No new calendar fetching is involved.
+
+| Dates (2026)  | Intensity  | Treatment                                                                                 |
+| ------------- | ---------- | ----------------------------------------------------------------------------------------- |
+| November 6–7  | `subtle`   | Small, dim, static lamps and corners; faint cell frame                                    |
+| November 8    | `full`     | Original animation strength; lantern, corners, lamps, perimeter sparkles; brightest frame |
+| November 9–10 | `moderate` | Static corners, lamps with 45% flame movement and reduced halo pulsation; softer frame    |
+
+Only the main day uses a lantern and sparkles. Existing short-cell and crowded-cell
+reductions apply on top of every intensity, preserving their relative brightness.
+The brighter main-day frame remains distinctive even when content hides its lantern.
+All frames and artwork are clipped independently to their own cells.
+
+## Diwali / Deepavali artwork
+
+`DiwaliDecoration.svelte` composes the four supplied SVGs from
+`static/assets/holidays/diwali/` within the existing clipped, noninteractive decoration
+layer. External image documents isolate gradient IDs and keyframes across assets and
+repeated calendar instances. Paths, gradients, animation timing, and the supplied
+reduced-motion media queries are preserved. The diya keyframes now multiply movement
+and halo pulsation by an inherited strength token, defaulting to the original strength.
+The `?motion=moderate#diwali-moderate` SVG view selects 45% movement and a dimmer halo.
+The main-day SVG still uses its original scale, skew, opacity endpoints, and timings.
+
+Each SVG adds a `diwali-reduced-motion` root ID and two small CSS rules: the targeted
+root sets an inherited motion token to `paused`, and SVG elements use that token for
+`animation-play-state`. Inheritance reaches the rangoli's `<use>` instances as well.
+A native `<picture>` media source selects `?motion=static#diwali-reduced-motion` when
+reduced motion is requested. The separate cache key and explicit static fragment handle
+Chromium image documents retaining earlier media preferences. There are no JavaScript
+listeners or duplicate assets.
+The supplied HTML is a visual reference only and is not included in the application.
+
+The rangoli sits in the upper corners, with a mask dimming the left date-label corner.
+The central hanging kandil and bottom diya row scale with the available cell dimensions.
+A mask keeps sparkles near the perimeter. Artwork never contributes to cell sizing.
+Size container queries live on the absolutely positioned artwork root, leaving calendar
+layout untouched. At 12rem cell height or less, the lantern shrinks and sparkles disappear.
+At four or more displayed events/tasks, the lantern and sparkles disappear, the rangoli
+dims, and the diya row shrinks and dims. Calendar content keeps its existing spacing,
+ordering, text colors, and all-day/multi-day rendering.
+
+The existing solar context controls image opacity and the shared gold frame: lights
+are more pronounced at night, with a six-second opacity transition. This deliberately
+changes the image element, not CSS properties inside the external SVG. No extra weather
+requests, timers, SVG duplication, animated filters, or dependencies are needed.
+Reduced motion disables image/frame transitions and each SVG's internal animations,
+leaving the original static artwork visible.
 
 ## Visual tuning
 

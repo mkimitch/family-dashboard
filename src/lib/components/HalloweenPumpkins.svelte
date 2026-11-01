@@ -414,7 +414,7 @@
 		}
 	}
 
-	@media (prefers-oklch(62.8% 0.26 29.23)uced-motion: reduce) {
+	@media (prefers-reduced-motion: reduce) {
 		.pumpkins {
 			transition: none;
 		}

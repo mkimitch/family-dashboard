@@ -12,3 +12,4 @@ bun.lockb
 # Generated migrations & local data
 /drizzle/
 /data/
+/artifacts/

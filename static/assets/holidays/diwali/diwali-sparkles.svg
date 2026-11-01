@@ -1,0 +1,56 @@
+<svg id="diwali-reduced-motion" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 360" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false" class="diwali-svg diwali-sparkles">
+  <style>
+    /* Explicit static image target for browsers caching SVG motion preferences. */
+    :root:target { --diwali-motion: paused; }
+    * { animation-play-state: var(--diwali-motion, running) !important; }
+    .diwali-sparkles {
+      --diwali-gold: #ffd166;
+      --diwali-saffron: #ff9f1c;
+      --diwali-vermilion: #e63946;
+      --sparkle-opacity: 0.75;
+    }
+    .sparkles-root { opacity: var(--sparkle-opacity); }
+    .drift-a, .drift-b, .drift-c, .twinkle-star {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .drift-a { animation: mote-rise 5.9s ease-in-out infinite; }
+    .drift-b { animation: mote-rise 7.3s ease-in-out infinite -2.4s; }
+    .drift-c { animation: mote-rise 6.7s ease-in-out infinite -4.1s; }
+    .twinkle-star { animation: star-pulse 4.7s ease-in-out infinite -1.5s; }
+    @keyframes mote-rise {
+      0%, 100% { opacity: 0.15; transform: translate3d(0, 8px, 0) scale(0.8); }
+      50% { opacity: 0.9; transform: translate3d(0, -10px, 0) scale(1.1); }
+    }
+    @keyframes star-pulse {
+      0%, 100% { opacity: 0.25; transform: scale(0.75) rotate(0deg); }
+      50% { opacity: 0.95; transform: scale(1.12) rotate(12deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .drift-a, .drift-b, .drift-c, .twinkle-star { animation: none !important; }
+    }
+  </style>
+  <defs>
+    <radialGradient id="sparkle-mote-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff8d6" stop-opacity="1" />
+      <stop offset="45%" stop-color="#ffd166" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#ff9f1c" stop-opacity="0" />
+    </radialGradient>
+    <path id="sparkle-star-unit" d="M 0,-6 L 1.4,-1.4 L 6,0 L 1.4,1.4 L 0,6 L -1.4,1.4 L -6,0 L -1.4,-1.4 Z" fill="var(--diwali-gold)" />
+    <circle id="sparkle-orb-unit" cx="0" cy="0" r="4.5" fill="url(#sparkle-mote-grad)" />
+  </defs>
+  <g class="sparkles-root">
+    <use href="#sparkle-orb-unit" class="drift-a" x="28" y="290" />
+    <use href="#sparkle-orb-unit" class="drift-b" x="76" y="305" transform="scale(0.85)" />
+    <use href="#sparkle-orb-unit" class="drift-c" x="168" y="298" />
+    <use href="#sparkle-orb-unit" class="drift-a" x="212" y="284" transform="scale(0.9)" />
+    <use href="#sparkle-orb-unit" class="drift-b" x="18" y="210" transform="scale(0.75)" />
+    <use href="#sparkle-orb-unit" class="drift-c" x="222" y="196" transform="scale(0.8)" />
+    <use href="#sparkle-orb-unit" class="drift-a" x="34" y="138" transform="scale(0.7)" />
+    <use href="#sparkle-orb-unit" class="drift-b" x="204" y="128" transform="scale(0.75)" />
+    <use href="#sparkle-star-unit" class="twinkle-star" x="42" y="96" transform="scale(0.75)" />
+    <use href="#sparkle-star-unit" class="twinkle-star" x="198" y="102" transform="scale(0.65)" />
+    <use href="#sparkle-star-unit" class="twinkle-star" x="24" y="252" transform="scale(0.6)" />
+    <use href="#sparkle-star-unit" class="twinkle-star" x="216" y="244" transform="scale(0.7)" />
+  </g>
+</svg>

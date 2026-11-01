@@ -1,0 +1,100 @@
+<svg id="diwali-reduced-motion" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" width="100%" height="100%" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false" class="diwali-svg diwali-rangoli-corners">
+  <style>
+    /* Explicit static image target for browsers caching SVG motion preferences. */
+    :root:target { --diwali-motion: paused; }
+    * { animation-play-state: var(--diwali-motion, running) !important; }
+    .diwali-rangoli-corners {
+      --diwali-gold: #ffd166;
+      --diwali-magenta: #d92672;
+      --diwali-marigold: #ffbe0b;
+      --diwali-plum: #3b1d5e;
+      --diwali-saffron: #ff9f1c;
+      --diwali-vermilion: #e63946;
+      --rangoli-opacity: 0.85;
+    }
+    .rangoli-root { opacity: var(--rangoli-opacity); }
+    .shimmer-a, .shimmer-b, .shimmer-c {
+      animation: rangoli-twinkle 4.2s ease-in-out infinite;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .shimmer-b { animation-delay: -1.4s; animation-duration: 5.1s; }
+    .shimmer-c { animation-delay: -2.9s; animation-duration: 3.7s; }
+    .petal-glow { animation: petal-breathe 6s ease-in-out infinite; }
+    @keyframes rangoli-twinkle {
+      0%, 100% { opacity: 0.35; transform: scale(0.88); }
+      50% { opacity: 1; transform: scale(1.12); }
+    }
+    @keyframes petal-breathe {
+      0%, 100% { opacity: 0.75; }
+      50% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .shimmer-a, .shimmer-b, .shimmer-c, .petal-glow { animation: none !important; }
+    }
+  </style>
+  <defs>
+    <radialGradient id="rangoli-corner-glow" cx="0" cy="0" r="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff9f1c" stop-opacity="0.28" />
+      <stop offset="55%" stop-color="#d92672" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#3b1d5e" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="petal-grad-magenta" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff9f1c" />
+      <stop offset="45%" stop-color="#e63946" />
+      <stop offset="100%" stop-color="#d92672" />
+    </linearGradient>
+    <linearGradient id="petal-grad-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff3b0" />
+      <stop offset="50%" stop-color="#ffd166" />
+      <stop offset="100%" stop-color="#ff9f1c" />
+    </linearGradient>
+    <g id="rangoli-corner-unit">
+      <circle cx="0" cy="0" r="92" fill="url(#rangoli-corner-glow)" />
+      <path d="M 0,0 L 68,0 C 66,22 56,42 42,56 C 28,70 14,76 0,78 Z" fill="var(--diwali-plum)" fill-opacity="0.55" />
+      <path d="M 76,2 C 74,28 60,52 38,68 C 24,78 12,84 2,86" fill="none" stroke="var(--diwali-gold)" stroke-width="1.2" stroke-opacity="0.55" stroke-dasharray="3 3" />
+      <path d="M 60,0 A 60,60 0 0 1 0,60" fill="none" stroke="var(--diwali-saffron)" stroke-width="1.5" stroke-opacity="0.7" />
+      <path d="M 44,0 A 44,44 0 0 1 0,44" fill="none" stroke="var(--diwali-gold)" stroke-width="1" stroke-opacity="0.65" />
+      <g class="petal-glow" stroke="var(--diwali-gold)" stroke-width="0.9">
+        <path d="M 4,2 C 20,-1 38,2 52,11 C 38,16 20,14 4,2 Z" fill="url(#petal-grad-magenta)" />
+        <path d="M 4,3 C 22,6 40,16 50,30 C 34,30 18,20 4,3 Z" fill="url(#petal-grad-gold)" />
+        <path d="M 3,3 C 24,12 42,28 46,46 C 28,42 12,24 3,3 Z" fill="url(#petal-grad-magenta)" />
+        <path d="M 3,4 C 20,18 30,34 30,50 C 16,40 6,22 3,4 Z" fill="url(#petal-grad-gold)" />
+        <path d="M 2,4 C 14,20 16,38 11,52 C 2,38 -1,20 2,4 Z" fill="url(#petal-grad-magenta)" />
+      </g>
+      <path d="M 0,0 L 24,0 A 24,24 0 0 1 0,24 Z" fill="var(--diwali-vermilion)" stroke="var(--diwali-gold)" stroke-width="1.2" />
+      <path d="M 0,0 L 13,0 A 13,13 0 0 1 0,13 Z" fill="var(--diwali-gold)" />
+      <path d="M 78,6 C 86,6 92,10 96,14 C 90,16 83,13 78,6 Z" fill="var(--diwali-saffron)" opacity="0.85" />
+      <path d="M 56,22 C 63,24 69,30 71,36 C 64,36 58,30 56,22 Z" fill="var(--diwali-magenta)" opacity="0.8" />
+      <path d="M 22,58 C 24,65 30,71 36,73 C 36,66 30,60 22,58 Z" fill="var(--diwali-magenta)" opacity="0.8" />
+      <path d="M 6,80 C 6,88 10,94 14,98 C 16,92 13,85 6,80 Z" fill="var(--diwali-saffron)" opacity="0.85" />
+      <g fill="var(--diwali-gold)">
+        <circle class="shimmer-a" cx="68" cy="12" r="2.2" />
+        <circle class="shimmer-a" cx="48" cy="48" r="2.4" />
+        <circle class="shimmer-a" cx="12" cy="70" r="2.2" />
+        <path class="shimmer-a" d="M 84,22 L 86,26 L 90,28 L 86,30 L 84,34 L 82,30 L 78,28 L 82,26 Z" />
+        <circle class="shimmer-b" cx="62" cy="30" r="2" />
+        <circle class="shimmer-b" cx="30" cy="62" r="2" />
+        <circle class="shimmer-b" cx="104" cy="8" r="1.6" />
+        <circle class="shimmer-b" cx="8" cy="104" r="1.6" />
+        <circle class="shimmer-c" cx="82" cy="14" r="1.5" />
+        <circle class="shimmer-c" cx="56" cy="56" r="1.6" />
+        <circle class="shimmer-c" cx="14" cy="84" r="1.5" />
+        <path class="shimmer-c" d="M 28,82 L 29.5,85 L 32.5,86.5 L 29.5,88 L 28,91 L 26.5,88 L 23.5,86.5 L 26.5,85 Z" />
+      </g>
+    </g>
+  </defs>
+  <g class="rangoli-root">
+    <g id="corner-top-left" class="corner-left">
+      <use href="#rangoli-corner-unit" x="0" y="0" />
+    </g>
+    <g id="corner-top-right" class="corner-right" transform="translate(240, 0) scale(-1, 1)">
+      <use href="#rangoli-corner-unit" x="0" y="0" />
+    </g>
+    <g id="top-center-bridge" opacity="0.6" fill="var(--diwali-gold)">
+      <circle class="shimmer-a" cx="112" cy="6" r="1.2" />
+      <path class="shimmer-b" d="M 120,2 L 121.5,5.5 L 125,7 L 121.5,8.5 L 120,12 L 118.5,8.5 L 115,7 L 118.5,5.5 Z" />
+      <circle class="shimmer-c" cx="128" cy="6" r="1.2" />
+    </g>
+  </g>
+</svg>
