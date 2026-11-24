@@ -38,8 +38,7 @@ export const selectScenes = (args) => {
 	return [...new Set(args)];
 };
 
-export const fixtureFor = (name) => {
-	const scene = scenes[name];
+export const fixtureFor = (name, scene = scenes[name]) => {
 	if (!scene) throw new Error(`Unknown demo scene: ${name}`);
 	const events = [];
 	const add = (date, time, title, calendarId = 'demo-celebrations') => {

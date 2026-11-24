@@ -1,13 +1,19 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
+	import { useSettings } from '$lib/settingsContext';
+	import { simplifiedDecoration } from '$lib/config/daymarkSettings';
 	import { onMount } from 'svelte';
 	import { useSolarLighting } from '$lib/solarLightingContext';
 	import HalloweenPumpkins from './HalloweenPumpkins.svelte';
 	import DiwaliDecoration from './DiwaliDecoration.svelte';
+	import ThanksgivingDecoration from './ThanksgivingDecoration.svelte';
 	import { getCalendarDecoration, getDiwaliIntensity } from '$lib/calendarDecorations';
 
 	let { date, crowded = false }: { date: Date; crowded?: boolean } = $props();
 	const decoration = $derived(getCalendarDecoration(date));
+	const getSettings = useSettings();
+	const settings = $derived(getSettings(decoration));
+	const simplified = $derived(simplifiedDecoration(settings.density, crowded, decoration));
 	const diwaliIntensity = $derived(decoration === 'diwali' ? getDiwaliIntensity(date) : null);
 	const solarNight = useSolarLighting();
 	let lightingPreview = $state<string | null>(null);
@@ -26,12 +32,20 @@
 		class:is-diwali={decoration === 'diwali'}
 		data-lighting={isNight ? 'night' : 'day'}
 		data-decoration={decoration}
+		data-richness={simplified ? 'reduced' : 'full'}
 		data-intensity={diwaliIntensity ?? undefined}
 		aria-hidden="true"
 	>
 		{#if decoration === 'diwali' && diwaliIntensity}
-			<DiwaliDecoration {isNight} {crowded} intensity={diwaliIntensity} />
-		{:else}
+			<DiwaliDecoration {isNight} {simplified} intensity={diwaliIntensity} />
+		{:else if decoration === 'thanksgiving'}
+			<ThanksgivingDecoration
+				{simplified}
+				settings={settings.turkey}
+				groundPeckStyle={settings.groundPeckStyle}
+				motionAllowed={settings.motionAllowed}
+			/>
+		{:else if decoration === 'halloween'}
 			<svg class="web" viewBox="0 0 100 100" fill="none" focusable="false">
 				<g stroke="currentColor" stroke-width="0.8">
 					<path d="M0 0 98 0M0 0 92 38M0 0 70 70M0 0 38 92M0 0 0 98" />
@@ -40,35 +54,37 @@
 					/>
 				</g>
 			</svg>
-			<svg class="bats" viewBox="0 0 120 100" focusable="false">
-				<g fill="currentColor">
+			{#if !simplified}
+				<svg class="bats" viewBox="0 0 120 100" focusable="false">
+					<g fill="currentColor">
+						<path
+							class="bat bat--near"
+							d="M10 28Q22 26 29 14L32 22 36 21 39 13Q47 23 60 21L51 32Q44 29 40 37L35 34 30 40Q24 33 17 37Z"
+						/>
+						<path
+							class="bat bat--far"
+							d="M63 62Q72 60 78 52L80 58 84 58 86 51Q93 59 103 58L97 67Q91 65 87 71L83 69 79 74Q74 68 68 71Z"
+						/>
+					</g>
+				</svg>
+				<svg class="ghost" viewBox="0 0 64 80" focusable="false">
 					<path
-						class="bat bat--near"
-						d="M10 28Q22 26 29 14L32 22 36 21 39 13Q47 23 60 21L51 32Q44 29 40 37L35 34 30 40Q24 33 17 37Z"
+						d="M12 69V30C12 4 51 4 51 30V55Q51 66 59 69Q51 78 43 69Q35 79 27 70Q19 78 12 69Z"
+						fill="#e4def2"
 					/>
-					<path
-						class="bat bat--far"
-						d="M63 62Q72 60 78 52L80 58 84 58 86 51Q93 59 103 58L97 67Q91 65 87 71L83 69 79 74Q74 68 68 71Z"
-					/>
-				</g>
-			</svg>
-			<svg class="ghost" viewBox="0 0 64 80" focusable="false">
-				<path
-					d="M12 69V30C12 4 51 4 51 30V55Q51 66 59 69Q51 78 43 69Q35 79 27 70Q19 78 12 69Z"
-					fill="#e4def2"
-				/>
-				<g fill="#393049">
-					<ellipse cx="27" cy="34" rx="2.6" ry="4" />
-					<ellipse cx="41" cy="34" rx="2.6" ry="4" />
-					<path
-						d="M30 44Q34 50 38 44"
-						fill="none"
-						stroke="#393049"
-						stroke-linecap="round"
-						stroke-width="2"
-					/>
-				</g>
-			</svg>
+					<g fill="#393049">
+						<ellipse cx="27" cy="34" rx="2.6" ry="4" />
+						<ellipse cx="41" cy="34" rx="2.6" ry="4" />
+						<path
+							d="M30 44Q34 50 38 44"
+							fill="none"
+							stroke="#393049"
+							stroke-linecap="round"
+							stroke-width="2"
+						/>
+					</g>
+				</svg>
+			{/if}
 			<div class="pumpkins"><HalloweenPumpkins {isNight} /></div>
 		{/if}
 	</div>
@@ -106,6 +122,24 @@
 			--holiday-color: #ffd166;
 
 			background: linear-gradient(180deg, #3b1d5e30, transparent 55%, #ff9f1c12);
+		}
+
+		&[data-decoration='thanksgiving'] {
+			--holiday-color: #d38a52;
+			--frame-day: 0.38;
+			--frame-night: 0.48;
+			--harvest-glow: 0.48;
+
+			background: none;
+
+			&.is-night {
+				--harvest-glow: 0.85;
+			}
+
+			&::after {
+				background: none;
+				transition: none;
+			}
 		}
 
 		&[data-intensity='subtle'] {

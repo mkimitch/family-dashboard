@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
 	import { parseCalendarPreviewDate } from '$lib/calendarDecorations';
 	import CalendarDayDecoration from './CalendarDayDecoration.svelte';
 	import { MERGE_ALLDAY_DUPLICATES, mergeAllDayDuplicates } from '$lib/calendarMerge';
@@ -691,11 +690,9 @@
 	};
 
 	onMount(() => {
-		if (dev) {
-			previewDate = parseCalendarPreviewDate(
-				new URLSearchParams(window.location.search).get('calendarPreviewDate')
-			);
-		}
+		previewDate = parseCalendarPreviewDate(
+			new URLSearchParams(window.location.search).get('calendarPreviewDate')
+		);
 		(async () => {
 			await refreshCalendarData(true);
 		})();
@@ -783,6 +780,8 @@
 						{@const dayKey = keyOf(d)}
 						{@const allDayItems = allDayItemsByDay[dayKey] || []}
 						{@const timedGroups = groupTimedForDay(d)}
+						{@const crowded =
+							allDayItems.length + timedGroups.reduce((count, group) => count + group.items.length, 0) >= 4}
 						<div
 							class="day-cell {d.getDay() === 0 || d.getDay() === 6 ? 'is-weekend' : ''} {sameDay(
 								d,
@@ -791,13 +790,9 @@
 								? 'is-today'
 								: ''}"
 							data-date={dayKey}
+							data-crowded={crowded}
 						>
-							<CalendarDayDecoration
-								date={d}
-								crowded={allDayItems.length +
-									timedGroups.reduce((count, group) => count + group.items.length, 0) >=
-									4}
-							/>
+							<CalendarDayDecoration date={d} {crowded} />
 							<div class="day-head">
 								{#if visibleIndex === 0 || d.getDate() === 1}
 									<span class="month-label"
@@ -1119,6 +1114,10 @@
 		min-height: 8rem;
 		padding: 0.175rem;
 		position: relative;
+
+		&:has(:global(.day-decoration)) .all-day-chip {
+			background-color: color-mix(in oklch, var(--card), transparent 55%);
+		}
 
 		/* Brighter holiday artwork must not show through transparent event titles. */
 		&:has(:global(.day-decoration)) .time-event .event-title {

@@ -1,4 +1,5 @@
 import { resolveRequestDateTimeDisplaySettings } from '$lib/server/dateTime';
+import { readInstallationSettings } from '$lib/server/daymarkSettings';
 import type { LayoutServerLoad } from './$types';
 
 export type SchoolMenuItem = {
@@ -27,10 +28,11 @@ export type SchoolMenu = {
 export const load: LayoutServerLoad = async (event: Parameters<LayoutServerLoad>[0]) => {
 	const { fetch } = event;
 	const dateTimeDisplay = resolveRequestDateTimeDisplaySettings();
-	const [weatherRes, photosRes, schoolMenuRes] = await Promise.all([
+	const [weatherRes, photosRes, schoolMenuRes, installationSettings] = await Promise.all([
 		fetch('/api/weather', { cache: 'no-store' }),
 		fetch('/api/photos', { cache: 'no-store' }),
-		fetch('/api/school-menu', { cache: 'no-store' })
+		fetch('/api/school-menu', { cache: 'no-store' }),
+		readInstallationSettings()
 	]);
 
 	let weather: unknown = null;
@@ -64,6 +66,7 @@ export const load: LayoutServerLoad = async (event: Parameters<LayoutServerLoad>
 	}
 
 	return {
+		installationSettings,
 		dateTimeDisplay,
 		weather,
 		photos,

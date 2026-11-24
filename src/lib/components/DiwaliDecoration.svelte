@@ -3,9 +3,9 @@
 
 	let {
 		isNight,
-		crowded = false,
+		simplified = false,
 		intensity
-	}: { isNight: boolean; crowded?: boolean; intensity: DiwaliIntensity } = $props();
+	}: { isNight: boolean; simplified?: boolean; intensity: DiwaliIntensity } = $props();
 
 	const assets = [
 		{ name: 'rangoli', file: 'diwali-rangoli-corners.svg' },
@@ -18,8 +18,8 @@
 <!-- Image documents isolate SVG IDs, keyframes and their built-in reduced-motion rules. -->
 <div
 	class="diwali-artwork"
+	class:is-crowded={simplified}
 	class:is-night={isNight}
-	class:is-crowded={crowded}
 	data-intensity={intensity}
 >
 	{#each assets as asset (asset.name)}

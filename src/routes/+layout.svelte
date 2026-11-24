@@ -2,6 +2,9 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import SnowOverlay from '$lib/components/SnowOverlay.svelte';
+	import { page } from '$app/state';
+	import { provideSettings } from '$lib/settingsContext';
+	import { resolveSettings } from '$lib/config/daymarkSettings';
 	import Wallpaper from '$lib/components/Wallpaper.svelte';
 	import { onMount } from 'svelte';
 	import { updated } from '$app/stores';
@@ -23,6 +26,7 @@
 	});
 
 	let { children, data } = $props();
+	provideSettings((id) => resolveSettings(data.installationSettings, id, page.url.searchParams));
 </script>
 
 <svelte:head>
