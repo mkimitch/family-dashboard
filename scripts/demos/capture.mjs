@@ -18,18 +18,18 @@ let displayServer;
 const log = createWriteStream(join(artifacts, 'server.log'));
 let cleanup;
 const clean = () =>
-	(cleanup ??= (async () => {
-		await browser?.close();
-		for (const child of [server, displayServer]) {
-			if (child?.pid && child.exitCode === null && child.signalCode === null) {
-				const exited = once(child, 'exit');
-				child.kill('SIGTERM');
-				await exited;
-			}
+(cleanup ??= (async () => {
+	await browser?.close();
+	for (const child of [server, displayServer]) {
+		if (child?.pid && child.exitCode === null && child.signalCode === null) {
+			const exited = once(child, 'exit');
+			child.kill('SIGTERM');
+			await exited;
 		}
-		log.end();
-		await rm(workspace, { recursive: true, force: true });
-	})());
+	}
+	log.end();
+	await rm(workspace, { recursive: true, force: true });
+})());
 for (const signal of ['SIGINT', 'SIGTERM']) {
 	process.once(signal, async () => {
 		await clean();
@@ -174,7 +174,7 @@ try {
 				document
 					.getAnimations()
 					.filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime))
-					.map((animation) => animation.finished.catch(() => {}))
+					.map((animation) => animation.finished.catch(() => { }))
 			);
 			await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 		});
@@ -253,7 +253,7 @@ try {
 		const screen = { x: markerPixel % 1200, y: Math.floor(markerPixel / 1200) };
 		assert(
 			screen.x + framing.clip.x + framing.clip.width <= 1200 &&
-				screen.y + framing.clip.y + framing.clip.height <= 2100,
+			screen.y + framing.clip.y + framing.clip.height <= 2100,
 			'Capture would clip the calendar.'
 		);
 		const before = await cell.screenshot();
@@ -340,7 +340,7 @@ try {
 		const after = await cell.boundingBox();
 		assert(
 			Math.abs(after.x - framing.clip.x - framing.main.x) < 1 &&
-				Math.abs(after.y + after.height - framing.clip.y - framing.clip.height) < 1,
+			Math.abs(after.y + after.height - framing.clip.y - framing.clip.height) < 1,
 			'Calendar shifted during recording.'
 		);
 		assert.deepEqual(blocked, [], 'Unexpected outbound request was blocked.');

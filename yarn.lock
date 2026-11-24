@@ -2407,8 +2407,8 @@ __metadata:
     lottie-web: "npm:^5.13.0"
     playwright-core: "npm:1.57.0"
     postcss-html: "npm:^1.7.0"
-    prettier: "npm:^3.6.2"
-    prettier-plugin-svelte: "npm:^3.4.0"
+    prettier: "npm:^3.9.10"
+    prettier-plugin-svelte: "npm:^4.1.1"
     stylelint: "npm:^16.10.0"
     stylelint-config-standard: "npm:^36.0.1"
     stylelint-order: "npm:^6.0.4"
@@ -4570,22 +4570,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-svelte@npm:^3.4.0":
-  version: 3.5.1
-  resolution: "prettier-plugin-svelte@npm:3.5.1"
+"prettier-plugin-svelte@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "prettier-plugin-svelte@npm:4.1.1"
   peerDependencies:
     prettier: ^3.0.0
-    svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
-  checksum: 10c0/4381123cb403434dc5a0c14562c40e78f51181a9207b5a3b1cd1e2c1abe75a9822351e7e92c3bf7d4bbbec4a57356338049fa925f7eaa2d7c695e2dcbc9ef600
+    svelte: ^5.0.0
+  checksum: 10c0/23a1c2f6fb64e152f1ad72e646860b67171f1f9d70081a676103a2ad41052c2f9e48f3567b52612c764a9fd06b44128ab098d4c1da4e88c726af5e6503545b67
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.6.2":
-  version: 3.8.1
-  resolution: "prettier@npm:3.8.1"
+"prettier@npm:^3.9.10":
+  version: 3.9.10
+  resolution: "prettier@npm:3.9.10"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/33169b594009e48f570471271be7eac7cdcf88a209eed39ac3b8d6d78984039bfa9132f82b7e6ba3b06711f3bfe0222a62a1bfb87c43f50c25a83df1b78a2c42
+  checksum: 10c0/0b3531593aa6fb36ac6baf629cb058bda472c59a6938774f931fe55283a07c62e6f56e621b043a82d8a3e21fc284c08c34f9e539fc70072635f79b7bae1a1067
   languageName: node
   linkType: hard
 

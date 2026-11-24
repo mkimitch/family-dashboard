@@ -1,6 +1,14 @@
 {
     "recommendations": [
         "foxundermoon.shell-format",
-        "jeronimoekerdt.color-picker-universal"
+        "jeronimoekerdt.color-picker-universal",
+        "dbaeumer.vscode-eslint",
+        "svelte.svelte-vscode",
+        "esbenp.prettier-vscode",
+        "usernamehw.errorlens",
+        "j13n.awesome-svelte-snippets",
+        "ms-playwright.playwright",
+        "vitest.explorer",
+        "jock.svg"
     ]
 }
