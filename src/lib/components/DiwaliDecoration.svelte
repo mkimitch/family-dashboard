@@ -26,12 +26,7 @@
 		{#if intensity === 'full' || asset.name === 'rangoli' || asset.name === 'diyas'}
 			{@const base = `/assets/holidays/diwali/${asset.file}`}
 			{@const staticSource = `${base}?motion=static#diwali-reduced-motion`}
-			{@const source =
-				intensity === 'full'
-					? base
-					: intensity === 'moderate' && asset.name === 'diyas'
-						? `${base}?motion=moderate#diwali-moderate`
-						: staticSource}
+			{@const source = intensity === 'full' ? base : staticSource}
 			<picture>
 				<!-- Explicit SVG targets also work with Chromium's cached motion preferences. -->
 				<source media="(prefers-reduced-motion: reduce)" srcset={staticSource} />

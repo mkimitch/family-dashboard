@@ -96,7 +96,7 @@ the theme. No new calendar fetching is involved.
 | ------------- | ---------- | ----------------------------------------------------------------------------------------- |
 | November 6–7  | `subtle`   | Small, dim, static lamps and corners; faint cell frame                                    |
 | November 8    | `full`     | Original animation strength; lantern, corners, lamps, perimeter sparkles; brightest frame |
-| November 9–10 | `moderate` | Static corners, lamps with 45% flame movement and reduced halo pulsation; softer frame    |
+| November 9–10 | `moderate` | Static corners and lamps with a brighter glow than the subtle days; softer frame           |
 
 Only the main day uses a lantern and sparkles. Existing short-cell and crowded-cell
 reductions apply on top of every intensity, preserving their relative brightness.
@@ -108,11 +108,9 @@ All frames and artwork are clipped independently to their own cells.
 `DiwaliDecoration.svelte` composes the four supplied SVGs from
 `static/assets/holidays/diwali/` within the existing clipped, noninteractive decoration
 layer. External image documents isolate gradient IDs and keyframes across assets and
-repeated calendar instances. Paths, gradients, animation timing, and the supplied
-reduced-motion media queries are preserved. The diya keyframes now multiply movement
-and halo pulsation by an inherited strength token, defaulting to the original strength.
-The `?motion=moderate#diwali-moderate` SVG view selects 45% movement and a dimmer halo.
-The main-day SVG still uses its original scale, skew, opacity endpoints, and timings.
+repeated calendar instances. The four SVGs provide custom paths, gradients, and
+animation for the main day. The preceding and following days use static lamps and
+corners with different brightness levels.
 
 Each SVG adds a `diwali-reduced-motion` root ID and two small CSS rules: the targeted
 root sets an inherited motion token to `paused`, and SVG elements use that token for
