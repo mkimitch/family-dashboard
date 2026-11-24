@@ -960,8 +960,7 @@
 
 		& .cal-legend-item {
 			align-items: center;
-			background:
-				linear-gradient(
+			background: linear-gradient(
 					to bottom right,
 					color-mix(in oklch, var(--cal-color, var(--accent)), transparent 90%),
 					color-mix(in oklch, var(--cal-color, var(--accent)), transparent 82%)
@@ -980,8 +979,7 @@
 			position: relative;
 
 			&.is-suppressed {
-				background:
-					repeating-linear-gradient(
+				background: repeating-linear-gradient(
 						135deg,
 						color-mix(in oklch, var(--fg), transparent 84%) 0 0.16rem,
 						transparent 0.16rem 0.42rem
@@ -1090,8 +1088,7 @@
 			}
 
 			&.is-weekend {
-				background:
-					linear-gradient(180deg, var(--weekend-wash), transparent 55%),
+				background: linear-gradient(180deg, var(--weekend-wash), transparent 55%),
 					linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent),
 					repeating-linear-gradient(
 						135deg,
@@ -1138,8 +1135,7 @@
 		}
 
 		&.is-weekend {
-			background:
-				linear-gradient(180deg, var(--weekend-wash), transparent 55%),
+			background: linear-gradient(180deg, var(--weekend-wash), transparent 55%),
 				linear-gradient(135deg, oklch(100% 0 0 / 0.06), transparent),
 				repeating-linear-gradient(
 					135deg,
@@ -1206,8 +1202,7 @@
 
 	.event-chip {
 		align-items: center;
-		background:
-			linear-gradient(
+		background: linear-gradient(
 				to bottom right,
 				color-mix(in oklch, var(--cal-color, var(--accent)), transparent 78%),
 				color-mix(in oklch, var(--cal-color, var(--accent)), transparent 66%)
@@ -1230,8 +1225,7 @@
 		}
 
 		&.task-chip {
-			background:
-				linear-gradient(
+			background: linear-gradient(
 					to bottom right,
 					color-mix(in oklch, var(--fg), transparent 95%),
 					color-mix(in oklch, var(--accent), transparent 91%)
@@ -1241,8 +1235,7 @@
 			color: var(--fg);
 
 			&.is-overdue {
-				background:
-					linear-gradient(
+				background: linear-gradient(
 						to bottom right,
 						color-mix(in oklch, var(--accent), transparent 88%),
 						color-mix(in oklch, var(--accent), transparent 82%)
@@ -1370,7 +1363,6 @@
 		gap: 0.25rem;
 		/* grid-auto-rows: 1.7rem; */
 		min-width: 0;
-		
 
 		& .event-chip {
 			width: 100%;
@@ -1384,8 +1376,7 @@
 
 	.event-time {
 		align-items: center;
-		background:
-			linear-gradient(
+		background: linear-gradient(
 				to bottom right,
 				color-mix(in oklch, var(--cal-color, var(--muted)), transparent 88%),
 				color-mix(in oklch, var(--cal-color, var(--muted)), transparent 76%)
