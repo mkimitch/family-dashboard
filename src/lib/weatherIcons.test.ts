@@ -50,6 +50,8 @@ describe('weather condition icons', () => {
 		[{ icon: '50n', description: 'overcast fog' }, 'overcast-night-fog'],
 		[{ icon: '11n', description: 'thunderstorms and snow' }, 'thunderstorms-night-snow'],
 		[{ code: '10n' }, 'partly-cloudy-night-rain'],
+		[{ code: 1000, category: 'clear' }, 'clear-day'],
+		[{ code: 1001, category: 'cloudy' }, 'cloudy'],
 		[{ icon: '13d' }, 'overcast-day-snow']
 	])('maps %j to %s', (condition, expected) => {
 		expect(weatherConditionIconSlug(condition)).toBe(expected);
