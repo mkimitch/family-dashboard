@@ -22,6 +22,17 @@ export const MAX_VISIBLE_COUNTDOWNS = 3;
 
 const countdowns: CountdownItem[] = [
 	{
+		id: 'thanksgiving-2026',
+		label: '🦃 Thanksgiving',
+		targetDate: '2026-11-26',
+		variant: 'accent'
+	},
+	{
+		id: 'smruti-birthday-2026',
+		label: "🎂 Smruti's Birthday",
+		targetDate: '2026-12-20'
+	},
+	{
 		id: 'diwali-deepavali-2026',
 		label: '🪔 Diwali / Deepavali',
 		targetDate: '2026-11-08',
