@@ -1,4 +1,5 @@
-export type CalendarDecoration = 'halloween' | 'diwali';
+export const decorationIds = ['halloween', 'diwali', 'thanksgiving'] as const;
+export type CalendarDecoration = (typeof decorationIds)[number];
 export type DiwaliIntensity = 'subtle' | 'full' | 'moderate';
 
 export type DiwaliFestival = {
@@ -36,13 +37,19 @@ const calendarDecorations: ReadonlyArray<{
 
 // Calendar columns are local civil dates, also used for their day/month headings.
 // Do not convert them to UTC (or reinterpret them in the feed's timezone).
-export const getCalendarDecoration = (date: Date): CalendarDecoration | null =>
-	calendarDecorations.find(
-		({ year, month, day }) =>
-			(year === undefined || year === date.getFullYear()) &&
-			month === date.getMonth() + 1 &&
-			day === date.getDate()
-	)?.decoration ?? (getDiwaliIntensity(date) ? 'diwali' : null);
+export const getCalendarDecoration = (date: Date): CalendarDecoration | null => {
+	// US Thanksgiving is the fourth Thursday in November.
+	if (date.getMonth() === 10 && date.getDay() === 4 && Math.ceil(date.getDate() / 7) === 4)
+		return 'thanksgiving';
+	return (
+		calendarDecorations.find(
+			({ year, month, day }) =>
+				(year === undefined || year === date.getFullYear()) &&
+				month === date.getMonth() + 1 &&
+				day === date.getDate()
+		)?.decoration ?? (getDiwaliIntensity(date) ? 'diwali' : null)
+	);
+};
 
 export const parseCalendarPreviewDate = (value: string | null): Date | null => {
 	if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;

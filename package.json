@@ -27,6 +27,8 @@
 		"demos:generate": "yarn demos:capture && yarn demos:encode",
 		"demos:halloween": "yarn demos:capture halloween && yarn demos:encode halloween",
 		"demos:diwali": "yarn demos:capture diwali && yarn demos:encode diwali",
+		"preview:thanksgiving": "node scripts/demos/thanksgiving.mjs --serve",
+		"test:decorations": "node scripts/demos/thanksgiving.mjs",
 		"test:demos": "node --test scripts/demos/*.test.mjs"
 	},
 	"devDependencies": {

@@ -8,6 +8,19 @@ import { resolveCalendarDisplayRange } from './calendarDisplay';
 
 describe('calendar day decorations', () => {
 	it.each([
+		[2026, 26],
+		[2027, 25],
+		[2029, 22],
+		[2030, 28]
+	])('decorates only the fourth Thursday of November in %i', (year, thanksgiving) => {
+		for (let day = 20; day <= 30; day++) {
+			expect(getCalendarDecoration(new Date(year, 10, day, 23, 59))).toBe(
+				day === thanksgiving ? 'thanksgiving' : null
+			);
+		}
+	});
+
+	it.each([
 		[6, 'subtle'],
 		[7, 'subtle'],
 		[8, 'full'],
@@ -102,7 +115,7 @@ describe('calendar day decorations', () => {
 	});
 });
 
-describe('development calendar preview', () => {
+describe('calendar date preview', () => {
 	it('parses a local civil date without a UTC conversion', () => {
 		const date = parseCalendarPreviewDate('2027-10-31');
 		expect(date).toEqual(new Date(2027, 9, 31));

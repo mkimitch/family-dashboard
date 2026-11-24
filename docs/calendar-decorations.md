@@ -44,6 +44,18 @@ uses the current clock, independently of the date displayed in the Halloween col
 DST changes use the forecast's actual solar timestamps. Missing, invalid, or expired
 solar data defaults to daytime rather than indefinitely repeating yesterday's times.
 
+## Thanksgiving preview
+
+Open `/?kiosk=1&calendarPreviewDate=2026-11-26` on the production dashboard to show
+Thanksgiving in the calendar. Remove `calendarPreviewDate` to return to the current date. Three leaves descend along the right edge. The turkey
+occasionally tilts its head, wobbles its wattle, adjusts its wing, pecks, or ruffles its tail.
+Reduced richness leaves two dimmer, slower leaves. System reduced motion and
+`seasonMotion=off` retain the resting turkey, leaves, and localized glow.
+
+Run `yarn preview:thanksgiving` to open a fictional-data server and print the interactive preview URL.
+The development toolbar can play each movement, play all five, or stop and reset the turkey.
+See [Daymark settings](daymark-settings.md) for density inheritance and motion timing.
+
 ## Local preview
 
 Run `yarn dev`, then open:
@@ -54,12 +66,12 @@ Run `yarn dev`, then open:
 - `http://localhost:5173/?calendarPreviewDate=2027-11-06` to check that Diwali does not recur automatically.
 - `http://localhost:5173/?calendarPreviewDate=2026-06-01` for an undecorated week.
 
-The development-only parameter accepts a valid `YYYY-MM-DD` local date and changes only
+The calendar date parameter accepts a valid `YYYY-MM-DD` local date and changes only
 the calendar's range anchor. The calendar still loads real events for that range. The
 current clock, event current/past states, and other dashboard components are unaffected.
 Add `&calendarPreviewLighting=day` or `&calendarPreviewLighting=night` to force a
 lighting state in development. Omit it to exercise actual sunrise/sunset transitions.
-Reload after changing either parameter. Production builds ignore it. Browser developer tools
+Reload after changing either parameter. Production builds ignore the lighting override. Browser developer tools
 can emulate 1200 × 1920 and reduced motion without changing operating system settings.
 
 ## Extending
