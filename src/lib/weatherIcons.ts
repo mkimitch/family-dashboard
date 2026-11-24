@@ -1,4 +1,5 @@
 export type WeatherCondition = {
+	category?: string;
 	code?: number | string;
 	desc?: string;
 	description?: string;
@@ -17,7 +18,7 @@ const WEATHER_LOTTIE_ROOT = '/lottie/weather';
 export const weatherLottiePath = (slug: string): string => `${WEATHER_LOTTIE_ROOT}/${slug}.json`;
 
 const conditionTextOf = (condition: WeatherCondition): string =>
-	[condition.main, condition.desc, condition.description]
+	[condition.category, condition.main, condition.desc, condition.description]
 		.filter((value): value is string => typeof value === 'string')
 		.join(' ')
 		.toLowerCase();
