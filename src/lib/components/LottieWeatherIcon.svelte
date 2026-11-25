@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	type Props = {
 		src: string;
 		loop?: boolean;
@@ -10,24 +8,30 @@
 	};
 
 	let { src, loop = true, autoplay = true, className = '', ariaLabel = '' }: Props = $props();
-	let container: HTMLDivElement | null = null;
+	let container = $state<HTMLDivElement | null>(null);
 
-	onMount(() => {
+	$effect(() => {
+		const target = container;
+		const path = src;
+		const options = { loop, autoplay };
+		if (!target) return;
+
+		let active = true;
 		let dispose: (() => void) | undefined;
-		const load = async () => {
-			if (!container || typeof window === 'undefined') return;
-			const { default: lottie } = await import('lottie-web');
-			const anim = lottie.loadAnimation({
-				container,
+		void import('lottie-web').then(({ default: lottie }) => {
+			if (!active) return;
+			const animation = lottie.loadAnimation({
+				container: target,
 				renderer: 'svg',
-				loop,
-				autoplay,
-				path: src
+				...options,
+				path
 			});
-			dispose = () => anim?.destroy();
+			dispose = () => animation.destroy();
+		});
+		return () => {
+			active = false;
+			dispose?.();
 		};
-		load();
-		return () => dispose?.();
 	});
 </script>
 
