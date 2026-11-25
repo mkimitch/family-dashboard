@@ -28,6 +28,15 @@ export type SchoolMenu = {
 export const load: LayoutServerLoad = async (event: Parameters<LayoutServerLoad>[0]) => {
 	const { fetch } = event;
 	const dateTimeDisplay = resolveRequestDateTimeDisplaySettings();
+	if (event.route.id === '/dev/weather-conditions') {
+		return {
+			installationSettings: await readInstallationSettings(),
+			dateTimeDisplay,
+			weather: null,
+			photos: [],
+			schoolMenu: null
+		};
+	}
 	const [weatherRes, photosRes, schoolMenuRes, installationSettings] = await Promise.all([
 		fetch('/api/weather', { cache: 'no-store' }),
 		fetch('/api/photos', { cache: 'no-store' }),
