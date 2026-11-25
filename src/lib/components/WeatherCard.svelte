@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { useSolarLighting } from '$lib/solarLightingContext';
 	import { formatWeatherProbability } from '$lib/weatherProbability';
-	import { isWeatherNight } from '$lib/weatherLighting';
+	import { weatherSolarPeriod } from '$lib/weatherLighting';
+	import { currentForecastDay, futureForecastDays } from '$lib/weatherForecast';
+	import { presentWeatherCondition, type ConditionRecord } from '$lib/weatherPresentation';
 	import SnowCap from '$lib/components/SnowCap.svelte';
 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
 	import {
@@ -15,21 +17,12 @@
 		getMoonPhaseAbbreviation,
 		getMoonPhaseName
 	} from '$lib/utils/moon';
-	import {
-		alertIconPath,
-		pressureIconPath,
-		uvIconPath,
-		weatherConditionIconPath,
-		windIconPath,
-		type WeatherCondition
-	} from '$lib/weatherIcons';
+	import { alertIconPath, pressureIconPath, uvIconPath, windIconPath } from '$lib/weatherIcons';
 	import { onMount } from 'svelte';
 	import LastUpdated from './LastUpdated.svelte';
 	import LottieWeatherIcon from './LottieWeatherIcon.svelte';
 
-	type Condition = WeatherCondition;
-	type Day = {
-		condition?: Condition;
+	type Day = ConditionRecord & {
 		date?: string | number;
 		day?: string | number;
 		hi?: number;
@@ -52,8 +45,7 @@
 		ts?: string | number;
 	};
 
-	type WeatherNow = {
-		condition?: Condition;
+	type WeatherNow = ConditionRecord & {
 		desc?: string;
 		feels_like?: number;
 		feels?: number;
@@ -78,6 +70,7 @@
 
 	type WeatherRoot = {
 		conditionSchemaVersion?: number;
+		timezone?: string | null;
 		astronomy?: {
 			moonPhase?: number;
 			moonrise?: string | number;
@@ -119,8 +112,9 @@
 	let wx = $state<WeatherRoot | null>(null);
 	let nowClock = $state(new Date());
 	const solarNight = useSolarLighting();
+	const solarPeriod = $derived(weatherSolarPeriod(wx, nowClock));
 	$effect(() => {
-		$solarNight = isWeatherNight(wx, nowClock);
+		$solarNight = solarPeriod === 'night';
 	});
 	let interval: number | undefined;
 	let clockTick: number | undefined;
@@ -231,7 +225,7 @@
 	const getMoonPhaseValue = (root: WeatherRoot, astro: WeatherAstro, now: Date): number => {
 		if (typeof astro.moonPhase === 'number') return astro.moonPhase;
 		const days = getForecastDays(root);
-		const today = days[0] as Day | undefined;
+		const today = currentForecastDay(days, root.timezone, now);
 		if (typeof today?.moonPhase === 'number') return today.moonPhase;
 		if (typeof today?.moon_phase === 'number') return today.moon_phase;
 		return computeMoonPhase(now);
@@ -420,7 +414,7 @@
 								? Math.round(now.feels_like)
 								: undefined}
 			{@const days = getForecastDays(root)}
-			{@const d0 = days[0]}
+			{@const d0 = currentForecastDay(days, root.timezone, nowClock)}
 			{@const todayHiF = d0
 				? typeof d0?.tempF?.max === 'number'
 					? Math.round(d0.tempF.max)
@@ -444,11 +438,15 @@
 			{@const pressureInHg = pressureHpa !== undefined ? formatPressureInHg(pressureHpa) : ''}
 			{@const pressureLottie = pressureIconPath(pressureHpa)}
 			{@const windLottie = windIconPath(windMphVal)}
+			{@const currentPresentation = presentWeatherCondition(
+				now,
+				root.conditionSchemaVersion,
+				'current',
+				solarPeriod
+			)}
 			{@const summary =
-				(now?.condition &&
-					(now.condition.desc || now.condition.description || now.condition.main)) ||
-				(pick(now, ['summary', 'desc', 'text']) ?? '')}
-			{@const lottieSrc = weatherConditionIconPath(now?.condition)}
+				currentPresentation.description || (pick(now, ['summary', 'desc', 'text']) ?? '')}
+			{@const lottieSrc = currentPresentation.path}
 			{@const astro = getAstro(root)}
 			{@const sunrise = astro.sunrise}
 			{@const sunset = astro.sunset}
@@ -480,7 +478,7 @@
 						{/if}
 					</div>
 					<div class="wx-compact-icon">
-						<LottieWeatherIcon src={lottieSrc} className="wi wi-compact" ariaLabel={summary} />
+						<LottieWeatherIcon src={lottieSrc} className="wi wi-compact" ariaLabel="" />
 					</div>
 					<div class="wx-compact-details">
 						{#if summary}
@@ -533,7 +531,7 @@
 							{/if}
 						</div>
 						<div class="wx-icon">
-							<LottieWeatherIcon src={lottieSrc} className="wi wi-now" ariaLabel={summary} />
+							<LottieWeatherIcon src={lottieSrc} className="wi wi-now" ariaLabel="" />
 						</div>
 					</div>
 				</div>
@@ -679,10 +677,10 @@
 				</div>
 
 				<!-- Forecast shows the next seven days after today for a full week at a glance. -->
-				{@const forecast = getForecastDays(wx)}
+				{@const forecast = futureForecastDays(getForecastDays(wx), root.timezone, nowClock)}
 				{#if forecast.length}
 					<ol class="wx-forecast" aria-label="Forecast">
-						{#each forecast.slice(1, 8) as d (d)}
+						{#each forecast as d (d)}
 							{@const dateStr = getDayDateValue(d)}
 							{@const dDate = parseYmdLocal(dateStr)}
 							{@const label = Number.isNaN(+dDate)
@@ -701,17 +699,18 @@
 										? c2f(d.tempC.min)
 										: pick(d, ['low', 'min', 'minTemp', 'lo'])}
 							{@const pop = formatWeatherProbability(d, root.conditionSchemaVersion === undefined)}
-							{@const forecastLottie = weatherConditionIconPath(d?.condition)}
+							{@const presentation = presentWeatherCondition(
+								d,
+								root.conditionSchemaVersion,
+								'fullDay'
+							)}
 							<li>
 								<div class="day">{label}</div>
 								<div class="wxi">
 									<LottieWeatherIcon
-										ariaLabel={d?.condition?.main ||
-											d?.condition?.desc ||
-											d?.condition?.description ||
-											''}
+										ariaLabel={presentation.description || 'Weather condition unavailable'}
 										className="wi wi-forecast"
-										src={forecastLottie}
+										src={presentation.path}
 									/>
 								</div>
 								<div class="pop">
@@ -725,7 +724,7 @@
 							</li>
 						{/each}
 					</ol>
-					{#if forecast.slice(1, 8).some((day) => formatWeatherProbability(day, root.conditionSchemaVersion === undefined).showLegend)}
+					{#if forecast.some((day) => formatWeatherProbability(day, root.conditionSchemaVersion === undefined).showLegend)}
 						<p class="wx-pop-legend">
 							Precipitation probability · Avg: interval average · Max: interval maximum · ?: basis
 							unknown · —: unavailable

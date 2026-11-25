@@ -12,8 +12,7 @@ const instant = (value: unknown): Date | null => {
 	return Number.isFinite(milliseconds) ? new Date(milliseconds) : null;
 };
 
-/** Missing, invalid, or out-of-date solar data defaults to daytime illumination. */
-export const isWeatherNight = (weather: unknown, now: Date): boolean => {
+export const weatherSolarPeriod = (weather: unknown, now: Date): 'day' | 'night' | undefined => {
 	const root = record(record(weather).data ?? weather);
 	try {
 		const timeZone = typeof root.timezone === 'string' ? root.timezone : undefined;
@@ -65,10 +64,14 @@ export const isWeatherNight = (weather: unknown, now: Date): boolean => {
 			const sunset = solarSeconds(candidate.sunset);
 			if (sunrise === null || sunset === null || sunrise >= sunset) continue;
 			const current = seconds(clockFormatter.format(now));
-			return current !== null && (current < sunrise || current >= sunset);
+			if (current !== null) return current < sunrise || current >= sunset ? 'night' : 'day';
 		}
 	} catch {
 		// Invalid timezone or timestamp: do not guess at local solar times.
 	}
-	return false;
+	return undefined;
 };
+
+/** Missing, invalid, or out-of-date solar data defaults to daytime illumination. */
+export const isWeatherNight = (weather: unknown, now: Date): boolean =>
+	weatherSolarPeriod(weather, now) === 'night';

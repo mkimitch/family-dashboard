@@ -17,36 +17,42 @@ const WEATHER_LOTTIE_ROOT = '/lottie/weather';
 
 export const weatherLottiePath = (slug: string): string => `${WEATHER_LOTTIE_ROOT}/${slug}.json`;
 
-const conditionTextOf = (condition: WeatherCondition): string =>
-	[condition.category, condition.main, condition.desc, condition.description]
-		.filter((value): value is string => typeof value === 'string')
-		.join(' ')
-		.toLowerCase();
+const OPENWEATHER_IDS = new Set([
+	200, 201, 202, 210, 211, 212, 221, 230, 231, 232, 300, 301, 302, 310, 311, 312, 313, 314, 321,
+	500, 501, 502, 503, 504, 511, 520, 521, 522, 531, 600, 601, 602, 611, 612, 613, 615, 616, 620,
+	621, 622, 701, 711, 721, 731, 741, 751, 761, 762, 771, 781, 800, 801, 802, 803, 804
+]);
+const TOMORROW_LEGACY_SKY = new Map([
+	[1000, 'clear'],
+	[1001, 'cloudy'],
+	[1100, 'mostly clear'],
+	[1101, 'partly cloudy'],
+	[1102, 'mostly cloudy']
+]);
+const LEGACY_ICON = /^(?:01|02|03|04|09|10|11|13|50)[dn]$/i;
+const LEGACY_DESCRIPTION =
+	/^(?:(?:light|moderate|heavy|extreme|partly cloudy|overcast) )?(?:clear(?: sky)?|sunny|cloudy|clouds|fog|mist|haze|smoke|dust|freezing rain|freezing drizzle|ice pellets|hail|drizzle|rain|sleet|snow|flurries|rain and snow|thunderstorms?(?: and (?:rain|snow))?|tornado|hurricane)$/;
 
 const conditionIdOf = (condition: WeatherCondition): number | undefined => {
 	const raw = condition.id ?? condition.weatherCode ?? condition.code;
-	if (raw === undefined || raw === null || raw === '') return undefined;
-	const value = Number(raw);
-	return Number.isInteger(value) ? value : undefined;
+	return typeof raw === 'number' && Number.isInteger(raw)
+		? raw
+		: typeof raw === 'string' && /^\d+$/.test(raw)
+			? Number(raw)
+			: undefined;
 };
 
-const weatherIconCodeOf = (condition: WeatherCondition): string | undefined => {
-	if (typeof condition.icon === 'string') return condition.icon;
-	const code = String(condition.code ?? '');
-	return /^\d{2}[dn]$/i.test(code) ? code : undefined;
-};
-
-const periodOf = (icon?: string): DayPeriod | undefined => {
-	if (typeof icon !== 'string') return undefined;
-	if (/n$/i.test(icon)) return 'night';
-	if (/d$/i.test(icon)) return 'day';
-	return undefined;
-};
+const weatherIconCodeOf = (condition: WeatherCondition): string | undefined =>
+	[condition.icon, condition.code]
+		.find((value): value is string => typeof value === 'string' && LEGACY_ICON.test(value))
+		?.toLowerCase();
 
 const skyCoverOf = (icon: string | undefined, text: string): SkyCover => {
 	if (/extreme|heavy|violent|ragged|severe|torrential/.test(text)) return 'extreme';
-	if (/overcast/.test(text) || /^(?:04|09|13)/.test(icon ?? '')) return 'overcast';
-	if (/partly|scattered|few clouds?/.test(text) || /^(?:02|10)/.test(icon ?? '')) return 'partly';
+	if (/overcast/.test(text) || ['04', '09', '13'].includes(icon?.slice(0, 2) ?? ''))
+		return 'overcast';
+	if (/partly|scattered|few clouds?/.test(text) || ['02', '10'].includes(icon?.slice(0, 2) ?? ''))
+		return 'partly';
 	return undefined;
 };
 
@@ -182,36 +188,60 @@ const iconForWeatherIconCode = (
 	icon: string,
 	period: DayPeriod | undefined
 ): string | undefined => {
-	if (/^01/.test(icon)) return period === 'night' ? 'clear-night' : 'clear-day';
-	if (/^02/.test(icon)) return period === 'night' ? 'partly-cloudy-night' : 'partly-cloudy-day';
-	if (/^03/.test(icon)) return 'cloudy';
-	if (/^04/.test(icon)) return period ? `overcast-${period}` : 'overcast';
-	if (/^09/.test(icon)) return variantSlug('rain', period, 'overcast');
-	if (/^10/.test(icon)) return variantSlug('rain', period, 'partly');
-	if (/^11/.test(icon)) return thunderstormSlug(period, undefined);
-	if (/^13/.test(icon)) return variantSlug('snow', period, 'overcast');
-	if (/^50/.test(icon)) return 'mist';
+	if (icon.slice(0, 2) === '01') return period === 'night' ? 'clear-night' : 'clear-day';
+	if (icon.slice(0, 2) === '02')
+		return period === 'night' ? 'partly-cloudy-night' : 'partly-cloudy-day';
+	if (icon.slice(0, 2) === '03') return 'cloudy';
+	if (icon.slice(0, 2) === '04') return period ? `overcast-${period}` : 'overcast';
+	if (icon.slice(0, 2) === '09') return variantSlug('rain', period, 'overcast');
+	if (icon.slice(0, 2) === '10') return variantSlug('rain', period, 'partly');
+	if (icon.slice(0, 2) === '11') return thunderstormSlug(period, undefined);
+	if (icon.slice(0, 2) === '13') return variantSlug('snow', period, 'overcast');
+	if (icon.slice(0, 2) === '50') return 'mist';
 	return undefined;
 };
 
+export function legacyConditionText(condition: WeatherCondition | null | undefined): string {
+	const text = [condition?.desc, condition?.description, condition?.main, condition?.category].find(
+		(value): value is string => typeof value === 'string' && Boolean(value.trim())
+	);
+	if (text === 'ice_pellets') return 'Ice pellets';
+	if (text === 'freezing_rain') return 'Freezing rain';
+	return text ?? '';
+}
+
 export const weatherConditionIconSlug = (
-	condition: WeatherCondition | null | undefined
+	condition: WeatherCondition | null | undefined,
+	provider?: unknown,
+	lighting?: DayPeriod
 ): string => {
 	if (!condition) return 'not-available';
-	const text = conditionTextOf(condition);
-	const icon = weatherIconCodeOf(condition);
-	const period = periodOf(icon);
-	const cover = skyCoverOf(icon, text);
 	const id = conditionIdOf(condition);
-	if (id !== undefined) {
-		const mapped = iconForConditionId(id, period, cover, text);
-		if (mapped) return mapped;
+	const icon = provider === 'tomorrow' ? undefined : weatherIconCodeOf(condition);
+	const period = lighting ?? (icon?.endsWith('n') ? 'night' : icon ? 'day' : undefined);
+	const text = legacyConditionText(condition).trim().toLowerCase();
+	const cover = skyCoverOf(icon, text);
+	const openweather =
+		provider === 'openweather' ||
+		(provider !== 'tomorrow' && (condition.id !== undefined || Boolean(icon)));
+	if (openweather && id !== undefined && OPENWEATHER_IDS.has(id)) {
+		return iconForConditionId(id, period, cover, '') ?? 'not-available';
 	}
-	return (
-		iconForDescription(text, period, cover) ??
-		(icon ? iconForWeatherIconCode(icon, period) : undefined) ??
-		'not-available'
-	);
+	if (openweather && id !== undefined && !OPENWEATHER_IDS.has(id)) return 'not-available';
+
+	const sky = provider === 'tomorrow' && id !== undefined ? TOMORROW_LEGACY_SKY.get(id) : undefined;
+	if (sky === 'mostly clear' || sky === 'partly cloudy') {
+		return period === 'night' ? 'partly-cloudy-night' : 'partly-cloudy-day';
+	}
+	if (sky === 'mostly cloudy' || sky === 'cloudy') return 'cloudy';
+	if (sky === 'clear') return period === 'night' ? 'clear-night' : 'clear-day';
+	if (/^(?:(?:light|moderate|heavy|extreme) )?(?:freezing drizzle|ice pellets)$/.test(text)) {
+		return variantSlug('sleet', period, cover);
+	}
+	const mapped = LEGACY_DESCRIPTION.test(text)
+		? iconForDescription(text, period, cover)
+		: undefined;
+	return mapped ?? (icon ? iconForWeatherIconCode(icon, period) : undefined) ?? 'not-available';
 };
 
 export const weatherConditionIconPath = (condition: WeatherCondition | null | undefined): string =>
