@@ -62,7 +62,33 @@ describe('condition presentation', () => {
 	});
 });
 
-describe('legacy compatibility', () => {
+describe('shared backend catalog', () => {
+	it('resolves a bundled asset for every gallery condition in all supported lighting contexts', async () => {
+		const { existsSync } = await import('node:fs');
+		const { default: fixture } = await import('./server/fixtures/weather-contract-v1.json');
+		const contexts = ['current', 'hourly', 'fullDay', 'daytime', 'nighttime'] as const;
+		const lights = ['day', 'night', undefined] as const;
+		for (const row of fixture.rows) {
+			for (const context of contexts) {
+				for (const light of lights) {
+					const view = presentWeatherCondition(
+						{ conditions: { [context]: { ...row, context } } },
+						fixture.conditionSchemaVersion,
+						context,
+						light
+					);
+					const asset = new URL(`../../static${view.path}`, import.meta.url);
+					expect(
+						existsSync(asset),
+						`${row.source.provider}/${row.source.native[0]?.code}/${view.path}`
+					).toBe(true);
+					if (row.status === 'unknown') expect(view.path).toContain('/not-available.json');
+					else expect(view.path).not.toContain('/not-available.json');
+				}
+			}
+		}
+	});
+
 	it('rejects unknown legacy numeric codes and malformed icon tokens', () => {
 		expect(
 			presentWeatherCondition({ condition: { id: 530 } }, undefined, 'fullDay').path
