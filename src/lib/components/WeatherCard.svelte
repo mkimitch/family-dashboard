@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { useSolarLighting } from '$lib/solarLightingContext';
+	import { formatWeatherProbability } from '$lib/weatherProbability';
 	import { isWeatherNight } from '$lib/weatherLighting';
 	import SnowCap from '$lib/components/SnowCap.svelte';
 	import { type ResolvedDateTimeDisplaySettings } from '$lib/config/dateTime';
@@ -43,6 +44,7 @@
 		moon_phase?: number;
 		name?: string;
 		pop?: number | null;
+		popBasis?: string | null;
 		precipPct?: number;
 		tempC?: { max?: number; min?: number };
 		tempF?: { max?: number; min?: number };
@@ -75,6 +77,7 @@
 	};
 
 	type WeatherRoot = {
+		conditionSchemaVersion?: number;
 		astronomy?: {
 			moonPhase?: number;
 			moonrise?: string | number;
@@ -270,15 +273,6 @@
 		const value = (day as Record<string, unknown>).name;
 		return typeof value === 'string' ? value : '';
 	};
-	const getDayPop = (day: Day): number | undefined => {
-		const anyDay = day as Record<string, unknown>;
-		if (anyDay.pop === null) return 0;
-		if (typeof anyDay.pop === 'number')
-			return Math.round(anyDay.pop <= 1 ? anyDay.pop * 100 : anyDay.pop);
-		if (typeof anyDay.precipPct === 'number') return Math.round(anyDay.precipPct);
-		return undefined;
-	};
-
 	const extractUpdatedAt = (root: WeatherRoot | null | undefined): string | null => {
 		if (!root) return null;
 		const anyRoot = root as any;
@@ -688,7 +682,7 @@
 				{@const forecast = getForecastDays(wx)}
 				{#if forecast.length}
 					<ol class="wx-forecast" aria-label="Forecast">
-						{#each forecast.slice(1, 8) as d}
+						{#each forecast.slice(1, 8) as d (d)}
 							{@const dateStr = getDayDateValue(d)}
 							{@const dDate = parseYmdLocal(dateStr)}
 							{@const label = Number.isNaN(+dDate)
@@ -706,7 +700,7 @@
 									: typeof d?.tempC?.min === 'number'
 										? c2f(d.tempC.min)
 										: pick(d, ['low', 'min', 'minTemp', 'lo'])}
-							{@const pop = getDayPop(d)}
+							{@const pop = formatWeatherProbability(d, root.conditionSchemaVersion === undefined)}
 							{@const forecastLottie = weatherConditionIconPath(d?.condition)}
 							<li>
 								<div class="day">{label}</div>
@@ -720,7 +714,10 @@
 										src={forecastLottie}
 									/>
 								</div>
-								<div class="pop">{pop === undefined ? '' : `${pop}%`}</div>
+								<div class="pop">
+									<span aria-hidden="true">{pop.label}</span>
+									<span class="wx-visually-hidden">{pop.description}</span>
+								</div>
 								<div class="hilow">
 									<span class="hi">{hiF === undefined ? '—' : `${hiF}°F`}</span>
 									<span class="lo">{loF === undefined ? '—' : `${loF}°F`}</span>
@@ -728,6 +725,12 @@
 							</li>
 						{/each}
 					</ol>
+					{#if forecast.slice(1, 8).some((day) => formatWeatherProbability(day, root.conditionSchemaVersion === undefined).showLegend)}
+						<p class="wx-pop-legend">
+							Precipitation probability · Avg: interval average · Max: interval maximum · ?: basis
+							unknown · —: unavailable
+						</p>
+					{/if}
 				{/if}
 			{/if}
 		{/key}
@@ -735,6 +738,21 @@
 {/if}
 
 <style>
+	.wx-visually-hidden {
+		clip-path: inset(50%);
+		height: 1px;
+		overflow: hidden;
+		position: absolute;
+		white-space: nowrap;
+		width: 1px;
+	}
+
+	.wx-pop-legend {
+		color: var(--muted);
+		font-size: 0.75rem;
+		margin: 0;
+	}
+
 	.wx-now {
 		--wx-alert-desc-line-clamp: 10;
 
