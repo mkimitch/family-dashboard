@@ -45,3 +45,7 @@ added to the feed instead of being inferred from unrelated data.
 
 The eight bundled `moon-*` Lotties are also intentionally not selected: the dashboard retains its
 existing 233-frame NASA-derived PNG moon-phase sequence for more precise lunar rendering.
+
+## Precipitation probability
+
+Daily precipitation probability occupies the existing forecast cell. `Avg` and `Max` mark interval statistics, `?` denotes unknown basis, and `—` is unavailable. The visible legend and screen-reader text explain those states. A valid zero is displayed as `0%`.
