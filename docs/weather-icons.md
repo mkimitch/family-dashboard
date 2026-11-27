@@ -15,13 +15,4 @@ Wind, pressure, UV, alert and astronomy artwork use their existing rules. Daymar
 
 Use `/dev/weather-conditions` with `yarn dev`. The page reads shared fixture data from Weather API's offline exporter. Search by condition code, field or text and filter by provider, period, mapping or canonical property. Each row shows the source, selected animation, file validation, any approximation and copyable JSON. The production route returns 404.
 
-Day/night coverage was measured using the original and replacement selectors with the same code inventory. The OpenWeather legacy baseline used representative icon tokens. Tomorrow V2 figures measure the publisher's artwork-supported mappings. The three documented pairs are reported separately from the provisional artwork entries.
-
-| Code inventory                         | Legacy recognized | Canonical recognized |
-| -------------------------------------- | ----------------: | -------------------: |
-| OpenWeather test inventory             |             55/55 |                55/55 |
-| Tomorrow.io named V1                   |              0/23 |                23/23 |
-| Tomorrow.io documented mixed sky pairs |               0/3 |                  3/3 |
-| Other Tomorrow.io V2 artwork entries   |             0/150 |     150/150, partial |
-
-Across those rows and both light modes the canonical selector reached 59 distinct existing animations. OpenWeather's code-only fixture set reached 35, compared with 49 on the old selector, because provider icon families no longer supply inferred cloud cover or severity. Real cloud measurements can select further variants. Unknown sentinels use the explicit unavailable asset. Tests check each fixture across all five contexts with day, night and unknown lighting. No tested path is missing.
+The shared fixture covers 55 OpenWeather IDs and 306 documented Tomorrow.io field/code pairs, including the unknown sentinels. The Tomorrow.io entries use the provider's metric API definitions. The disputed rich `6200` family and unknown values use the explicit unavailable asset. Tests check the animation path for each fixture across all five contexts with day, night and unknown lighting.
